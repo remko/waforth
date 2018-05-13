@@ -6,5 +6,6 @@ parserOptions:
   sourceType: module
 globals:
   WebAssembly: true
+  require: true
 rules:
   no-console: 0

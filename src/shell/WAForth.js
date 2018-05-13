@@ -1,5 +1,7 @@
 let wasmModule;
 
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
 // eslint-disable-next-line no-unused-vars
 function arrayToBase64(bytes) {
   var binary = "";
@@ -11,9 +13,11 @@ function arrayToBase64(bytes) {
 }
 
 class WAForth {
-  start() {
+  start(options = {}) {
+    const { skipPrelude } = options;
     let nextTableBase = 0;
     let table;
+    let tableStart;
     const buffer = (this.buffer = []);
 
     // TODO: Try to bundle this. See https://github.com/parcel-bundler/parcel/issues/647
@@ -30,76 +34,58 @@ class WAForth {
       .then(m =>
         WebAssembly.instantiate(m, {
           shell: {
+            ////////////////////////////////////////
+            // I/O
+            ////////////////////////////////////////
+
             emit: this.onEmit,
+
             key: () => {
               if (buffer.length === 0) {
-                //   throw Error("Buffer underrun");
                 return -1;
               }
               return buffer.pop();
             },
+
+            debug: d => {
+              console.log("DEBUG: ", d);
+            },
+
+            ////////////////////////////////////////
+            // Loader
+            ////////////////////////////////////////
+
             load: (offset, length) => {
-              // console.log(
-              //   "LOAD",
-              //   new Uint8Array(this.core.exports.memory.buffer, offset, length),
-              //   arrayToBase64(
-              //     new Uint8Array(
-              //       this.core.exports.memory.buffer,
-              //       offset,
-              //       length
-              //     )
-              //   )
-              // );
-              var tableBase = table.length + nextTableBase;
+              let data = new Uint8Array(
+                this.core.exports.memory.buffer,
+                offset,
+                length
+              );
+              if (isSafari) {
+                // On Safari, using the original Uint8Array triggers a bug.
+                // Taking an element-by-element copy of the data first.
+                let dataCopy = [];
+                for (let i = 0; i < length; ++i) {
+                  dataCopy.push(data[i]);
+                }
+                data = new Uint8Array(dataCopy);
+              }
+              var tableBase = tableStart + nextTableBase;
               if (tableBase >= table.length) {
                 table.grow(table.length); // Double size
               }
-              var module = new WebAssembly.Module(
-                new Uint8Array(this.core.exports.memory.buffer, offset, length)
-              );
+              var module = new WebAssembly.Module(data);
+              // console.log("Load", tableBase, new Uint8Array(data), arrayToBase64(data));
               new WebAssembly.Instance(module, {
                 env: { table, tableBase }
               });
               nextTableBase = nextTableBase + 1;
               return tableBase;
-            },
-            debug: d => {
-              console.log("DEBUG: ", d);
             }
           },
           tmp: {
-            number: outOffset => {
-              const length = new Uint32Array(
-                this.core.exports.memory.buffer,
-                0x200,
-                4
-              )[0];
-              const s = new Uint8Array(
-                this.core.exports.memory.buffer,
-                0x204,
-                length
-              );
-              let sign = 1;
-              let val = 0;
-              sign = 1;
-              if (s[0] === 45) {
-                sign = -1;
-              } else if (s[0] < 48 || s[0] > 57) {
-                return -1;
-              } else {
-                val = val + s[0] - 48;
-              }
-              for (let i = 1; i < s.length; ++i) {
-                if (s[i] < 48 || s[i] > 57) {
-                  return -1;
-                }
-                val = val * 10 + (s[i] - 48);
-              }
-              new Int32Array(this.core.exports.memory.buffer, outOffset, 4)[0] =
-                sign * val;
-              return 0;
-            },
             find: (latest, outOffset) => {
+              const DICT_BASE = 0x20000;
               const wordAddr = new Int32Array(
                 this.core.exports.memory.buffer,
                 outOffset - 4,
@@ -123,23 +109,24 @@ class WAForth {
               // console.log("FIND", wordAddr, length, word);
               const u8 = new Uint8Array(
                 this.core.exports.memory.buffer,
-                0x0000,
-                0x4000
+                DICT_BASE,
+                0x10000
               );
               const s4 = new Int32Array(
                 this.core.exports.memory.buffer,
-                0x0000,
-                0x4000
+                DICT_BASE,
+                0x10000
               );
               let p = latest;
               while (p != 0) {
                 // console.log("P", p);
-                const wordLength = u8[p + 4] & 0x1f;
-                const immediate = (u8[p + 4] & 0x80) != 0;
-                if (wordLength === length) {
+                const wordLength = u8[p - DICT_BASE + 4] & 0x1f;
+                const hidden = u8[p - DICT_BASE + 4] & 0x20;
+                const immediate = (u8[p - DICT_BASE + 4] & 0x80) != 0;
+                if (hidden == 0 && wordLength === length) {
                   let ok = true;
                   for (let i = 0; i < length; ++i) {
-                    if (word[i] !== u8[p + 5 + i]) {
+                    if (word[i] !== u8[p - DICT_BASE + 5 + i]) {
                       ok = false;
                       break;
                     }
@@ -151,7 +138,7 @@ class WAForth {
                     return;
                   }
                 }
-                p = s4[p / 4];
+                p = s4[(p - DICT_BASE) / 4];
               }
               out[1] = 0;
               // console.log("Not found");
@@ -162,7 +149,10 @@ class WAForth {
       .then(instance => {
         this.core = instance.instance;
         table = this.core.exports.table;
-        this._internal = this.core.exports; // For testing
+        tableStart = table.length;
+        if (!skipPrelude) {
+          this.core.exports.loadPrelude();
+        }
       });
   }
 
@@ -171,6 +161,11 @@ class WAForth {
     for (let i = data.length - 1; i >= 0; --i) {
       this.buffer.push(data[i]);
     }
+  }
+
+  run(s) {
+    this.read(s);
+    return this.core.exports.interpret();
   }
 }
 

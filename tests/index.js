@@ -3,26 +3,28 @@ import { mocha } from "mocha";
 import { expect } from "chai";
 mocha.setup("bdd");
 
-const WORD_BASE = 0x200;
-
 describe("WAForth", () => {
-  let forth, stack, word, output, core, memory, memory8;
+  let forth, stack, output, core, memory, memory8;
 
   beforeEach(() => {
     forth = new WAForth();
     forth.onEmit = c => {
-      output.push(c);
+      output = output + String.fromCharCode(c);
     };
-    const x = forth.start().then(() => {
-      core = forth._internal;
+    const x = forth.start({ skipPrelude: true }).then(
+      () => {
+        core = forth.core.exports;
 
-      output = [];
-      memory = new Int32Array(core.memory.buffer, 0, 0x4000);
-      memory8 = new Uint8Array(core.memory.buffer, 0, 0x4000);
-      // dictionary = new Uint8Array(core.memory.buffer, 0x1000, 0x1000);
-      word = new Uint8Array(core.memory.buffer, WORD_BASE + 4, 0x20);
-      stack = new Int32Array(core.memory.buffer, core.tos(), 0x100);
-    });
+        output = "";
+        memory = new Int32Array(core.memory.buffer, 0, 0x30000);
+        memory8 = new Uint8Array(core.memory.buffer, 0, 0x30000);
+        // dictionary = new Uint8Array(core.memory.buffer, 0x1000, 0x1000);
+        stack = new Int32Array(core.memory.buffer, core.tos(), 0x100);
+      },
+      err => {
+        console.error(err);
+      }
+    );
     return x;
   });
 
@@ -33,20 +35,56 @@ describe("WAForth", () => {
     }
   }
 
-  function getWordLength() {
-    return new Int32Array(core.memory.buffer, WORD_BASE, 4)[0];
+  function getString(p, n) {
+    let name = [];
+    for (let i = 0; i < n; ++i) {
+      name.push(String.fromCharCode(memory8[p + i]));
+    }
+    return name.join("");
+  }
+
+  function getCountedString(p) {
+    return getString(p + 4, memory[p / 4]);
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  function dumpWord(w) {
+    let end = here();
+    let p = latest();
+    while (p != w) {
+      console.log("SEARCH", p, w);
+      end = p;
+      p = memory[p / 4];
+    }
+    const previous = memory[p / 4];
+    const length = memory8[p + 4];
+    const name = getString(p + 4 + 1, length);
+    const codeP = (p + 4 + 1 + length + 3) & ~3;
+    const code = memory[codeP / 4];
+    const data = [];
+    for (let i = codeP + 4; i < end; ++i) {
+      data.push(memory8[i]);
+    }
+    console.log("Entry:", p, previous, length, name, code, data, end);
   }
 
   function run(s) {
-    forth.read(s);
-    const r = core.interpret();
+    const r = forth.run(s);
     expect(r).to.not.be.below(0);
+    output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
     return r;
   }
 
   function here() {
     run("HERE");
-    const result = stack[0];
+    const result = memory[core.tos() / 4 - 1];
+    run("DROP");
+    return result;
+  }
+
+  function latest() {
+    run("LATEST");
+    const result = memory[core.tos() / 4 - 1];
     run("DROP");
     return result;
   }
@@ -246,6 +284,15 @@ describe("WAForth", () => {
     });
   });
 
+  describe("/MOD", () => {
+    it("should work", () => {
+      run("15 6 /MOD 5");
+      expect(stack[0]).to.eql(3);
+      expect(stack[1]).to.eql(2);
+      expect(stack[2]).to.eql(5);
+    });
+  });
+
   describe("1+", () => {
     it("should work with positive numbers", () => {
       run("3");
@@ -405,7 +452,7 @@ describe("WAForth", () => {
     it("should work once", () => {
       run("87");
       run("EMIT");
-      expect(output).to.eql([87]);
+      expect(output).to.eql("W");
     });
 
     it("should work twice", () => {
@@ -413,7 +460,7 @@ describe("WAForth", () => {
       run("87");
       run("EMIT");
       run("EMIT");
-      expect(output).to.eql([87, 97]);
+      expect(output).to.eql("Wa");
     });
   });
 
@@ -547,6 +594,14 @@ describe("WAForth", () => {
       expect(stack[4]).to.eql(3);
       expect(stack[5]).to.eql(5);
     });
+
+    it("should increment a loop beyond the index", () => {
+      run(`: FOO 10 0 DO 3 8 +LOOP ;`);
+      run("FOO 5");
+      expect(stack[0]).to.eql(3);
+      expect(stack[1]).to.eql(3);
+      expect(stack[2]).to.eql(5);
+    });
   });
 
   describe("I", () => {
@@ -616,101 +671,101 @@ describe("WAForth", () => {
     });
   });
 
+  describe("CHAR", () => {
+    it("should work with a single character", () => {
+      run("CHAR A 5");
+      expect(stack[0]).to.eql(65);
+      expect(stack[1]).to.eql(5);
+    });
+
+    it("should work with multiple characters", () => {
+      run("CHAR ABC 5");
+      expect(stack[0]).to.eql(65);
+      expect(stack[1]).to.eql(5);
+    });
+  });
+
   describe("word", () => {
     it("should read a word", () => {
       forth.read(" FOO BAR BAZ ");
-      core.word();
-      expect(getWordLength()).to.eql(3);
-      expect([word[0], word[1], word[2]]).to.eql([70, 79, 79]);
+      core.WORD();
+      expect(getCountedString(stack[0])).to.eql("FOO");
     });
 
     it("should read two words", () => {
       forth.read(" FOO BAR BAZ ");
-      core.word();
-      core.word();
-      expect(getWordLength()).to.eql(3);
-      expect([word[0], word[1], word[2]]).to.eql([66, 65, 82]);
+      core.WORD();
+      core.WORD();
+      expect(getCountedString(stack[1])).to.eql("BAR");
     });
 
     it("should skip comments", () => {
       forth.read("  \\ FOO BAZ\n BART BAZ");
-      core.word();
-      expect(getWordLength()).to.eql(4);
-      expect([word[0], word[1], word[2], word[3]]).to.eql([66, 65, 82, 84]);
+      core.WORD();
+      expect(getCountedString(stack[0])).to.eql("BART");
     });
 
     it("should stop at end of buffer while parsing word", () => {
       forth.read("FOO");
-      core.word();
-      expect(getWordLength()).to.eql(3);
-      expect([word[0], word[1], word[2]]).to.eql([70, 79, 79]);
+      core.WORD();
+      expect(getCountedString(stack[0])).to.eql("FOO");
     });
 
     it("should stop at end of buffer while parsing comments", () => {
       forth.read(" \\FOO");
-      core.word();
-      expect(getWordLength()).to.eql(0);
-      expect([word[0]]).to.eql([0]);
+      core.WORD();
+      expect(getCountedString()).to.eql("");
     });
 
     it("should stop when parsing empty line", () => {
       forth.read(" ");
-      core.word();
-      expect(getWordLength()).to.eql(0);
-      expect([word[0]]).to.eql([0]);
+      core.WORD();
+      expect(getCountedString()).to.eql("");
     });
 
     it("should stop when parsing nothing", () => {
       forth.read("");
-      core.word();
-      expect(getWordLength()).to.eql(0);
-      expect([word[0]]).to.eql([0]);
+      core.WORD();
+      expect(getCountedString()).to.eql("");
     });
   });
 
   describe("FIND", () => {
     it("should find a word", () => {
       forth.read("DUP");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(8520);
+      expect(stack[0]).to.eql(131488);
       expect(stack[1]).to.eql(-1);
     });
 
     it("should find a short word", () => {
       forth.read("!");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(8192);
+      expect(stack[0]).to.eql(131072);
       expect(stack[1]).to.eql(-1);
     });
 
     it("should find an immediate word", () => {
       forth.read("+LOOP");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(8228);
+      expect(stack[0]).to.eql(131108);
       expect(stack[1]).to.eql(1);
     });
 
     it("should not find an unexisting word", () => {
       forth.read("BADWORD");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(WORD_BASE);
       expect(stack[1]).to.eql(0);
     });
 
     it("should not find a very long unexisting word", () => {
       forth.read("VERYVERYVERYBADWORD");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(WORD_BASE);
       expect(stack[1]).to.eql(0);
     });
   });
@@ -741,7 +796,7 @@ describe("WAForth", () => {
     });
   });
 
-  describe("[ / ]", () => {
+  describe("[ ]", () => {
     it("should work", () => {
       run(": FOO [ 20 5 * ] LITERAL ;");
       run("5 FOO 6");
@@ -830,6 +885,34 @@ describe("WAForth", () => {
     });
   });
 
+  describe('S"', () => {
+    it("should work", () => {
+      run(': FOO S" Foo Bar" ;');
+      run("FOO");
+      expect(stack[1]).to.eql(7);
+      expect(getString(stack[0], stack[1])).to.eql("Foo Bar");
+    });
+
+    it("should work with 2 strings", () => {
+      run(': FOO S" Foo Bar" ;');
+      run(': BAR S" Baz Ba" ;');
+      run("FOO BAR 5");
+      expect(stack[1]).to.eql(7);
+      expect(getString(stack[0], stack[1])).to.eql("Foo Bar");
+      expect(stack[3]).to.eql(6);
+      expect(getString(stack[2], stack[3])).to.eql("Baz Ba");
+    });
+  });
+
+  describe('."', () => {
+    it("should work", () => {
+      run(': FOO ." Foo Bar" ;');
+      run("FOO 5");
+      expect(stack[0]).to.eql(5);
+      expect(output).to.eql("Foo Bar");
+    });
+  });
+
   describe("RECURSE", () => {
     it("should recurse", () => {
       run(": FOO DUP 4 < IF DUP 1+ RECURSE ELSE 12 THEN 13 ;");
@@ -854,7 +937,7 @@ describe("WAForth", () => {
       run("CREATE DUP");
       run("HERE");
       run("LATEST");
-      expect(stack[2] - stack[0]).to.eql(4 + 4);
+      expect(stack[2] - stack[0]).to.eql(4 + 4 + 4);
       expect(stack[3]).to.eql(stack[0]);
       expect(stack[3]).to.not.eql(stack[1]);
     });
@@ -865,8 +948,7 @@ describe("WAForth", () => {
       run("CREATE BAM");
 
       forth.read("FOOBAR");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
       expect(stack[1]).to.eql(stack[0]);
       expect(stack[2]).to.eql(-1);
@@ -889,8 +971,7 @@ describe("WAForth", () => {
     it("should make words immediate", () => {
       run("CREATE FOOBAR IMMEDIATE");
       forth.read("FOOBAR");
-      core.word();
-      core.push(WORD_BASE);
+      core.WORD();
       core.FIND();
 
       expect(stack[1]).to.eql(1);
@@ -915,15 +996,47 @@ describe("WAForth", () => {
       run("3 FOOBAR");
       expect(stack[0]).to.eql(333333);
     });
+
+    it("should skip comments", () => {
+      run(": FOOBAR\n\n    \\ Test string  \n  4 * ;");
+      run("3 FOOBAR 5");
+      expect(stack[0]).to.eql(12);
+      expect(stack[1]).to.eql(5);
+    });
+
+    it("should override", () => {
+      run(": FOOBAR 3 ;");
+      run(": FOOBAR FOOBAR 4 ;");
+      run("FOOBAR 5");
+      expect(stack[0]).to.eql(3);
+      expect(stack[1]).to.eql(4);
+      expect(stack[2]).to.eql(5);
+    });
+  });
+
+  describe("UWIDTH", () => {
+    beforeEach(() => {
+      core.loadPrelude();
+    });
+
+    it("should work with 3 digits", () => {
+      run("123 UWIDTH");
+      expect(stack[0]).to.eql(3);
+    });
+
+    it("should work with 4 digits", () => {
+      run("1234 UWIDTH");
+      expect(stack[0]).to.eql(4);
+    });
   });
 
   describe("system", () => {
     it.skip("should run sieve", () => {
       run(`
-: prime? ( n -- ? ) HERE + C@ 0= ;
-: composite! ( n -- ) HERE + 1 SWAP C! ;
+: prime? HERE + C@ 0= ;
+: composite! HERE + 1 SWAP C! ;
 
-: sieve ( n -- )
+: sieve
   HERE OVER ERASE
   2
   BEGIN
@@ -939,6 +1052,8 @@ describe("WAForth", () => {
   DROP
   ." Primes: " 2 DO I prime? IF I . THEN LOOP 
 ;`);
+      run("10 sieve");
+      expect(output).to.eql("");
     });
   });
 });

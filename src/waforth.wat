@@ -5,6 +5,9 @@
 ;; This is not part of the WebAssembly spec, but uses some custom assembler
 ;; infrastructure.
 ;;
+;; Although you can go crazy wild with macro programming, I tried to keep this
+;; as simple as possible.
+;;
 ;; Variables and functions in the WebAssembly module definition starting with 
 ;; ! are processed by the assembler, and defined in this section.
 ;; The assembler also fixes the order of "table" in the module  (which needs to come
@@ -25,9 +28,11 @@
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
 ;; them synchronously
 (define !moduleHeaderBase #x1000) 
-(define !dictionaryBase #x2000)
-(define !returnStackBase #x10000)
-(define !stackBase #x20000)
+(define !preludeDataBase #x2000)
+(define !returnStackBase #x4000)
+(define !stackBase #x10000)
+(define !dictionaryBase #x20000)
+(define !memorySize (* 1 1024 1024))
 
 (define !moduleHeader 
   (string-append
@@ -82,7 +87,8 @@
 (define !popIndex 2)
 (define !beginDoIndex 3)
 (define !endDoIndex 4)
-(define !tableStartIndex 5)
+(define !displayIndex 5)
+(define !tableStartIndex 6)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -106,6 +112,17 @@
         ,(integer->integer-bytes idx 4 #f #f)))))
 
 (define (!+ x y) (list (+ x y)))
+(define (!/ x y) (list (ceiling (/ x y))))
+
+(define !preludeData "")
+(define (!prelude c) 
+  (set! !preludeData 
+    (regexp-replace* #px"[ ]?\n[ ]?" 
+      (regexp-replace* #px"[ ]+" 
+        (regexp-replace* #px"[\n]+" (string-append !preludeData "\n" c) "\n")
+        " ")
+      "\n"))
+  (list))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; WebAssembly module definition
@@ -117,10 +134,9 @@
   (import "shell" "load" (func $shell_load (param i32 i32) (result i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
-  (import "tmp" "number" (func $tmpNumber (param i32) (result i32)))
   (import "tmp" "find" (func $tmpFind (param i32 i32)))
 
-  (memory (export "memory") 10)
+  (memory (export "memory") (!/ !memorySize 65536))
 
   (type $void (func))
 
@@ -185,6 +201,12 @@
     (set_global $tos (get_local $btos)))
   (!def_word "-" "$minus")
 
+  ;; 6.1.0180
+  (func $.q
+    (call $Sq)
+    (call $emitICall (i32.const 0) (i32.const !displayIndex)))
+  (!def_word ".\"" "$.q" !fImmediate)
+
   ;; 6.1.0230
   (func $/
     (local $btos i32)
@@ -194,6 +216,30 @@
                           (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
   (!def_word "/" "$/")
+
+  ;; 6.1.0240
+  (func $/MOD
+    (local $btos i32)
+    (local $bbtos i32)
+    (local $n1 i32)
+    (local $n2 i32)
+    (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
+               (i32.rem_s (tee_local $n1 (i32.load (get_local $bbtos)))
+                          (tee_local $n2 (i32.load (tee_local $btos (i32.sub (get_global $tos) 
+                                                                             (i32.const 4)))))))
+    (i32.store (get_local $btos) (i32.div_s (get_local $n1) (get_local $n2))))
+  (!def_word "/MOD" "$/MOD")
+
+  ;; 6.1.0250
+  (func $0<
+    (local $btos i32)
+    (if (i32.lt_s (i32.load (tee_local $btos (i32.sub (get_global $tos) 
+                                                     (i32.const 4))))
+                  (i32.const 0))
+      (then (i32.store (get_local $btos) (i32.const -1)))
+      (else (i32.store (get_local $btos) (i32.const 0)))))
+  (!def_word "0<" "$0<")
+
 
   ;; 6.1.0270
   (func $zero-equals
@@ -218,6 +264,11 @@
                (i32.sub (i32.load (get_local $btos)) (i32.const 1))))
   (!def_word "1-" "$one-minus")
 
+  ;; 6.1.0370 
+  (func $two-drop
+    (set_global $tos (i32.sub (get_global $tos) (i32.const 8))))
+  (!def_word "2DROP" "$two-drop")
+
   ;; 6.1.0380
   (func $two-dupe
     (i32.store (get_global $tos)
@@ -231,50 +282,36 @@
   (func $colon
     (call $create)
     (call $hidden)
-    (set_global $here (i32.add (get_global $here) (i32.const 4))) ;; Table entry
-    (call $memcpy 
-          (get_global $here) 
-          (i32.const !moduleHeaderBase) (i32.const !moduleHeaderSize))
-    (set_global $here (i32.add (get_global $here) (i32.const !moduleHeaderSize)))
+    (set_global $cp (i32.const !moduleBodyBase))
     (call $right-bracket))
   (!def_word ":" "$colon")
 
   ;; 6.1.0460
   (func $semicolon
-    (local $body i32)
     (local $bodySize i32)
 
-    ;; write 'end' instruction
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
+    (call $emitEnd)
 
-    (set_local $bodySize (i32.sub (get_global $here) 
-                                  (tee_local $body (i32.add (call $body (get_global $latest)) 
-                                                            (i32.const 4)))))
+    (set_local $bodySize (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))) 
     
     ;; Update code size
     (i32.store 
-      (i32.add (get_local $body) (i32.const !moduleHeaderCodeSizeOffset))
+      (i32.const !moduleHeaderCodeSizeBase)
       (call $leb128-4p
          (i32.sub (get_local $bodySize) 
                   (i32.const (!+ !moduleHeaderCodeSizeOffset 4)))))
 
     ;; Update body size
     (i32.store 
-      (i32.add (get_local $body) (i32.const !moduleHeaderBodySizeOffset))
+      (i32.const !moduleHeaderBodySizeBase)
       (call $leb128-4p
          (i32.sub (get_local $bodySize) 
                   (i32.const (!+ !moduleHeaderBodySizeOffset 4)))))
 
     ;; Load the code and store the index
     (i32.store
-      (i32.sub (get_local $body) (i32.const 4))
-      (call $shell_load 
-            (get_local $body) 
-            (i32.sub (get_global $here) (get_local $body))))
-
-    ;; Delete the code
-    (set_global $here (get_local $body))
+      (call $body (get_global $latest))
+      (call $shell_load (i32.const !moduleHeaderBase) (get_local $bodySize)))
 
     (call $hidden)
     (call $left-bracket))
@@ -320,6 +357,13 @@
                (i32.load (i32.load (get_local $btos)))))
   (!def_word "@" "$@")
 
+  ;; 6.1.0705
+  (func $ALIGN
+    (set_global $here (i32.and
+                        (i32.add (get_global $here) (i32.const 3))
+                        (i32.const -4 #| ~3 |#))))
+  (!def_word "ALIGN" "$ALIGN")
+
   ;; 6.1.0750 
   (func $BASE 
    (i32.store (get_global $tos) (i32.const !baseBase))
@@ -351,6 +395,13 @@
                (i32.load8_u (i32.load (get_local $btos)))))
   (!def_word "C@" "$c-fetch")
 
+  ;; 6.1.0895
+  (func $CHAR
+    (call $word)
+    (i32.store (i32.sub (get_global $tos) (i32.const 4))
+               (i32.load8_u (i32.const (!+ !wordBase 4)))))
+  (!def_word "CHAR" "$CHAR")
+
   ;; 6.1.1000
   (func $create
     (local $length i32)
@@ -360,6 +411,7 @@
     (set_global $here (i32.add (get_global $here) (i32.const 4)))
 
     (call $word)
+    (drop (call $pop))
     (i32.store8 (get_global $here) (tee_local $length (i32.load (i32.const !wordBase))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
 
@@ -367,10 +419,11 @@
 
     (set_global $here (i32.add (get_global $here) (get_local $length)))
 
-    ;; Align
-    (set_global $here (i32.and
-                        (i32.add (get_global $here) (i32.const 3))
-                        (i32.const -4 #| ~3 |#))))
+    (call $ALIGN)
+
+    ;; Leave space for the code pointer
+    (i32.store (get_global $here) (i32.const 0))
+    (set_global $here (i32.add (get_global $here) (i32.const 4))))
   (!def_word "CREATE" "$create")
 
   ;; 6.1.1240
@@ -405,7 +458,6 @@
   (!def_word "EMIT" "$emit")
 
   ;; 6.1.1550
-  ;; Finds the entry in the dictionary pointed to by the word buffer
   (func $find (export "FIND")
     (call $tmpFind (get_global $latest) (get_global $tos))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
@@ -446,7 +498,7 @@
 
   ;; 6.1.1750
   (func $key
-   (i32.store (get_global $tos) (call $shell_key))
+   (i32.store (get_global $tos) (call $readChar))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "KEY" "$key")
 
@@ -502,9 +554,29 @@
                (get_local $tmp)))
   (!def_word "ROT" "$ROT")
 
+  ;; 6.1.2165
+  (func $Sq
+    (local $c i32)
+    (local $start i32)
+    (set_local $start (get_global $here))
+    (block $endLoop
+      (loop $loop
+        (if (i32.eqz (tee_local $c (call $readChar)))
+          (then
+            (unreachable)))
+        (br_if $endLoop (i32.eq (get_local $c) (i32.const 0x22)))
+        (i32.store8 (get_global $here) (get_local $c))
+        (set_global $here (i32.add (get_global $here) (i32.const 1)))
+        (br $loop)))
+    (call $compilePush (get_local $start))
+    (call $compilePush (i32.sub (get_global $here) (get_local $start)))
+    (call $ALIGN))
+  (!def_word "S\"" "$Sq" !fImmediate)
+
   ;; 6.1.2220
   (func $space (call $bl) (call $emit))
   (!def_word "SPACE" "$space")
+
 
   ;; 6.1.2260
   (func $swap
@@ -528,6 +600,54 @@
     (if (i32.eqz (get_global $state)) (unreachable))
     (call $compileWhile))
   (!def_word "WHILE" "$while" !fImmediate)
+
+  ;; 6.1.2450
+  (func $word (export "WORD") 
+    (local $char i32)
+    (local $stringPtr i32)
+
+    ;; Search for first non-blank character
+    (block $endSkipBlanks
+     (loop $skipBlanks
+       (set_local $char (call $readChar))
+       
+       ;; Skip comments (if necessary)
+       (if (i32.eq (get_local $char) (i32.const 0x5C #| '\' |#))
+         (then 
+          (loop $skipComments
+            (set_local $char (call $readChar))
+            (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| '\n' |#)))
+            (br_if $endSkipBlanks (i32.eq (get_local $char) (i32.const -1)))
+            (br $skipComments))))
+
+       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
+       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
+       (br $endSkipBlanks)))
+
+    (if (i32.ne (get_local $char) (i32.const -1)) 
+      (then 
+        ;; Search for first blank character
+        (i32.store8 (i32.const (!+ !wordBase 4)) (get_local $char))
+        (set_local $stringPtr (i32.const (!+ !wordBase 5)))
+        (block $endReadChars
+         (loop $readChars
+           (set_local $char (call $readChar))
+           (br_if $endReadChars (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
+           (br_if $endReadChars (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
+           (br_if $endReadChars (i32.eq (get_local $char) (i32.const -1)))
+           (i32.store8 (get_local $stringPtr) (get_local $char))
+           (set_local $stringPtr (i32.add (get_local $stringPtr) (i32.const 0x1)))
+           (br $readChars))))
+      (else
+        ;; Reached end of input
+        (set_local $stringPtr (i32.const (!+ !wordBase 4)))))
+
+     ;; Write word length
+     (i32.store (i32.const !wordBase) 
+       (i32.sub (get_local $stringPtr) (i32.const (!+ !wordBase 4))))
+     
+     (call $push (i32.const !wordBase)))
+  (!def_word "WORD" "$word")
 
   ;; 6.1.2500
   (func $left-bracket
@@ -565,64 +685,110 @@
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "DSP@" "$dspFetch")
 
+  (func $S0
+    (call $push (i32.const !stackBase)))
+  (!def_word "S0" "$S0")
+
   (func $latest
    (i32.store (get_global $tos) (get_global $latest))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "LATEST" "$latest")
 
-  ;; Reads a word from the input, puts it in wordBase
-  (func $word (export "word") 
-    (local $char i32)
-    (local $stringPtr i32)
+  ;; High-level words
+  (!prelude #<<EOF
 
-    ;; Search for first non-blank character
-    (block $endSkipBlanks
-     (loop $skipBlanks
-       (set_local $char (call $shell_key))
-       
-       ;; Skip comments (if necessary)
-       (if (i32.eq (get_local $char) (i32.const 0x5C #| '\' |#))
-         (then 
-          (loop $skipComments
-            (set_local $char (call $shell_key))
-            (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| '\n' |#)))
-            (br_if $endSkipBlanks (i32.eq (get_local $char) (i32.const -1)))
-            (br $skipComments))))
+    : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
 
-       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
-       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
-       (br $endSkipBlanks)))
+    : '\n' 10 ;
+    \ : 'A' [ CHAR A ] LITERAL ;
+    \ : '0' [ CHAR 0 ] LITERAL ;
+    
+    \ 6.1.0990
+    : CR '\n' EMIT ;
 
-    (if (i32.ne (get_local $char) (i32.const -1)) 
-      (then 
-        ;; Search for first blank character
-        (i32.store8 (i32.const (!+ !wordBase 4)) (get_local $char))
-        (set_local $stringPtr (i32.const (!+ !wordBase 5)))
-        (block $endReadChars
-         (loop $readChars
-           (set_local $char (call $shell_key))
-           (br_if $endReadChars (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
-           (br_if $endReadChars (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
-           (br_if $endReadChars (i32.eq (get_local $char) (i32.const -1)))
-           (i32.store8 (get_local $stringPtr) (get_local $char))
-           (set_local $stringPtr (i32.add (get_local $stringPtr) (i32.const 0x1)))
-           (br $readChars))))
-      (else
-        ;; Reached end of input
-        (set_local $stringPtr (i32.const (!+ !wordBase 4)))))
+    \ 6.1.2230
+    : SPACES BEGIN DUP 0> WHILE SPACE 1- REPEAT DROP ;
 
-     ;; Write word length
-     (i32.store (i32.const !wordBase) 
-       (i32.sub (get_local $stringPtr) (i32.const (!+ !wordBase 4)))))
+    \ 6.1.2320
+    : U.
+      BASE @ /MOD
+      ?DUP IF RECURSE THEN
+      DUP 10 < IF 48 ELSE 10 - 65 THEN
+      +
+      EMIT
+    ;
+
+    \ 15.6.1.0220
+    : .S
+      DSP@ S0 
+      BEGIN
+        2DUP >
+      WHILE
+        DUP @ U.
+        SPACE
+        4 +
+      REPEAT
+      2DROP
+    ;
+
+    \ 6.2.0210
+    : .R
+      SWAP
+      DUP 0< IF NEGATE 1 SWAP ROT 1- ELSE 0 SWAP ROT THEN
+      SWAP DUP UWIDTH ROT SWAP -
+      SPACES SWAP
+      IF 45 EMIT THEN
+      U.
+    ;
+
+    \ 6.1.0180
+    : . 0 .R SPACE ;
+EOF
+)
 
   ;; Reads a number from the word buffer, and puts it on the stack. 
   ;; Returns -1 if an error occurred.
+  ;; TODO: Support other bases
   (func $number (result i32)
-    (local $result i32)
-    (set_local $result (call $tmpNumber (get_global $tos)))
-    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
-    (get_local $result))
+    (local $sign i32)
+    (local $length i32)
+    (local $char i32)
+    (local $value i32)
+    (local $base i32)
+    (local $p i32)
+    (local $end i32)
 
+    (if (i32.eqz (tee_local $length (i32.load (i32.const !wordBase))))
+      (return (i32.const -1)))
+
+    (set_local $p (i32.const (!+ !wordBase 4)))
+    (set_local $end (i32.add (i32.const (!+ !wordBase 4)) (get_local $length)))
+    (set_local $base (i32.load (i32.const !baseBase)))
+
+    ;; Read first character
+    (if (i32.eq (tee_local $char (i32.load8_u (i32.const (!+ !wordBase 4))))
+                (i32.const 0x2d #| '-' |#))
+      (then 
+        (set_local $sign (i32.const -1))
+        (set_local $char (i32.const 48)))
+      (else (set_local $sign (i32.const 1))))
+
+    ;; Read all characters
+    (set_local $value (i32.const 0))
+    (block $endLoop
+      (loop $loop
+        (if (i32.or (i32.lt_s (get_local $char) (i32.const 48 #| '0' |# ))
+                    (i32.gt_s (get_local $char) (i32.const 57 #| '9' |# )))
+          (then (return (i32.const -1))))
+        (set_local $value (i32.add (i32.mul (get_local $value) (get_local $base))
+                                   (i32.sub (get_local $char)
+                                            (i32.const 48))))
+        (set_local $p (i32.add (get_local $p) (i32.const 1)))
+        (br_if $endLoop (i32.eq (get_local $p) (get_local $end)))
+        (set_local $char (i32.load8_s (get_local $p)))
+        (br $loop)))
+    (call $push (i32.mul (get_local $sign) (get_local $value)))
+    (return (i32.const 0)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
@@ -630,14 +796,13 @@
 
   ;; Interprets the string in the input, until the end of string is reached.
   ;; Returns 0 if processed, 1 if still compiling, -1 if a word was not found.
-  (func $interpret (export "interpret") (result i32)
+  (func $interpret (result i32)
     (local $findResult i32)
     (local $findToken i32)
     (block $endLoop
       (loop $loop
         (call $word)
         (br_if $endLoop (i32.eqz (i32.load (i32.const !wordBase))))
-        (call $push (i32.const !wordBase))
         (call $find)
         (set_local $findResult (call $pop))
         (set_local $findToken (call $pop))
@@ -666,240 +831,130 @@
                   (then ;; Immediate. Execute the word.
                     (call_indirect (type $void) (i32.load (call $body (get_local $findToken)))))
                   (else ;; Not Immediate. Compile the word call.
-                    (call $compileCall (get_local $findToken))))))))
+                    (call $emitICall 
+                          (i32.const 0)
+                          (i32.load (call $body (get_local $findToken))))))))))
           (br $loop)))
-      (return (get_global $state)))
+    ;; 'WORD' left the address on the stack
+    (drop (call $pop))
+    (return (get_global $state)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (func $compileCall (param $xt i32)
-    ;; const <table index>
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (set_global $here (call $leb128 
-                            (get_global $here) 
-                            (i32.load (call $body (get_local $xt)))))
-
-    ;; call_indirect (type 0) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
-
   (func $compilePush (param $n i32)
-    ;; const <number>
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (set_global $here (call $leb128 (get_global $here) (get_local $n)))
-
-    ;; const pushIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !pushIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 1) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x01))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitConst (get_local $n))
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
 
   (func $compileIf
-    ;; const popIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !popIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 2) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x02))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-   
-    ;; const 0
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
+    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $emitConst (i32.const 0))
 
     ;; ne
-    (i32.store8 (get_global $here) (i32.const 0x47))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x47))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
 
     ;; if (empty block)
-    (i32.store8 (get_global $here) (i32.const 0x04))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x40))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (i32.store8 (get_global $cp) (i32.const 0x04))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x40))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
   (func $compileElse
-    (i32.store8 (get_global $here) (i32.const 0x05))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (i32.store8 (get_global $cp) (i32.const 0x05))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
-  (func $compileThen
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+  (func $compileThen (call $emitEnd))
 
   (func $compileDo
-    ;; const beginDoIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !beginDoIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 0) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; block (empty block)
-    (i32.store8 (get_global $here) (i32.const 0x02))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x40))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; loop (empty block)
-    (i32.store8 (get_global $here) (i32.const 0x03))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x40))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitICall (i32.const 0) (i32.const !beginDoIndex))
+    (call $emitBlock)
+    (call $emitLoop))
   
   (func $compileLoop 
-    ;; const <increment>
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (set_global $here (call $leb128 (get_global $here) (i32.const 1)))
+    (call $emitConst (i32.const 1))
     (call $compileLoopEnd))
 
   (func $compilePlusLoop 
-    ;; const popIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !popIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 2) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x02))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
+    (call $emitICall (i32.const 2) (i32.const !popIndex))
     (call $compileLoopEnd))
 
   ;; Assumes increment is on the operand stack
   (func $compileLoopEnd
-    ;; const endDoIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !endDoIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 2) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x03))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; br_if 1
-    (i32.store8 (get_global $here) (i32.const 0x0d))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 1))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; br 0
-    (i32.store8 (get_global $here) (i32.const 0x0c))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; end
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; unreachable (unnecessary?)
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; end
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitICall (i32.const 3) (i32.const !endDoIndex))
+    (call $emitBrIf (i32.const 1))
+    (call $emitBr (i32.const 0))
+    (call $emitEnd)
+    (call $emitEnd))
 
   (func $compileBegin
-    ;; block (empty block)
-    (i32.store8 (get_global $here) (i32.const 0x02))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x40))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; loop (empty block)
-    (i32.store8 (get_global $here) (i32.const 0x03))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x40))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitBlock)
+    (call $emitLoop))
 
   (func $compileWhile
-    ;; const popIndex
-    (i32.store8 (get_global $here) (i32.const 0x41))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const !popIndex))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; call_indirect (type 2) (reserved)
-    (i32.store8 (get_global $here) (i32.const 0x11))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x02))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
+    (call $emitICall (i32.const 2) (i32.const !popIndex))
 
     ;; eqz
-    (i32.store8 (get_global $here) (i32.const 0x45))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x45))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
 
-    ;; br_if 1
-    (i32.store8 (get_global $here) (i32.const 0x0d))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 1))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitBrIf (i32.const 1)))
 
   (func $compileRepeat
-    ;; br 0
-    (i32.store8 (get_global $here) (i32.const 0x0c))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; end
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-
-    ;; end
-    (i32.store8 (get_global $here) (i32.const 0x0b))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (call $emitBr (i32.const 0))
+    (call $emitEnd)
+    (call $emitEnd))
 
   (func $compileRecurse
     ;; call 0
-    (i32.store8 (get_global $here) (i32.const 0x10))
-    (set_global $here (i32.add (get_global $here) (i32.const 1)))
-    (i32.store8 (get_global $here) (i32.const 0x00))
-    (set_global $here (i32.add (get_global $here) (i32.const 1))))
+    (i32.store8 (get_global $cp) (i32.const 0x10))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x00))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
+  (func $emitICall (param $type i32) (param $n i32)
+    (call $emitConst (get_local $n))
+
+    (i32.store8 (get_global $cp) (i32.const 0x11))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (get_local $type))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x00))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitBlock
+    (i32.store8 (get_global $cp) (i32.const 0x02))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x40))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitLoop
+    (i32.store8 (get_global $cp) (i32.const 0x03))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x40))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitConst (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x41))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
+
+  (func $emitEnd
+    (i32.store8 (get_global $cp) (i32.const 0x0b))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitBr (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x0c))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (get_local $n))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitBrIf (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x0d))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (get_local $n))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Word helper function
@@ -910,7 +965,7 @@
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (elem (i32.const !pushIndex) $push)
 
-  (func $pop (result i32)
+  (func $pop (export "pop") (result i32)
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
     (i32.load (get_global $tos)))
   (elem (i32.const !popIndex) $pop)
@@ -925,7 +980,7 @@
     (local $i i32)
     (local $bbtors i32)
     (local $btors i32)
-    (if (i32.eq (tee_local $i (i32.add (i32.load (tee_local $btors (i32.sub (get_global $tors) 
+    (if (i32.ge_s (tee_local $i (i32.add (i32.load (tee_local $btors (i32.sub (get_global $tors) 
                                                                             (i32.const 4))))
                                        (get_local $incr)))
                 (i32.load (tee_local $bbtors (i32.sub (get_global $tors) (i32.const 8)))))
@@ -937,6 +992,18 @@
         (return (i32.const 0))))
     (unreachable))
   (elem (i32.const !endDoIndex) $endDo)
+
+  (func $display
+    (local $p i32)
+    (local $end i32)
+    (set_local $end (i32.add (call $pop) (tee_local $p (call $pop))))
+    (block $endLoop
+     (loop $loop
+       (br_if $endLoop (i32.eq (get_local $p) (get_local $end)))
+       (call $shell_emit (i32.load8_u (get_local $p)))
+       (set_local $p (i32.add (get_local $p) (i32.const 1)))
+       (br $loop))))
+  (elem (i32.const !displayIndex) $display)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Helper functions
@@ -1032,16 +1099,56 @@
         (i32.const 8 #| 4 + 1 + 3 |#))
       (i32.const -4)))
 
+  (func $readChar (result i32)
+    (local $n i32)
+    (if (i32.eq (get_global $preludeDataP) (get_global $preludeDataEnd))
+      (then 
+        (return (call $shell_key)))
+      (else
+        (set_local $n (i32.load8_s (get_global $preludeDataP)))
+        (set_global $preludeDataP (i32.add (get_global $preludeDataP) (i32.const 1)))
+        (return (get_local $n))))
+    (unreachable))
+
+  (func $loadPrelude (export "loadPrelude")
+    (set_global $preludeDataP (i32.const !preludeDataBase))
+    (if (i32.ne (call $interpret) (i32.const 0))
+      (unreachable)))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Data
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (data (i32.const !moduleHeaderBase) !moduleHeader)
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
+  (data (i32.const !moduleHeaderBase) !moduleHeader)
+
+  (data (i32.const !preludeDataBase)  !preludeData)
+  (global $preludeDataEnd i32 (i32.const (!+ !preludeDataBase (string-length !preludeData))))
+  (global $preludeDataP (mut i32) (i32.const (!+ !preludeDataBase (string-length !preludeData))))
 
   (func (export "tos") (result i32)
     (get_global $tos))
 
+  (func (export "interpret") (result i32)
+    (local $result i32)
+    (if (i32.ge_s (tee_local $result (call $interpret)) (i32.const 0))
+      (then
+        ;; Write ok
+        (call $shell_emit (i32.const 111))
+        (call $shell_emit (i32.const 107)))
+      (else
+        ;; Write error
+        (call $shell_emit (i32.const 101))
+        (call $shell_emit (i32.const 114))
+        (call $shell_emit (i32.const 114))
+        (call $shell_emit (i32.const 111))
+        (call $shell_emit (i32.const 114))))
+    (call $shell_emit (i32.const 10))
+    (get_local $result))
+
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
-  (global $here (mut i32) (i32.const !dictionaryTop)))
+  (global $here (mut i32) (i32.const !dictionaryTop))
+
+  ;; Compilation pointer
+  (global $cp (mut i32) (i32.const !moduleBodyBase)))
