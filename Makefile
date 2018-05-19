@@ -5,7 +5,7 @@ WAT2WASM_FLAGS=--debug-names
 endif
 PARCEL=./node_modules/.bin/parcel
 
-WASM_FILES=dist/waforth.wasm
+WASM_FILES=dist/waforth.wasm dist/sieve-vanilla.wasm
 
 all: $(WASM_FILES)
 	$(PARCEL) build src/shell/index.html
@@ -17,11 +17,18 @@ dev-server: $(WASM_FILES)
 tests: $(WASM_FILES)
 	$(PARCEL) --no-hmr -o dist/tests.html tests/index.html
 
+.PHONY: sieve-vanilla
+sieve-vanilla: $(WASM_FILES)
+	$(PARCEL) --no-hmr -o dist/sieve-vanilla.html benchmarks/sieve-vanilla/index.html
+
 wasm: $(WASM_FILES) src/tools/quadruple.wasm.hex
 
 dist/waforth.wasm: src/waforth.wat dist
 	racket -f $< > src/waforth.wat.tmp
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.wat.tmp
+
+dist/sieve-vanilla.wasm: benchmarks/sieve-vanilla/sieve-vanilla.wat
+	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 dist:
 	mkdir -p $@

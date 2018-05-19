@@ -75,73 +75,17 @@ class WAForth {
                 table.grow(table.length); // Double size
               }
               var module = new WebAssembly.Module(data);
-              // console.log("Load", tableBase, new Uint8Array(data), arrayToBase64(data));
+              // console.log(
+              //   "Load",
+              //   tableBase,
+              //   new Uint8Array(data),
+              //   arrayToBase64(data)
+              // );
               new WebAssembly.Instance(module, {
                 env: { table, tableBase }
               });
               nextTableBase = nextTableBase + 1;
               return tableBase;
-            }
-          },
-          tmp: {
-            find: (latest, outOffset) => {
-              const DICT_BASE = 0x20000;
-              const wordAddr = new Int32Array(
-                this.core.exports.memory.buffer,
-                outOffset - 4,
-                4
-              )[0];
-              const length = new Uint32Array(
-                this.core.exports.memory.buffer,
-                wordAddr,
-                4
-              )[0];
-              const word = new Uint8Array(
-                this.core.exports.memory.buffer,
-                wordAddr + 4,
-                length
-              );
-              const out = new Int32Array(
-                this.core.exports.memory.buffer,
-                outOffset - 4,
-                8
-              );
-              // console.log("FIND", wordAddr, length, word);
-              const u8 = new Uint8Array(
-                this.core.exports.memory.buffer,
-                DICT_BASE,
-                0x10000
-              );
-              const s4 = new Int32Array(
-                this.core.exports.memory.buffer,
-                DICT_BASE,
-                0x10000
-              );
-              let p = latest;
-              while (p != 0) {
-                // console.log("P", p);
-                const wordLength = u8[p - DICT_BASE + 4] & 0x1f;
-                const hidden = u8[p - DICT_BASE + 4] & 0x20;
-                const immediate = (u8[p - DICT_BASE + 4] & 0x80) != 0;
-                if (hidden == 0 && wordLength === length) {
-                  let ok = true;
-                  for (let i = 0; i < length; ++i) {
-                    if (word[i] !== u8[p - DICT_BASE + 5 + i]) {
-                      ok = false;
-                      break;
-                    }
-                  }
-                  if (ok) {
-                    // console.log("Found!");
-                    out[0] = p;
-                    out[1] = immediate ? 1 : -1;
-                    return;
-                  }
-                }
-                p = s4[(p - DICT_BASE) / 4];
-              }
-              out[1] = 0;
-              // console.log("Not found");
             }
           }
         })

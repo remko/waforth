@@ -134,8 +134,6 @@
   (import "shell" "load" (func $shell_load (param i32 i32) (result i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
-  (import "tmp" "find" (func $tmpFind (param i32 i32)))
-
   (memory (export "memory") (!/ !memorySize 65536))
 
   (type $void (func))
@@ -459,8 +457,53 @@
 
   ;; 6.1.1550
   (func $find (export "FIND")
-    (call $tmpFind (get_global $latest) (get_global $tos))
-    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+    (local $entryP i32)
+    (local $entryNameP i32)
+    (local $entryLF i32)
+    (local $wordP i32)
+    (local $wordStart i32)
+    (local $wordLength i32)
+    (local $wordEnd i32)
+
+    (set_local $wordLength 
+               (i32.load (tee_local $wordStart (i32.load (i32.sub (get_global $tos) 
+                                                                  (i32.const 4))))))
+    (set_local $wordStart (i32.add (get_local $wordStart) (i32.const 4)))
+    (set_local $wordEnd (i32.add (get_local $wordStart) (get_local $wordLength)))
+
+    (set_local $entryP (get_global $latest))
+    (block $endLoop
+      (loop $loop
+        (set_local $entryLF (i32.load (i32.add (get_local $entryP) (i32.const 4))))
+        (block $endCompare
+          (if (i32.and 
+                (i32.eq (i32.and (get_local $entryLF) (i32.const !fHidden)) (i32.const 0))
+                (i32.eq (i32.and (get_local $entryLF) (i32.const !lengthMask))
+                        (get_local $wordLength)))
+            (then
+              (set_local $wordP (get_local $wordStart))
+              (set_local $entryNameP (i32.add (get_local $entryP) (i32.const 5)))
+              (block $endCompareLoop
+                (loop $compareLoop
+                  (br_if $endCompare (i32.ne (i32.load8_s (get_local $entryNameP))
+                                             (i32.load8_s (get_local $wordP))))
+                  (set_local $entryNameP (i32.add (get_local $entryNameP) (i32.const 1)))
+                  (set_local $wordP (i32.add (get_local $wordP) (i32.const 1)))
+                  (br_if $endCompareLoop (i32.eq (get_local $wordP)
+                                                 (get_local $wordEnd)))
+                  (br $compareLoop)))
+              (i32.store (i32.sub (get_global $tos) (i32.const 4))
+                         (get_local $entryP))
+              (if (i32.eq (i32.and (get_local $entryLF) (i32.const !fImmediate)) (i32.const 0))
+                (then
+                  (call $push (i32.const -1)))
+                (else
+                  (call $push (i32.const 1))))
+              (return))))
+        (set_local $entryP (i32.load (get_local $entryP)))
+        (br_if $endLoop (i32.eqz (get_local $entryP)))
+        (br $loop)))
+    (call $push (i32.const 0)))
   (!def_word "FIND" "$find")
 
   ;; 6.1.1650
@@ -1114,6 +1157,70 @@ EOF
     (set_global $preludeDataP (i32.const !preludeDataBase))
     (if (i32.ne (call $interpret) (i32.const 0))
       (unreachable)))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; For benchmarking
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ (func $sieve1_prime
+   (call $here)
+   (call $plus)
+   (call $c-fetch)
+   (call $zero-equals))
+
+ (func $sieve1_composite
+   (call $here)
+   (call $plus)
+   (call $push (i32.const 1))
+   (call $swap)
+   (call $c-store))
+
+ (func $sieve1 (export "sieve1")
+  (call $here)
+  (call $over)
+  (call $erase)
+  (call $push (i32.const 2))
+  (block $label$1
+   (loop $label$2
+    (call $two-dupe)
+    (call $dupe)
+    (call $star)
+    (call $greater-than)
+    (br_if $label$1 (i32.eqz (call $pop)))
+    (call $dupe)
+    (call $sieve1_prime)
+    (if (i32.ne (call $pop) (i32.const 0))
+     (block
+      (call $two-dupe)
+      (call $dupe)
+      (call $star)
+      (call $beginDo)
+      (block $label$4
+       (loop $label$5
+        (call $i)
+        (call $sieve1_composite)
+        (call $dupe)
+        (br_if $label$4 (call $endDo (call $pop)))
+        (br $label$5)))))
+    (call $one-plus)
+    (br $label$2)))
+  (call $drop)
+  (call $push (i32.const 1))
+  (call $swap)
+  (call $push (i32.const 2))
+  (call $beginDo)
+  (block $label$6
+   (loop $label$7
+    (call $i)
+    (call $sieve1_prime)
+    (if (i32.ne (call $pop) (i32.const 0))
+     (block
+      (call $drop)
+      (call $i)))
+    (br_if $label$6 (call $endDo (i32.const 1)))
+    (br $label$7))))
+  (!def_word "sieve1" "$sieve1")
+  
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Data
