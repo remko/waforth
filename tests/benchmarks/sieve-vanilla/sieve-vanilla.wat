@@ -1,6 +1,6 @@
 (module
   (import "js" "print" (func $print (param i32)))
-  (memory 4096)
+  (memory 8192)
   (func $sieve (export "sieve") (param $n i32) (result i32)
     (local $i i32)
     (local $j i32)

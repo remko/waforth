@@ -1159,67 +1159,45 @@ EOF
       (unreachable)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; For benchmarking
+  ;; A sieve with direct calls. Only here for benchmarking
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
- (func $sieve1_prime
-   (call $here)
-   (call $plus)
-   (call $c-fetch)
-   (call $zero-equals))
-
- (func $sieve1_composite
-   (call $here)
-   (call $plus)
-   (call $push (i32.const 1))
-   (call $swap)
-   (call $c-store))
-
- (func $sieve1 (export "sieve1")
-  (call $here)
-  (call $over)
-  (call $erase)
-  (call $push (i32.const 2))
-  (block $label$1
-   (loop $label$2
-    (call $two-dupe)
-    (call $dupe)
-    (call $star)
-    (call $greater-than)
-    (br_if $label$1 (i32.eqz (call $pop)))
-    (call $dupe)
-    (call $sieve1_prime)
-    (if (i32.ne (call $pop) (i32.const 0))
-     (block
-      (call $two-dupe)
-      (call $dupe)
-      (call $star)
-      (call $beginDo)
-      (block $label$4
-       (loop $label$5
-        (call $i)
-        (call $sieve1_composite)
-        (call $dupe)
-        (br_if $label$4 (call $endDo (call $pop)))
-        (br $label$5)))))
-    (call $one-plus)
-    (br $label$2)))
-  (call $drop)
-  (call $push (i32.const 1))
-  (call $swap)
-  (call $push (i32.const 2))
-  (call $beginDo)
-  (block $label$6
-   (loop $label$7
-    (call $i)
-    (call $sieve1_prime)
-    (if (i32.ne (call $pop) (i32.const 0))
-     (block
-      (call $drop)
-      (call $i)))
-    (br_if $label$6 (call $endDo (i32.const 1)))
-    (br $label$7))))
-  (!def_word "sieve1" "$sieve1")
+;  (func $sieve1_prime
+;    (call $here) (call $plus) (call $c-fetch) (call $zero-equals))
+;
+;  (func $sieve1_composite
+;    (call $here) (call $plus) (call $push (i32.const 1)) (call $swap) (call $c-store))
+;
+;  (func $sieve1 (export "sieve1")
+;   (call $here) (call $over) (call $erase)
+;   (call $push (i32.const 2))
+;   (block $label$1
+;    (loop $label$2
+;     (call $two-dupe) (call $dupe) (call $star) (call $greater-than)
+;     (br_if $label$1 (i32.eqz (call $pop)))
+;     (call $dupe) (call $sieve1_prime)
+;     (if (i32.ne (call $pop) (i32.const 0))
+;      (block
+;       (call $two-dupe) (call $dupe) (call $star)
+;       (call $beginDo)
+;       (block $label$4
+;        (loop $label$5
+;         (call $i) (call $sieve1_composite) (call $dupe)
+;         (br_if $label$4 (call $endDo (call $pop)))
+;         (br $label$5)))))
+;     (call $one-plus)
+;     (br $label$2)))
+;   (call $drop) 
+;   (call $push (i32.const 1)) (call $swap) (call $push (i32.const 2))
+;   (call $beginDo)
+;   (block $label$6
+;    (loop $label$7
+;     (call $i) (call $sieve1_prime)
+;     (if (i32.ne (call $pop) (i32.const 0))
+;      (block (call $drop) (call $i)))
+;     (br_if $label$6 (call $endDo (i32.const 1)))
+;     (br $label$7))))
+;   (!def_word "sieve1" "$sieve1")
   
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

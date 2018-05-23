@@ -19,7 +19,7 @@ tests: $(WASM_FILES)
 
 .PHONY: sieve-vanilla
 sieve-vanilla: $(WASM_FILES)
-	$(PARCEL) --no-hmr -o dist/sieve-vanilla.html benchmarks/sieve-vanilla/index.html
+	$(PARCEL) --no-hmr -o dist/sieve-vanilla.html tests/benchmarks/sieve-vanilla/index.html
 
 wasm: $(WASM_FILES) src/tools/quadruple.wasm.hex
 
@@ -27,7 +27,7 @@ dist/waforth.wasm: src/waforth.wat dist
 	racket -f $< > src/waforth.wat.tmp
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.wat.tmp
 
-dist/sieve-vanilla.wasm: benchmarks/sieve-vanilla/sieve-vanilla.wat
+dist/sieve-vanilla.wasm: tests/benchmarks/sieve-vanilla/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 dist:

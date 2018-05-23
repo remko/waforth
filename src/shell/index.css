@@ -40,6 +40,11 @@ body {
   color: #00ff00;
 }
 
+.jqconsole-header a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* The cursor. */
 .jqconsole-cursor {
     background-color: gray;

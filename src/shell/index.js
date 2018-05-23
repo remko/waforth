@@ -4,6 +4,7 @@ import $ from "jquery";
 window.jQuery = $;
 require("jq-console");
 
+// Copied from https://rosettacode.org/wiki/Sieve_of_Eratosthenes#Forth
 const sieve = `
   : prime? HERE + C@ 0= ;
   : composite! HERE + 1 SWAP C! ;
@@ -30,6 +31,9 @@ const forth = new WAForth();
 
 let jqconsole = $("#console").jqconsole("WAForth\n", "");
 $("#console").hide();
+$(".jqconsole-header").html(
+  "<span><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span>"
+);
 let outputBuffer = [];
 forth.onEmit = c => {
   outputBuffer.push(String.fromCharCode(c));
