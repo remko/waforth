@@ -1,6 +1,8 @@
 body {
   height: 100vh;
   margin: 0;
+  background-color: black;
+  color: gray;
 }
 
 .messageContainer {

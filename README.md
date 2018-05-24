@@ -1,6 +1,6 @@
 # [WAForth](https://el-tramo.be/waforth): Forth Interpreter+Compiler for WebAssembly
 
-WAForth is a bootstrapping Forth interpreter and compiler for
+WAForth is a bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
 [here](https://el-tramo.be/waforth/).
 

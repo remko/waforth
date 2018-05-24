@@ -735,7 +735,7 @@ describe("WAForth", () => {
       forth.read("DUP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131488);
+      expect(stack[0]).to.eql(131524);
       expect(stack[1]).to.eql(-1);
     });
 
@@ -1013,6 +1013,57 @@ describe("WAForth", () => {
       expect(stack[2]).to.eql(5);
     });
   });
+
+  describe("VARIABLE", () => {
+    it("should work with one variable", () => {
+      run("VARIABLE FOO");
+      run("12 FOO !");
+      run("FOO @ 5");
+      expect(stack[0]).to.eql(12);
+      expect(stack[1]).to.eql(5);
+    });
+
+    it("should work with two variables", () => {
+      run("VARIABLE FOO VARIABLE BAR");
+      run("12 FOO ! 13 BAR !");
+      run("FOO @ BAR @ 5");
+      expect(stack[0]).to.eql(12);
+      expect(stack[1]).to.eql(13);
+      expect(stack[2]).to.eql(5);
+    });
+  });
+
+  describe("CONSTANT", () => {
+    it("should work", () => {
+      run("12 CONSTANT FOO");
+      run("FOO 5");
+      expect(stack[0]).to.eql(12);
+      expect(stack[1]).to.eql(5);
+    });
+  });
+
+  describe("VALUE", () => {
+    it("should store a value", () => {
+      run("12 VALUE FOO");
+      run("FOO 5");
+      expect(stack[0]).to.eql(12);
+      expect(stack[1]).to.eql(5);
+    });
+
+    it("should update a value", () => {
+      run("12 VALUE FOO");
+      run("13 TO FOO");
+      run("FOO 5");
+      expect(stack[0]).to.eql(13);
+      expect(stack[1]).to.eql(5);
+    });
+  });
+
+  // describe.only("DOES>", () => {
+  //   it("should work", () => {
+  //     run(": ID CREATE 1 , DOES> @");
+  //   });
+  // });
 
   describe("UWIDTH", () => {
     beforeEach(() => {

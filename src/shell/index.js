@@ -1,5 +1,7 @@
-import WAForth from "./WAForth";
+import "whatwg-fetch";
+import "promise-polyfill/src/polyfill";
 import $ from "jquery";
+import WAForth from "./WAForth";
 
 window.jQuery = $;
 require("jq-console");
