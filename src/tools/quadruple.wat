@@ -9,12 +9,12 @@
   (type $pop (func (result i32)))
   (type $endLoop (func (param i32) (result i32)))
 
-  (func $word 
+  (func $word (param $n i32)
     ;; Push
     (call_indirect (type $push) (i32.const 43) (i32.const 1))
 
     ;; Word call
-    (call_indirect (type $void) (i32.const 10))
+    (call_indirect (type $push) (i32.const 10) (i32.const 9))
 
     ;; Conditional
     (if (i32.ne (call_indirect (type $pop) (i32.const 2)) (i32.const 0))
@@ -42,6 +42,6 @@
         (nop)
         (br $repeatLoop)))
     
-    (call $word))
+    (call $word (get_local $n)))
 
   (elem (get_global $tableBase) $word))
