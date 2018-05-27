@@ -46,12 +46,17 @@
         "\u0060\u0000\u0001\u007F" ;; (func (result i32))
         "\u0060\u0001\u007f\u0001\u007F" ;; (func (param i32) (result i32))
 
-    "\u0002" "\u0020" ;; Import section
-      "\u0002" ;; #Entries
+    "\u0002" "\u0039" ;; Import section
+      "\u0004" ;; #Entries
       "\u0003\u0065\u006E\u0076" "\u0005\u0074\u0061\u0062\u006C\u0065" ;; 'env' . 'table'
         "\u0001" "\u0070" "\u0000" "\u0004" ;; table, anyfunc, flags, initial size
       "\u0003\u0065\u006E\u0076" "\u0009\u0074\u0061\u0062\u006C\u0065\u0042\u0061\u0073\u0065" ;; 'env' . 'tableBase
         "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
+      "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
+        "\u0002" "\u0000" "\u0001" ;; memory
+      "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
+        "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
+
     
     "\u0003" "\u0002" ;; Function section
       "\u0001" ;; #Entries

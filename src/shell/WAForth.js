@@ -16,6 +16,7 @@ class WAForth {
   start(options = {}) {
     const { skipPrelude } = options;
     let table;
+    let memory;
     const buffer = (this.buffer = []);
 
     // TODO: Try to bundle this. See https://github.com/parcel-bundler/parcel/issues/647
@@ -79,7 +80,7 @@ class WAForth {
               // );
               var module = new WebAssembly.Module(data);
               new WebAssembly.Instance(module, {
-                env: { table, tableBase: index }
+                env: { table, tableBase: index, memory, tos: -1 }
               });
             }
           }
@@ -88,6 +89,7 @@ class WAForth {
       .then(instance => {
         this.core = instance.instance;
         table = this.core.exports.table;
+        memory = this.core.exports.memory;
         if (!skipPrelude) {
           this.core.exports.loadPrelude();
         }

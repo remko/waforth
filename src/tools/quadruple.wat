@@ -3,6 +3,8 @@
 (module
   (import "env" "table" (table 4 anyfunc))
   (import "env" "tableBase" (global $tableBase i32))
+  (import "env" "memory" (memory 1))
+  (import "env" "tos" (global $tos i32))
 
   (type $void (func))
   (type $push (func (param i32)))
