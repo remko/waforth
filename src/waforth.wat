@@ -544,7 +544,7 @@
   (func $i (param i32)
     (if (i32.eqz (get_global $state)) (unreachable))
     (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+    (call $compilePush))
   (!def_word "I" "$i" !fImmediate)
 
   ;; 6.1.1700
@@ -566,7 +566,7 @@
   (func $j (param i32)
     (if (i32.eqz (get_global $state)) (unreachable))
     (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 3)))
-    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+    (call $compilePush))
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
@@ -577,7 +577,7 @@
 
   ;; 6.1.1780
   (func $literal (param i32)
-    (call $compilePush (call $pop)))
+    (call $compilePushConst (call $pop)))
   (!def_word "LITERAL" "$literal" !fImmediate)
 
   ;; 6.1.1800
@@ -641,8 +641,8 @@
         (i32.store8 (get_global $here) (get_local $c))
         (set_global $here (i32.add (get_global $here) (i32.const 1)))
         (br $loop)))
-    (call $compilePush (get_local $start))
-    (call $compilePush (i32.sub (get_global $here) (get_local $start)))
+    (call $compilePushConst (get_local $start))
+    (call $compilePushConst (i32.sub (get_global $here) (get_local $start)))
     (call $ALIGN (i32.const -1)))
   (!def_word "S\"" "$Sq" !fImmediate)
 
@@ -908,7 +908,7 @@ EOF
                   (then
                     ;; We're compiling. Pop it off the stack and 
                     ;; add it to the compiled list
-                    (call $compilePush (call $pop)))))
+                    (call $compilePushConst (call $pop)))))
                   ;; We're not compiling. Leave the number on the stack.
               (else ;; It's not a number.
                 (drop (call $pop))
@@ -944,12 +944,12 @@ EOF
   ;; Compiler functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (func $compilePush (param $n i32)
+  (func $compilePushConst (param $n i32)
     (call $emitConst (get_local $n))
-    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+    (call $compilePush))
 
   (func $compileIf
-    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $compilePop)
     (call $emitConst (i32.const 0))
 
     ;; ne
@@ -973,9 +973,9 @@ EOF
     (if (i32.gt_s (get_global $currentLocal) (get_global $localsCount))
       (then
         (set_global $localsCount (get_global $currentLocal))))
-    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $compilePop)
     (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $compilePop)
     (call $emitSetLocal (get_global $currentLocal))
     (call $emitBlock)
     (call $emitLoop))
@@ -985,7 +985,7 @@ EOF
     (call $compileLoopEnd))
 
   (func $compilePlusLoop 
-    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $compilePop)
     (call $compileLoopEnd))
 
   ;; Assumes increment is on the operand stack
@@ -1007,7 +1007,7 @@ EOF
     (call $emitLoop))
 
   (func $compileWhile
-    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $compilePop)
 
     ;; eqz
     (i32.store8 (get_global $cp) (i32.const 0x45))
@@ -1032,6 +1032,12 @@ EOF
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
     (i32.store8 (get_global $cp) (i32.const 0x00))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $compilePush
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+
+  (func $compilePop
+    (call $emitICall (i32.const 2) (i32.const !popIndex)))
 
   (func $emitICall (param $type i32) (param $n i32)
     (call $emitConst (get_local $n))
