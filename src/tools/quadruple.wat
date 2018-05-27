@@ -10,6 +10,9 @@
   (type $endLoop (func (param i32) (result i32)))
 
   (func $word (param $n i32)
+    (local $index1 i32)
+    (local $end1 i32)
+
     ;; Push
     (call_indirect (type $push) (i32.const 43) (i32.const 1))
 
@@ -27,11 +30,13 @@
         (nop)))
 
     ;; do loop
-    (call_indirect (type $void) (i32.const 4))
+    (set_local $index1 (call_indirect (type $pop) (i32.const 2)))
+    (set_local $end1 (call_indirect (type $pop) (i32.const 2)))
     (block $endDoLoop
       (loop $doLoop
         (nop)
-        (br_if $endDoLoop (call_indirect (type $endLoop) (i32.const 1) (i32.const 3)))
+        (set_local $index1 (i32.add (get_local $index1) (i32.const 1)))
+        (br_if $endDoLoop (i32.ge_s (get_local $index1) (get_local $end1)))
         (br $doLoop)))
 
     ;; repeat loop

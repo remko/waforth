@@ -67,14 +67,18 @@
     "\u000A" "\u00FF\u0000\u0000\u0000" ;; Code section (padded length)
     "\u0001" ;; #Bodies
       "\u00FE\u0000\u0000\u0000" ;; Body size (padded)
-      "\u0000")) ;; #locals
+      "\u0001" ;; #locals
+        "\u00FD\u0000\u0000\u0000\u007F")) ;; # #i32 locals (padded)
+
 (define !moduleHeaderSize (string-length !moduleHeader))
 (define !moduleHeaderCodeSizeOffset (char-index (string->list !moduleHeader) #\u00FF 0))
 (define !moduleHeaderBodySizeOffset (char-index (string->list !moduleHeader) #\u00FE 0))
+(define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
 
 (define !moduleBodyBase (+ !moduleHeaderBase !moduleHeaderSize))
 (define !moduleHeaderCodeSizeBase (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
 (define !moduleHeaderBodySizeBase (+ !moduleHeaderBase !moduleHeaderBodySizeOffset))
+(define !moduleHeaderLocalCountBase (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
 
 
 (define !fNone #x0)
@@ -85,12 +89,10 @@
 ;; Predefined table indices
 (define !pushIndex 1)
 (define !popIndex 2)
-(define !beginDoIndex 3)
-(define !endDoIndex 4)
-(define !displayIndex 5)
-(define !pushDataAddressIndex 6)
-(define !pushDataValueIndex 7)
-(define !tableStartIndex 8)
+(define !displayIndex 3)
+(define !pushDataAddressIndex 4)
+(define !pushDataValueIndex 5)
+(define !tableStartIndex 6)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -141,7 +143,6 @@
   (type $word (func (param i32)))
 
   (global $tos (mut i32) (i32.const !stackBase))
-  (global $tors (mut i32) (i32.const !returnStackBase))
   (global $state (mut i32) (i32.const 0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -283,6 +284,8 @@
     (call $create (i32.const -1))
     (call $hidden)
     (set_global $cp (i32.const !moduleBodyBase))
+    (set_global $currentLocal (i32.const 0))
+    (set_global $localsCount (i32.const 0))
     (call $right-bracket (i32.const -1))
     )
   (!def_word ":" "$colon")
@@ -308,6 +311,11 @@
       (call $leb128-4p
          (i32.sub (get_local $bodySize) 
                   (i32.const (!+ !moduleHeaderBodySizeOffset 4)))))
+
+    ;; Update #locals
+    (i32.store 
+      (i32.const !moduleHeaderLocalCountBase)
+      (call $leb128-4p (get_global $localsCount)))
 
     ;; Load the code and store the index
     (i32.store
@@ -534,9 +542,10 @@
 
   ;; 6.1.1680
   (func $i (param i32)
-    (i32.store (get_global $tos) (i32.load (i32.sub (get_global $tors) (i32.const 4))))
-    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
-  (!def_word "I" "$i")
+    (if (i32.eqz (get_global $state)) (unreachable))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+  (!def_word "I" "$i" !fImmediate)
 
   ;; 6.1.1700
   (func $if (param i32)
@@ -555,9 +564,10 @@
 
   ;; 6.1.1730
   (func $j (param i32)
-    (i32.store (get_global $tos) (i32.load (i32.sub (get_global $tors) (i32.const 12))))
-    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
-  (!def_word "J" "$j")
+    (if (i32.eqz (get_global $state)) (unreachable))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 3)))
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+  (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
   (func $key (param i32)
@@ -959,7 +969,14 @@ EOF
   (func $compileThen (call $emitEnd))
 
   (func $compileDo
-    (call $emitICall (i32.const 0) (i32.const !beginDoIndex))
+    (set_global $currentLocal (i32.add (get_global $currentLocal) (i32.const 2)))
+    (if (i32.gt_s (get_global $currentLocal) (get_global $localsCount))
+      (then
+        (set_global $localsCount (get_global $currentLocal))))
+    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitICall (i32.const 2) (i32.const !popIndex))
+    (call $emitSetLocal (get_global $currentLocal))
     (call $emitBlock)
     (call $emitLoop))
   
@@ -973,11 +990,17 @@ EOF
 
   ;; Assumes increment is on the operand stack
   (func $compileLoopEnd
-    (call $emitICall (i32.const 3) (i32.const !endDoIndex))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitAdd)
+    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGetLocal (get_global $currentLocal))
+    (call $emitGreaterEqualSigned)
     (call $emitBrIf (i32.const 1))
     (call $emitBr (i32.const 0))
     (call $emitEnd)
-    (call $emitEnd))
+    (call $emitEnd)
+    (set_global $currentLocal (i32.sub (get_global $currentLocal) (i32.const 2))))
 
   (func $compileBegin
     (call $emitBlock)
@@ -1053,6 +1076,24 @@ EOF
     (i32.store8 (get_global $cp) (get_local $n))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
+  (func $emitSetLocal (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x21))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
+
+  (func $emitGetLocal (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x20))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
+
+  (func $emitAdd
+    (i32.store8 (get_global $cp) (i32.const 0x6a))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitGreaterEqualSigned
+    (i32.store8 (get_global $cp) (i32.const 0x4e))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Word helper function
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1066,29 +1107,6 @@ EOF
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
     (i32.load (get_global $tos)))
   (elem (i32.const !popIndex) $pop)
-
-  (func $beginDo
-    (i32.store (i32.add (get_global $tors) (i32.const 4)) (call $pop))
-    (i32.store (get_global $tors) (call $pop))
-    (set_global $tors (i32.add (get_global $tors) (i32.const 8))))
-  (elem (i32.const !beginDoIndex) $beginDo)
-
-  (func $endDo (param $incr i32) (result i32)
-    (local $i i32)
-    (local $bbtors i32)
-    (local $btors i32)
-    (if (i32.ge_s (tee_local $i (i32.add (i32.load (tee_local $btors (i32.sub (get_global $tors) 
-                                                                            (i32.const 4))))
-                                       (get_local $incr)))
-                (i32.load (tee_local $bbtors (i32.sub (get_global $tors) (i32.const 8)))))
-      (then
-        (set_global $tors (get_local $bbtors))
-        (return (i32.const 1)))
-      (else
-        (i32.store (get_local $btors) (get_local $i))
-        (return (i32.const 0))))
-    (unreachable))
-  (elem (i32.const !endDoIndex) $endDo)
 
   (func $display
     (local $p i32)
@@ -1299,6 +1317,13 @@ EOF
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
   (global $here (mut i32) (i32.const !dictionaryTop))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Compilation state
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (global $currentLocal (mut i32) (i32.const 0))
+  (global $localsCount (mut i32) (i32.const 0))
 
   ;; Compilation pointer
   (global $cp (mut i32) (i32.const !moduleBodyBase)))
