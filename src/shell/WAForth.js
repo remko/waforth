@@ -15,9 +15,7 @@ function arrayToBase64(bytes) {
 class WAForth {
   start(options = {}) {
     const { skipPrelude } = options;
-    let nextTableBase = 0;
     let table;
-    let tableStart;
     const buffer = (this.buffer = []);
 
     // TODO: Try to bundle this. See https://github.com/parcel-bundler/parcel/issues/647
@@ -55,7 +53,7 @@ class WAForth {
             // Loader
             ////////////////////////////////////////
 
-            load: (offset, length) => {
+            load: (offset, length, index) => {
               let data = new Uint8Array(
                 this.core.exports.memory.buffer,
                 offset,
@@ -70,22 +68,19 @@ class WAForth {
                 }
                 data = new Uint8Array(dataCopy);
               }
-              var tableBase = tableStart + nextTableBase;
-              if (tableBase >= table.length) {
+              if (index >= table.length) {
                 table.grow(table.length); // Double size
               }
               // console.log(
               //   "Load",
-              //   tableBase,
+              //   index,
               //   new Uint8Array(data),
               //   arrayToBase64(data)
               // );
               var module = new WebAssembly.Module(data);
               new WebAssembly.Instance(module, {
-                env: { table, tableBase }
+                env: { table, tableBase: index }
               });
-              nextTableBase = nextTableBase + 1;
-              return tableBase;
             }
           }
         })
@@ -93,7 +88,6 @@ class WAForth {
       .then(instance => {
         this.core = instance.instance;
         table = this.core.exports.table;
-        tableStart = table.length;
         if (!skipPrelude) {
           this.core.exports.loadPrelude();
         }

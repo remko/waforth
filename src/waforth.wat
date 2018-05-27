@@ -135,7 +135,7 @@
 (module
   (import "shell" "emit" (func $shell_emit (param i32)))
   (import "shell" "key" (func $shell_key (result i32)))
-  (import "shell" "load" (func $shell_load (param i32 i32) (result i32)))
+  (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
   (memory (export "memory") (!/ !memorySize 65536))
@@ -318,9 +318,9 @@
       (call $leb128-4p (get_global $localsCount)))
 
     ;; Load the code and store the index
-    (i32.store
-      (call $body (get_global $latest))
-      (call $shell_load (i32.const !moduleHeaderBase) (get_local $bodySize)))
+    (call $shell_load (i32.const !moduleHeaderBase) (get_local $bodySize) (get_global $nextTableIndex))
+    (i32.store (call $body (get_global $latest)) (get_global $nextTableIndex))
+    (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1)))
 
     (call $hidden)
     (call $left-bracket (i32.const -1)))
@@ -1323,6 +1323,7 @@ EOF
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
   (global $here (mut i32) (i32.const !dictionaryTop))
+  (global $nextTableIndex (mut i32) (i32.const !tableStartIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compilation state
