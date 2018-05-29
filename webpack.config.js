@@ -22,7 +22,8 @@ function config({ entry, outputDir, title, template, mode }) {
           use: {
             loader: "babel-loader",
             options: {
-              presets: ["es2015"]
+              presets: ["es2015"],
+              plugins: [["transform-react-jsx", { pragma: "h" }]]
             }
           }
         },
@@ -80,9 +81,9 @@ module.exports = (env, argv) => [
     mode: argv.mode
   }),
   config({
-    title: "Sieve Benchmark",
-    entry: "./tests/benchmarks/sieve/index.js",
-    outputDir: "sieve",
+    title: "Benchmarks",
+    entry: "./tests/benchmarks/index.js",
+    outputDir: "benchmarks",
     mode: argv.mode
   })
 ];

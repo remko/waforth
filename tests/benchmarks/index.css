@@ -1,0 +1,16 @@
+table {
+  text-align: center;
+  border-collapse: collapse;
+}
+
+table thead th {
+  min-width: 4em;
+  border-bottom: thin solid grey;
+}
+
+pre.output {
+  margin: 0;
+  font-size: .5em;
+  text-align: left;
+}
+

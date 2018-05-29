@@ -6,7 +6,7 @@ endif
 WEBPACK=npx webpack
 WEBPACK_DEV_SERVER=npx webpack-dev-server
 
-WASM_FILES=src/waforth.wasm tests/benchmarks/sieve-vanilla/sieve-vanilla.wasm
+WASM_FILES=src/waforth.wasm tests/benchmarks/sieve-vanilla.wasm
 
 all: $(WASM_FILES)
 	$(WEBPACK) --mode=production
@@ -20,7 +20,7 @@ src/waforth.wasm: src/waforth.wat dist
 	racket -f $< > src/waforth.wat.tmp
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.wat.tmp
 
-tests/benchmarks/sieve-vanilla/sieve-vanilla.wasm: tests/benchmarks/sieve-vanilla/sieve-vanilla.wat
+tests/benchmarks/sieve-vanilla.wasm: tests/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 dist:
