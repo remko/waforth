@@ -21,6 +21,14 @@ tests: $(WASM_FILES)
 sieve-vanilla: $(WASM_FILES)
 	$(PARCEL) --no-hmr -o dist/sieve-vanilla.html tests/benchmarks/sieve-vanilla/index.html
 
+.PHONY: benchmark-sieve
+benchmark-sieve: $(WASM_FILES)
+	$(PARCEL) build -o dist/benchmark-sieve.html tests/benchmarks/sieve/index.html
+
+.PHONY: benchmark-sieve-dev
+benchmark-sieve-dev: $(WASM_FILES)
+	$(PARCEL) --no-hmr tests/benchmarks/sieve/index.html
+
 wasm: $(WASM_FILES) src/tools/quadruple.wasm.hex
 
 dist/waforth.wasm: src/waforth.wat dist

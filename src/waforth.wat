@@ -32,7 +32,7 @@
 (define !returnStackBase #x4000)
 (define !stackBase #x10000)
 (define !dictionaryBase #x20000)
-(define !memorySize (* 1 1024 1024))
+(define !memorySize (* 100 1024 1024))
 
 (define !moduleHeader 
   (string-append
