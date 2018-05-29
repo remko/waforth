@@ -1,4 +1,4 @@
-let wasmModule;
+import wasmModule from "../waforth.wasm";
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
@@ -19,81 +19,67 @@ class WAForth {
     let memory;
     const buffer = (this.buffer = []);
 
-    // TODO: Try to bundle this. See https://github.com/parcel-bundler/parcel/issues/647
-    const initialize =
-      wasmModule != null
-        ? Promise.resolve(wasmModule)
-        : fetch("waforth.wasm")
-            .then(resp => resp.arrayBuffer())
-            .then(module => {
-              wasmModule = module;
-              return wasmModule;
-            });
-    return initialize
-      .then(m =>
-        WebAssembly.instantiate(m, {
-          shell: {
-            ////////////////////////////////////////
-            // I/O
-            ////////////////////////////////////////
+    return WebAssembly.instantiate(wasmModule, {
+      shell: {
+        ////////////////////////////////////////
+        // I/O
+        ////////////////////////////////////////
 
-            emit: this.onEmit,
+        emit: this.onEmit,
 
-            key: () => {
-              if (buffer.length === 0) {
-                return -1;
-              }
-              return buffer.pop();
-            },
-
-            debug: d => {
-              console.log("DEBUG: ", d);
-            },
-
-            ////////////////////////////////////////
-            // Loader
-            ////////////////////////////////////////
-
-            load: (offset, length, index) => {
-              let data = new Uint8Array(
-                this.core.exports.memory.buffer,
-                offset,
-                length
-              );
-              if (isSafari) {
-                // On Safari, using the original Uint8Array triggers a bug.
-                // Taking an element-by-element copy of the data first.
-                let dataCopy = [];
-                for (let i = 0; i < length; ++i) {
-                  dataCopy.push(data[i]);
-                }
-                data = new Uint8Array(dataCopy);
-              }
-              if (index >= table.length) {
-                table.grow(table.length); // Double size
-              }
-              // console.log(
-              //   "Load",
-              //   index,
-              //   new Uint8Array(data),
-              //   arrayToBase64(data)
-              // );
-              var module = new WebAssembly.Module(data);
-              new WebAssembly.Instance(module, {
-                env: { table, tableBase: index, memory, tos: -1 }
-              });
-            }
+        key: () => {
+          if (buffer.length === 0) {
+            return -1;
           }
-        })
-      )
-      .then(instance => {
-        this.core = instance.instance;
-        table = this.core.exports.table;
-        memory = this.core.exports.memory;
-        if (!skipPrelude) {
-          this.core.exports.loadPrelude();
+          return buffer.pop();
+        },
+
+        debug: d => {
+          console.log("DEBUG: ", d);
+        },
+
+        ////////////////////////////////////////
+        // Loader
+        ////////////////////////////////////////
+
+        load: (offset, length, index) => {
+          let data = new Uint8Array(
+            this.core.exports.memory.buffer,
+            offset,
+            length
+          );
+          if (isSafari) {
+            // On Safari, using the original Uint8Array triggers a bug.
+            // Taking an element-by-element copy of the data first.
+            let dataCopy = [];
+            for (let i = 0; i < length; ++i) {
+              dataCopy.push(data[i]);
+            }
+            data = new Uint8Array(dataCopy);
+          }
+          if (index >= table.length) {
+            table.grow(table.length); // Double size
+          }
+          // console.log(
+          //   "Load",
+          //   index,
+          //   new Uint8Array(data),
+          //   arrayToBase64(data)
+          // );
+          var module = new WebAssembly.Module(data);
+          new WebAssembly.Instance(module, {
+            env: { table, tableBase: index, memory, tos: -1 }
+          });
         }
-      });
+      }
+    }).then(instance => {
+      this.core = instance.instance;
+      table = this.core.exports.table;
+      memory = this.core.exports.memory;
+      if (!skipPrelude) {
+        this.core.exports.loadPrelude();
+      }
+    });
   }
 
   read(s) {

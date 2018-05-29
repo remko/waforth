@@ -1,6 +1,8 @@
+.DS_Store
 .cache/
 node_modules/
 dist/
 *.wasm
 *.wasm.hex
 *.tmp
+*.bin

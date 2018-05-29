@@ -1,8 +1,8 @@
-import "whatwg-fetch";
 import "promise-polyfill/src/polyfill";
 import $ from "jquery";
 import WAForth from "./WAForth";
 import sieve from "./sieve";
+import "./index.css";
 
 window.jQuery = $;
 require("jq-console");
