@@ -53,9 +53,12 @@ function config({ entry, outputDir, title, template, mode }) {
         )
       )
     ],
+    // Mocha requires this
     node: {
       fs: "empty"
-    }
+    },
+    // Mocha requires this
+    performance: { hints: false }
   };
   if (mode === "development") {
     result.devtool = "cheap-module-eval-source-map";
