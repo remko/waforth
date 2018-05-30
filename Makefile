@@ -1,6 +1,6 @@
 WASM2WAT=wasm2wat
 WAT2WASM=wat2wasm
-WAT2WASM_FLAGS=
+WAT2WASM_FLAGS=--enable-mutable-globals
 ifeq ($(DEBUG),1)
 WAT2WASM_FLAGS=--debug-names
 endif

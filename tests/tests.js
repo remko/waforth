@@ -100,14 +100,14 @@ function loadTests(wasmModule, arrayToBase64) {
 
     function here() {
       run("HERE");
-      const result = memory[core.tos() / 4 - 1];
+      const result = memory[core.tos.value / 4 - 1];
       run("DROP");
       return result;
     }
 
     function latest() {
       run("LATEST");
-      const result = memory[core.tos() / 4 - 1];
+      const result = memory[core.tos.value / 4 - 1];
       run("DROP");
       return result;
     }

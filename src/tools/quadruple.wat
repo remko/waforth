@@ -3,7 +3,7 @@
 (module $quadruple
   (import "env" "table" (table 4 anyfunc))
   (import "env" "memory" (memory 1))
-  (import "env" "tos" (global $tos i32))
+  (import "env" "tos" (global $tos (mut i32)))
 
   (type $void (func))
   (type $push (func (param i32)))
@@ -16,13 +16,16 @@
     (local $incr1 i32)
 
     ;; Push
-    (call_indirect (type $push) (i32.const 43) (i32.const 1))
+    (i32.store (get_global $tos) (i32.const 43))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
 
     ;; Word call
     (call_indirect (type $push) (i32.const 10) (i32.const 9))
 
     ;; Conditional
-    (if (i32.ne (call_indirect (type $pop) (i32.const 2)) (i32.const 0))
+    (i32.load (get_global $tos))
+    (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+    (if (i32.ne (i32.const 0))
       (then
         (nop)
         (nop))

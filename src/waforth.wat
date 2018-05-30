@@ -56,7 +56,7 @@
       "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
         "\u0002" "\u0000" "\u0001" ;; memory
       "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
-        "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
+        "\u0003" "\u007F" "\u0001" ;; global, i32, mutable
 
     
     "\u0003" "\u0002" ;; Function section
@@ -108,6 +108,9 @@
 (define !setLatestBodyIndex 6)
 (define !compileCallIndex 7)
 (define !tableStartIndex 8)
+
+;; Predefined imported globals
+(define !tosIndex 0)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -179,7 +182,7 @@
   (type $word (func))
   (type $dataWord (func (param i32)))
 
-  (global $tos (mut i32) (i32.const !stackBase))
+  (global $tos (export "tos") (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
   (global $inputBufferSize (mut i32) (i32.const 0))
   (global $inputBufferBase (mut i32) (i32.const !inputBufferBase))
@@ -1873,8 +1876,38 @@ EOF
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
     (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
 
+  (func $emitSetGlobal (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x24))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
+
+  (func $emitGetGlobal (param $n i32)
+    (i32.store8 (get_global $cp) (i32.const 0x23))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
+
+  (func $emitStore
+    (i32.store8 (get_global $cp) (i32.const 0x36))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x02))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x00))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitLoad
+    (i32.store8 (get_global $cp) (i32.const 0x28))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x02))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x00))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
   (func $emitAdd
     (i32.store8 (get_global $cp) (i32.const 0x6a))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitSub
+    (i32.store8 (get_global $cp) (i32.const 0x6b))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
   (func $emitEqualsZero
@@ -2074,47 +2107,62 @@ EOF
     (call $here) 
     (call $over) 
     (call $erase)
-    (call $push (i32.const 2))
+    (i32.store (get_global $tos) (i32.const 2))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
     (block $endLoop1
       (loop $loop1
         (call $two-dupe) 
         (call $dupe) 
         (call $star) 
         (call $greater-than)
-        (br_if $endLoop1 (i32.eqz (call $pop)))
+        (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+        (br_if $endLoop1 (i32.eqz (i32.load (get_global $tos))))
         (call $dupe) 
         (call $sieve_prime)
-        (if (i32.ne (call $pop) (i32.const 0))
+        (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+        (if (i32.ne (i32.load (get_global $tos)) (i32.const 0))
           (block
             (call $two-dupe) 
             (call $dupe) 
             (call $star)
-            (set_local $i (call $pop))
-            (set_local $end (call $pop))
+            (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+            (set_local $i (i32.load (get_global $tos)))
+            (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+            (set_local $end (i32.load (get_global $tos)))
             (block $endLoop2
               (loop $loop2
-                (call $push (get_local $i))
+                (i32.store (get_global $tos) (get_local $i))
+                (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
                 (call $sieve_composite) 
                 (call $dupe)
-                (set_local $i (i32.add (call $pop) (get_local $i)))
+                (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+                (set_local $i (i32.add (i32.load (get_global $tos)) (get_local $i)))
                 (br_if $endLoop2 (i32.ge_s (get_local $i) (get_local $end)))
                 (br $loop2)))))
         (call $one-plus)
         (br $loop1)))
     (call $drop) 
-    (call $push (i32.const 1))
+    (i32.store (get_global $tos) (i32.const 1))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
     (call $swap) 
-    (call $push (i32.const 2))
-    (set_local $i (call $pop))
-    (set_local $end (call $pop))
+    (i32.store (get_global $tos) (i32.const 2))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
+
+    (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+    (set_local $i (i32.load (get_global $tos)))
+    (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+    (set_local $end (i32.load (get_global $tos)))
     (block $endLoop3
       (loop $loop3
-        (call $push (get_local $i))
+        (i32.store (get_global $tos) (get_local $i))
+        (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
         (call $sieve_prime) 
-        (if (i32.ne (call $pop) (i32.const 0))
+        (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
+        (if (i32.ne (i32.load (get_global $tos)) (i32.const 0))
         (block
           (call $drop)
-          (call $push (get_local $i))))
+          (i32.store (get_global $tos) (get_local $i))
+          (set_global $tos (i32.add (get_global $tos) (i32.const 4)))))
         (set_local $i (i32.add (i32.const 1) (get_local $i)))
         (br_if $endLoop3 (i32.ge_s (get_local $i) (get_local $end)))
         (br $loop3))))
@@ -2140,9 +2188,6 @@ EOF
   (data (i32.const !inBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !moduleHeaderBase) !moduleHeader)
   (data (i32.const !preludeDataBase)  !preludeData)
-
-  (func (export "tos") (result i32)
-    (get_global $tos))
 
   (func (export "interpret") (result i32)
     (local $result i32)
