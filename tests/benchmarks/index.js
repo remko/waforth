@@ -36,7 +36,7 @@ setup.push(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ITERATIONS = 5;
-const LIMIT = 50000000;
+const LIMIT = 90000000;
 const benchmarks = [
   {
     name: "sieve",
