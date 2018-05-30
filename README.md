@@ -36,9 +36,7 @@ To run the development server:
 
 ## Testing
 
-To run the development server with all the tests:
-
-    make tests
+The tests are served from `/tests`.
 
 ## Design
 
