@@ -548,8 +548,7 @@
   ;; 6.1.1680
   (func $i (param i32)
     (if (i32.eqz (get_global $state)) (unreachable))
-    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $compilePush))
+    (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 1))))
   (!def_word "I" "$i" !fImmediate)
 
   ;; 6.1.1700
@@ -570,8 +569,7 @@
   ;; 6.1.1730
   (func $j (param i32)
     (if (i32.eqz (get_global $state)) (unreachable))
-    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 3)))
-    (call $compilePush))
+    (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 3))))
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
@@ -951,7 +949,11 @@ EOF
 
   (func $compilePushConst (param $n i32)
     (call $emitConst (get_local $n))
-    (call $compilePush))
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
+
+  (func $compilePushLocal (param $n i32)
+    (call $emitGetLocal (get_local $n))
+    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
 
   (func $compileIf
     (call $compilePop)
@@ -1037,9 +1039,6 @@ EOF
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
     (i32.store8 (get_global $cp) (i32.const 0x00))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
-
-  (func $compilePush
-    (call $emitICall (i32.const 1) (i32.const !pushIndex)))
 
   (func $compilePop
     (call $emitICall (i32.const 2) (i32.const !popIndex)))
