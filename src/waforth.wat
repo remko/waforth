@@ -1252,47 +1252,70 @@ EOF
   ;; A sieve with direct calls. Only here for benchmarking
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;  (func $sieve1_prime (param i32)
-;    (call $here (i32.const -1)) (call $plus (i32.const -1)) 
-;    (call $c-fetch (i32.const -1)) (call $zero-equals (i32.const -1)))
-;
-;  (func $sieve1_composite (param i32)
-;    (call $here (i32.const -1)) (call $plus (i32.const -1)) (call $push (i32.const 1)) 
-;    (call $swap (i32.const -1)) (call $c-store (i32.const -1)))
-;
-;  (func $sieve1 (export "sieve1") (param i32)
-;   (call $here (i32.const -1)) (call $over (i32.const -1)) (call $erase (i32.const -1))
-;   (call $push (i32.const 2))
-;   (block $label$1
-;    (loop $label$2
-;     (call $two-dupe (i32.const -1)) (call $dupe (i32.const -1)) 
-;     (call $star (i32.const -1)) (call $greater-than (i32.const -1))
-;     (br_if $label$1 (i32.eqz (call $pop)))
-;     (call $dupe (i32.const -1)) (call $sieve1_prime (i32.const -1))
-;     (if (i32.ne (call $pop) (i32.const 0))
-;      (block
-;       (call $two-dupe (i32.const -1)) (call $dupe (i32.const -1)) (call $star (i32.const -1))
-;       (call $beginDo)
-;       (block $label$4
-;        (loop $label$5
-;         (call $i (i32.const -1)) (call $sieve1_composite (i32.const -1)) (call $dupe (i32.const -1))
-;         (br_if $label$4 (call $endDo (call $pop)))
-;         (br $label$5)))))
-;     (call $one-plus (i32.const -1))
-;     (br $label$2)))
-;   (call $drop (i32.const -1)) 
-;   (call $push (i32.const 1)) (call $swap (i32.const -1)) (call $push (i32.const 2))
-;   (call $beginDo)
-;   (block $label$6
-;    (loop $label$7
-;     (call $i (i32.const -1)) (call $sieve1_prime (i32.const -1))
-;     (if (i32.ne (call $pop) (i32.const 0))
-;      (block (call $drop (i32.const -1)) (call $i (i32.const -1))))
-;     (br_if $label$6 (call $endDo (i32.const 1)))
-;     (br $label$7))))
-;   (!def_word "sieve1" "$sieve1")
-;   
+  (func $sieve_prime (param i32)
+    (call $here (i32.const 131600)) (call $plus (i32.const 131600)) 
+    (call $c-fetch (i32.const 131600)) (call $zero-equals (i32.const 131600)))
 
+  (func $sieve_composite (param i32)
+    (call $here (i32.const 131600))
+    (call $plus (i32.const 131600))
+    (i32.store (get_global $tos) (i32.const 1))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
+    (call $swap (i32.const 131600))
+    (call $c-store (i32.const 131600)))
+;
+  (func $sieve (param i32)
+    (local $i i32)
+    (local $end i32)
+    (call $here (i32.const 131600)) 
+    (call $over (i32.const 131600)) 
+    (call $erase (i32.const 131600))
+    (call $push (i32.const 2))
+    (block $endLoop1
+      (loop $loop1
+        (call $two-dupe (i32.const 131600)) 
+        (call $dupe (i32.const 131600)) 
+        (call $star (i32.const 131600)) 
+        (call $greater-than (i32.const 131600))
+        (br_if $endLoop1 (i32.eqz (call $pop)))
+        (call $dupe (i32.const 131600)) 
+        (call $sieve_prime (i32.const 131600))
+        (if (i32.ne (call $pop) (i32.const 0))
+          (block
+            (call $two-dupe (i32.const 131600)) 
+            (call $dupe (i32.const 131600)) 
+            (call $star (i32.const 131600))
+            (set_local $i (call $pop))
+            (set_local $end (call $pop))
+            (block $endLoop2
+              (loop $loop2
+                (call $push (get_local $i))
+                (call $sieve_composite (i32.const 131600)) 
+                (call $dupe (i32.const 131600))
+                (set_local $i (i32.add (call $pop) (get_local $i)))
+                (br_if $endLoop2 (i32.ge_s (get_local $i) (get_local $end)))
+                (br $loop2)))))
+        (call $one-plus (i32.const 131600))
+        (br $loop1)))
+    (call $drop (i32.const 131600)) 
+    (call $push (i32.const 1))
+    (call $swap (i32.const 131600)) 
+    (call $push (i32.const 2))
+    (set_local $i (call $pop))
+    (set_local $end (call $pop))
+    (block $endLoop3
+      (loop $loop3
+        (call $push (get_local $i))
+        (call $sieve_prime (i32.const 131600)) 
+        (if (i32.ne (call $pop) (i32.const 0))
+        (block
+          (call $drop (i32.const -1))
+          (call $push (get_local $i))))
+        (set_local $i (i32.add (i32.const 1) (get_local $i)))
+        (br_if $endLoop3 (i32.ge_s (get_local $i) (get_local $end)))
+        (br $loop3))))
+  (!def_word "sieve_direct" "$sieve")
+    
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Data
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
