@@ -91,8 +91,8 @@ the [name section](https://github.com/WebAssembly/design/blob/master/BinaryEncod
 
 ### The Loader
 
-The loader is a small bit of JavaScript that uses the [WebAssembly JavaScript API](https://webassembly.github.io/spec/js-api/index.html) to dynamically load a compiled word (in the form of a WebAssembly module),
-and add it to the shared function table.
+The loader is a small bit of JavaScript that uses the [WebAssembly JavaScript API](https://webassembly.github.io/spec/js-api/index.html) to dynamically load a compiled word (in the form of a WebAssembly module), and ensuring that the shared function table is large enough for the module to
+register itself.
 
 ### The Shell
 
