@@ -83,6 +83,11 @@ As WebAssembly doesn't support unstructured jumps, control flow words (`IF/ELSE/
 However, since Forth only requires structured jumps, the compiler can easily be implemented 
 using the loop and branch instructions available in WebAssembly.
 
+Finally, the compiler adds minimal debug information about the compiled word in
+the [name section](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md#name-section), making it easier for doing some debugging in the browser.
+
+![Debugger view of a compiled word](https://el-tramo.be/blog/waforth/debugger.png "Debugger view of a compiled word")
+
 
 ### The Loader
 

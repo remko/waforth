@@ -298,12 +298,12 @@
   ;; 6.1.0460
   (func $semicolon (param i32)
     (local $bodySize i32)
+    (local $nameLength i32)
 
     (call $emitEnd)
 
-    (set_local $bodySize (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))) 
-    
     ;; Update code size
+    (set_local $bodySize (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))) 
     (i32.store 
       (i32.const !moduleHeaderCodeSizeBase)
       (call $leb128-4p
@@ -322,8 +322,46 @@
       (i32.const !moduleHeaderLocalCountBase)
       (call $leb128-4p (get_global $localsCount)))
 
+    ;; Write a name section
+    (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
+                                    (i32.const !lengthMask)))
+    (i32.store8 (get_global $cp) (i32.const 0))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                (i32.add (i32.const 13) (i32.mul (i32.const 2) 
+                                                   (get_local $nameLength))))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x04))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x6e))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (i32.const 0x61))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 5)) (i32.const 0x6d))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 6)) (i32.const 0x65))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 7)))
+
+    (i32.store8 (get_global $cp) (i32.const 0x00))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                (i32.add (i32.const 1) (get_local $nameLength)))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (get_local $nameLength)) 
+    (set_global $cp (i32.add (get_global $cp) (i32.const 3)))
+    (call $memcpy (get_global $cp)
+                  (i32.add (get_global $latest) (i32.const 5))
+                  (get_local $nameLength))
+    (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
+
+    (i32.store8 (get_global $cp) (i32.const 0x01))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                (i32.add (i32.const 3) (get_local $nameLength)))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x01))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x00))
+    (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (get_local $nameLength))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 5)))
+    (call $memcpy (get_global $cp)
+                  (i32.add (get_global $latest) (i32.const 5))
+                  (get_local $nameLength))
+    (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
+
     ;; Load the code and store the index
-    (call $shell_load (i32.const !moduleHeaderBase) (get_local $bodySize) (get_global $nextTableIndex))
+    (call $shell_load (i32.const !moduleHeaderBase) 
+                      (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))
+                      (get_global $nextTableIndex))
     (i32.store (call $body (get_global $latest)) (get_global $nextTableIndex))
     (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1)))
 

@@ -1,6 +1,6 @@
 ;; Template for defining 'word' modules
 ;; Used to 'reverse engineer' the binary code to emit from the compiler
-(module
+(module $quadruple
   (import "env" "table" (table 4 anyfunc))
   (import "env" "tableBase" (global $tableBase i32))
   (import "env" "memory" (memory 1))

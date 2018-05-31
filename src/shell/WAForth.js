@@ -60,12 +60,7 @@ class WAForth {
           if (index >= table.length) {
             table.grow(table.length); // Double size
           }
-          // console.log(
-          //   "Load",
-          //   index,
-          //   new Uint8Array(data),
-          //   arrayToBase64(data)
-          // );
+          // console.log("Load", index, new Uint8Array(data), arrayToBase64(data));
           var module = new WebAssembly.Module(data);
           new WebAssembly.Instance(module, {
             env: { table, tableBase: index, memory, tos: -1 }

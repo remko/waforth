@@ -1012,6 +1012,10 @@ describe("WAForth", () => {
       expect(stack[1]).to.eql(4);
       expect(stack[2]).to.eql(5);
     });
+
+    it("should compile a name with an illegal WASM character", () => {
+      run(': F" 3 0 DO 2 LOOP ;');
+    });
   });
 
   describe("VARIABLE", () => {
