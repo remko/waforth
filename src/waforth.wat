@@ -399,7 +399,7 @@
                 (i32.add (i32.const 1) (get_local $nameLength)))
     (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (get_local $nameLength)) 
     (set_global $cp (i32.add (get_global $cp) (i32.const 3)))
-    (call $memcpy (get_global $cp)
+    (call $memmove (get_global $cp)
                   (i32.add (get_global $latest) (i32.const 5))
                   (get_local $nameLength))
     (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
@@ -411,7 +411,7 @@
     (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x00))
     (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (get_local $nameLength))
     (set_global $cp (i32.add (get_global $cp) (i32.const 5)))
-    (call $memcpy (get_global $cp)
+    (call $memmove (get_global $cp)
                   (i32.add (get_global $latest) (i32.const 5))
                   (get_local $nameLength))
     (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
@@ -612,7 +612,7 @@
     (i32.store8 (get_global $here) (tee_local $length (i32.load (i32.const !wordBase))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
 
-    (call $memcpy (get_global $here) (i32.const (!+ !wordBase 4)) (get_local $length))
+    (call $memmove (get_global $here) (i32.const (!+ !wordBase 4)) (get_local $length))
 
     (set_global $here (i32.add (get_global $here) (get_local $length)))
 
@@ -848,6 +848,15 @@
                           (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
   (!def_word "MOD" "$MOD")
+
+  ;; 6.1.1900
+  (func $MOVE (param i32)
+    (local $bbbtos i32)
+    (call $memmove (i32.load (i32.sub (get_global $tos) (i32.const 8)))
+                   (i32.load (tee_local $bbbtos (i32.sub (get_global $tos) (i32.const 12))))
+                   (i32.load (i32.sub (get_global $tos) (i32.const 4))))
+    (set_global $tos (get_local $bbbtos)))
+  (!def_word "MOVE" "$MOVE")
 
   ;; 6.1.1910
   (func $negate (param i32)
@@ -1534,16 +1543,29 @@ EOF
         (i32.load (i32.add (get_global $latest) (i32.const 4)))
         (i32.const !fHidden))))
 
-  (func $memcpy (param $dst i32) (param $src i32) (param $n i32)
+  (func $memmove (param $dst i32) (param $src i32) (param $n i32)
     (local $end i32)
-    (set_local $end (i32.add (get_local $src) (get_local $n)))
-    (block $endLoop
-     (loop $loop
-       (br_if $endLoop (i32.eq (get_local $src) (get_local $end)))
-       (i32.store (get_local $dst) (i32.load (get_local $src)))
-       (set_local $src (i32.add (get_local $src) (i32.const 1)))
-       (set_local $dst (i32.add (get_local $dst) (i32.const 1)))
-       (br $loop))))
+    (if (i32.gt_u (get_local $dst) (get_local $src))
+      (then
+        (set_local $end (get_local $src))
+        (set_local $src (i32.sub (i32.add (get_local $src) (get_local $n)) (i32.const 1)))
+        (set_local $dst (i32.sub (i32.add (get_local $dst) (get_local $n)) (i32.const 1)))
+        (block $endLoop
+        (loop $loop
+          (br_if $endLoop (i32.lt_u (get_local $src) (get_local $end)))
+          (i32.store8 (get_local $dst) (i32.load8_u (get_local $src)))
+          (set_local $src (i32.sub (get_local $src) (i32.const 1)))
+          (set_local $dst (i32.sub (get_local $dst) (i32.const 1)))
+          (br $loop))))
+      (else
+        (set_local $end (i32.add (get_local $src) (get_local $n)))
+        (block $endLoop
+          (loop $loop
+            (br_if $endLoop (i32.eq (get_local $src) (get_local $end)))
+            (i32.store8 (get_local $dst) (i32.load8_u (get_local $src)))
+            (set_local $src (i32.add (get_local $src) (i32.const 1)))
+            (set_local $dst (i32.add (get_local $dst) (i32.const 1)))
+            (br $loop))))))
 
    (func $memset (param $dst i32) (param $c i32) (param $n i32)
     (local $end i32)

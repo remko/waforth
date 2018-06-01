@@ -961,6 +961,63 @@ describe("WAForth", () => {
     });
   });
 
+  describe.only("MOVE", () => {
+    it("should work with non-overlapping regions", () => {
+      const ptr = here();
+      memory8[ptr] = 1;
+      memory8[ptr + 1] = 2;
+      memory8[ptr + 2] = 3;
+      memory8[ptr + 3] = 4;
+      memory8[ptr + 4] = 5;
+      run("HERE HERE 10 + 4 MOVE 5");
+
+      expect(stack[0]).to.eql(5);
+      expect(memory8[ptr + 10]).to.eql(1);
+      expect(memory8[ptr + 11]).to.eql(2);
+      expect(memory8[ptr + 12]).to.eql(3);
+      expect(memory8[ptr + 13]).to.eql(4);
+      expect(memory8[ptr + 14]).to.eql(0);
+    });
+
+    it("should work with begin-overlapping regions", () => {
+      const ptr = here();
+      memory8[ptr] = 1;
+      memory8[ptr + 1] = 2;
+      memory8[ptr + 2] = 3;
+      memory8[ptr + 3] = 4;
+      memory8[ptr + 4] = 5;
+      run("HERE HERE 2 + 4 MOVE 5");
+
+      expect(stack[0]).to.eql(5);
+      expect(memory8[ptr + 0]).to.eql(1);
+      expect(memory8[ptr + 1]).to.eql(2);
+      expect(memory8[ptr + 2]).to.eql(1);
+      expect(memory8[ptr + 3]).to.eql(2);
+      expect(memory8[ptr + 4]).to.eql(3);
+      expect(memory8[ptr + 5]).to.eql(4);
+      expect(memory8[ptr + 6]).to.eql(0);
+    });
+
+    it("should work with end-overlapping regions", () => {
+      const ptr = here();
+      memory8[ptr + 10] = 1;
+      memory8[ptr + 11] = 2;
+      memory8[ptr + 12] = 3;
+      memory8[ptr + 13] = 4;
+      memory8[ptr + 14] = 5;
+      run("HERE 10 + DUP 2 - 4 MOVE 5");
+
+      expect(stack[0]).to.eql(5);
+      expect(memory8[ptr + 8]).to.eql(1);
+      expect(memory8[ptr + 9]).to.eql(2);
+      expect(memory8[ptr + 10]).to.eql(3);
+      expect(memory8[ptr + 11]).to.eql(4);
+      expect(memory8[ptr + 12]).to.eql(3);
+      expect(memory8[ptr + 13]).to.eql(4);
+      expect(memory8[ptr + 14]).to.eql(5);
+    });
+  });
+
   describe("RECURSE", () => {
     it("should recurse", () => {
       run(": FOO DUP 4 < IF DUP 1+ RECURSE ELSE 12 THEN 13 ;");
