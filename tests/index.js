@@ -306,6 +306,21 @@ describe("WAForth", () => {
     });
   });
 
+  describe("*/MOD", () => {
+    it("should work with small numbers", () => {
+      run("9 3 5 */MOD 7");
+      expect(stack[0]).to.eql(2);
+      expect(stack[1]).to.eql(5);
+      expect(stack[2]).to.eql(7);
+    });
+
+    it("should work with large numbers", () => {
+      run("268435455 1000 3333 */MOD");
+      expect(stack[0]).to.eql(1230);
+      expect(stack[1]).to.eql(80538690);
+    });
+  });
+
   describe("1+", () => {
     it("should work with positive numbers", () => {
       run("3");
@@ -796,7 +811,7 @@ describe("WAForth", () => {
       forth.read("DUP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131740);
+      expect(stack[0]).to.eql(131756);
       expect(stack[1]).to.eql(-1);
     });
 
@@ -812,7 +827,7 @@ describe("WAForth", () => {
       forth.read("+LOOP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131144);
+      expect(stack[0]).to.eql(131160);
       expect(stack[1]).to.eql(1);
     });
 
