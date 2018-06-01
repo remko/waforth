@@ -24,6 +24,7 @@
         (else (char-index (cdr cs) char (add1 pos)))))
 
 (define !baseBase #x100)
+(define !stateBase #x104)
 (define !wordBase #x200)
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
 ;; them synchronously
@@ -149,7 +150,6 @@
 
   (global $tos (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
-  (global $state (mut i32) (i32.const 0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -946,6 +946,11 @@
   (func $space (param i32) (call $bl (i32.const -1)) (call $emit (i32.const -1)))
   (!def_word "SPACE" "$space")
 
+  ;; 6.1.2250
+  (func $STATE (param i32)
+    (i32.store (get_global $tos) (i32.const !stateBase))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (!def_word "STATE" "$STATE")
 
   ;; 6.1.2260
   (func $swap (param i32)
@@ -1069,12 +1074,12 @@
 
   ;; 6.1.2500
   (func $left-bracket (param i32)
-    (set_global $state (i32.const 0)))
+    (i32.store (i32.const !stateBase) (i32.const 0)))
   (!def_word "[" "$left-bracket" !fImmediate)
 
   ;; 6.1.2540
   (func $right-bracket (param i32)
-    (set_global $state (i32.const 1)))
+    (i32.store (i32.const !stateBase) (i32.const 1)))
   (!def_word "]" "$right-bracket")
 
   ;; 6.2.0280
@@ -1266,7 +1271,7 @@ EOF
           (then ;; Not in the dictionary. Is it a number?
             (if (i32.eqz (call $number))
               (then ;; It's a number. Are we compiling?
-                (if (i32.ne (get_global $state) (i32.const 0))
+                (if (i32.ne (i32.load (i32.const !stateBase)) (i32.const 0))
                   (then
                     ;; We're compiling. Pop it off the stack and 
                     ;; add it to the compiled list
@@ -1279,7 +1284,7 @@ EOF
           (else ;; Found the word. 
             (set_local $body (call $body (get_local $findToken)))
             ;; Are we compiling?
-            (if (i32.eqz (get_global $state))
+            (if (i32.eqz (i32.load (i32.const !stateBase)))
               (then
                 ;; We're not compiling. Execute the word.
                 (call_indirect (type $word) 
@@ -1300,7 +1305,7 @@ EOF
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
-    (return (get_global $state)))
+    (return (i32.load (i32.const !stateBase))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
@@ -1517,7 +1522,9 @@ EOF
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (func $ensureCompiling
-    (if (i32.eqz (get_global $state)) (unreachable)))
+    (if (i32.eqz (i32.load (i32.const !stateBase)))
+      (then
+        (unreachable))))
 
   ;; Toggle the hidden flag
   (func $hidden
@@ -1698,6 +1705,7 @@ EOF
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
+  (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !moduleHeaderBase) !moduleHeader)
 
   (data (i32.const !preludeDataBase)  !preludeData)
