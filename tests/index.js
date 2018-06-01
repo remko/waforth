@@ -293,6 +293,19 @@ describe("WAForth", () => {
     });
   });
 
+  describe("*/", () => {
+    it("should work with small numbers", () => {
+      run("10 3 5 */ 5");
+      expect(stack[0]).to.eql(6);
+      expect(stack[1]).to.eql(5);
+    });
+
+    it("should work with large numbers", () => {
+      run("268435455 1000 5000 */");
+      expect(stack[0]).to.eql(53687091);
+    });
+  });
+
   describe("1+", () => {
     it("should work with positive numbers", () => {
       run("3");
@@ -783,7 +796,7 @@ describe("WAForth", () => {
       forth.read("DUP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131728);
+      expect(stack[0]).to.eql(131740);
       expect(stack[1]).to.eql(-1);
     });
 
@@ -799,7 +812,7 @@ describe("WAForth", () => {
       forth.read("+LOOP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131132);
+      expect(stack[0]).to.eql(131144);
       expect(stack[1]).to.eql(1);
     });
 
@@ -961,7 +974,7 @@ describe("WAForth", () => {
     });
   });
 
-  describe.only("MOVE", () => {
+  describe("MOVE", () => {
     it("should work with non-overlapping regions", () => {
       const ptr = here();
       memory8[ptr] = 1;

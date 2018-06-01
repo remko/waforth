@@ -181,6 +181,19 @@
     (set_global $tos (get_local $btos)))
   (!def_word "*" "$star")
 
+  ;; 6.1.0100
+  (func $*/ (param i32)
+    (local $bbtos i32)
+    (local $bbbtos i32)
+    (i32.store (tee_local $bbbtos (i32.sub (get_global $tos) (i32.const 12)))
+               (i32.wrap/i64
+                  (i64.div_s
+                      (i64.mul (i64.extend_s/i32 (i32.load (get_local $bbbtos)))
+                               (i64.extend_s/i32 (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8))))))
+                      (i64.extend_s/i32 (i32.load (i32.sub (get_global $tos) (i32.const 4)))))))
+    (set_global $tos (get_local $bbtos)))
+  (!def_word "*/" "$*/")
+
   ;; 6.1.0120
   (func $plus (param i32)
     (local $btos i32)
