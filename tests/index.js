@@ -583,6 +583,16 @@ describe("WAForth", () => {
     });
   });
 
+  describe("LEAVE", () => {
+    it("should leave", () => {
+      run(`: FOO 4 0 DO 3 LEAVE 6 LOOP 4 ;`);
+      run("FOO 5");
+      expect(stack[0]).to.eql(3);
+      expect(stack[1]).to.eql(4);
+      expect(stack[2]).to.eql(5);
+    });
+  });
+
   describe("+LOOP", () => {
     it("should increment a loop", () => {
       run(`: FOO 10 0 DO 3 2 +LOOP ;`);
@@ -671,6 +681,44 @@ describe("WAForth", () => {
     });
   });
 
+  describe("BEGIN / UNTIL", () => {
+    it("should work", () => {
+      run(`: FOO BEGIN DUP 2 * DUP 16 > UNTIL 7 ;`);
+      run("1 FOO 5");
+      expect(stack[0]).to.eql(1);
+      expect(stack[1]).to.eql(2);
+      expect(stack[2]).to.eql(4);
+      expect(stack[3]).to.eql(8);
+      expect(stack[4]).to.eql(16);
+      expect(stack[5]).to.eql(32);
+      expect(stack[6]).to.eql(7);
+      expect(stack[7]).to.eql(5);
+    });
+  });
+
+  describe("EXIT", () => {
+    it("should work", () => {
+      run(`: FOO IF 3 EXIT 4 THEN 5 ;`);
+      run("1 FOO 6");
+      expect(stack[0]).to.eql(3);
+      expect(stack[1]).to.eql(6);
+    });
+  });
+
+  describe("( / )", () => {
+    beforeEach(() => {
+      core.loadPrelude();
+    });
+
+    it("should work", () => {
+      run(": FOO ( bad -- x ) 7 ;");
+      run("1 FOO 5");
+      expect(stack[0]).to.eql(1);
+      expect(stack[1]).to.eql(7);
+      expect(stack[2]).to.eql(5);
+    });
+  });
+
   describe("CHAR", () => {
     it("should work with a single character", () => {
       run("CHAR A 5");
@@ -735,7 +783,7 @@ describe("WAForth", () => {
       forth.read("DUP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131524);
+      expect(stack[0]).to.eql(131728);
       expect(stack[1]).to.eql(-1);
     });
 
@@ -751,7 +799,7 @@ describe("WAForth", () => {
       forth.read("+LOOP");
       core.WORD();
       core.FIND();
-      expect(stack[0]).to.eql(131108);
+      expect(stack[0]).to.eql(131132);
       expect(stack[1]).to.eql(1);
     });
 
