@@ -47,6 +47,14 @@ describe("WAForth", () => {
     return getString(p + 4, memory[p / 4]);
   }
 
+  function loadString(s) {
+    run("HERE");
+    run(`${s.length} ,`);
+    for (let i = 0; i < s.length; ++i) {
+      run(`${s.charCodeAt(i)} C,`);
+    }
+  }
+
   // eslint-disable-next-line no-unused-vars
   function dumpWord(w) {
     let end = here();
@@ -808,40 +816,35 @@ describe("WAForth", () => {
 
   describe("FIND", () => {
     it("should find a word", () => {
-      forth.read("DUP");
-      core.WORD();
-      core.FIND();
+      loadString("DUP");
+      run("FIND");
       expect(stack[0]).to.eql(131756);
       expect(stack[1]).to.eql(-1);
     });
 
     it("should find a short word", () => {
-      forth.read("!");
-      core.WORD();
-      core.FIND();
+      loadString("!");
+      run("FIND");
       expect(stack[0]).to.eql(131072);
       expect(stack[1]).to.eql(-1);
     });
 
     it("should find an immediate word", () => {
-      forth.read("+LOOP");
-      core.WORD();
-      core.FIND();
+      loadString("+LOOP");
+      run("FIND");
       expect(stack[0]).to.eql(131160);
       expect(stack[1]).to.eql(1);
     });
 
     it("should not find an unexisting word", () => {
-      forth.read("BADWORD");
-      core.WORD();
-      core.FIND();
+      loadString("BADWORD");
+      run("FIND");
       expect(stack[1]).to.eql(0);
     });
 
     it("should not find a very long unexisting word", () => {
-      forth.read("VERYVERYVERYBADWORD");
-      core.WORD();
-      core.FIND();
+      loadString("VERYVERYVERYBADWORD");
+      run("FIND");
       expect(stack[1]).to.eql(0);
     });
   });
@@ -1079,10 +1082,8 @@ describe("WAForth", () => {
       run("CREATE FOOBAR");
       run("LATEST");
       run("CREATE BAM");
-
-      forth.read("FOOBAR");
-      core.WORD();
-      core.FIND();
+      loadString("FOOBAR");
+      run("FIND");
       expect(stack[1]).to.eql(stack[0]);
       expect(stack[2]).to.eql(-1);
     });
@@ -1103,10 +1104,8 @@ describe("WAForth", () => {
   describe("IMMEDIATE", () => {
     it("should make words immediate", () => {
       run("CREATE FOOBAR IMMEDIATE");
-      forth.read("FOOBAR");
-      core.WORD();
-      core.FIND();
-
+      loadString("FOOBAR");
+      run("FIND");
       expect(stack[1]).to.eql(1);
     });
   });

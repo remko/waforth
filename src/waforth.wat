@@ -26,6 +26,7 @@
 (define !baseBase #x100)
 (define !stateBase #x104)
 (define !wordBase #x200)
+(define !inputBufferBase #x300)
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
 ;; them synchronously
 (define !moduleHeaderBase #x1000) 
@@ -140,7 +141,6 @@
 
 (module
   (import "shell" "emit" (func $shell_emit (param i32)))
-  (import "shell" "key" (func $shell_key (result i32)))
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
@@ -150,6 +150,8 @@
 
   (global $tos (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
+  (global $inputBufferEnd (mut i32) (i32.const !inputBufferBase))
+  (global $inputBufferP (mut i32) (i32.const !inputBufferBase))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -719,7 +721,7 @@
   (!def_word "FILL" "$FILL")
 
   ;; 6.1.1550
-  (func $find (export "FIND") (param i32)
+  (func $find (param i32)
     (local $entryP i32)
     (local $entryNameP i32)
     (local $entryLF i32)
@@ -811,8 +813,8 @@
 
   ;; 6.1.1750
   (func $key (param i32)
-   (i32.store (get_global $tos) (call $readChar))
-   (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+    (i32.store (get_global $tos) (call $readChar))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "KEY" "$key")
 
   ;; 6.1.1760
@@ -1299,6 +1301,9 @@ EOF
     (local $findResult i32)
     (local $findToken i32)
     (local $body i32)
+    (local $error i32)
+    (set_local $error (i32.const 0))
+    (set_global $inputBufferP (i32.const !inputBufferBase))
     (block $endLoop
       (loop $loop
         (call $word (i32.const -1))
@@ -1317,9 +1322,9 @@ EOF
                     (call $compilePushConst (call $pop)))))
                   ;; We're not compiling. Leave the number on the stack.
               (else ;; It's not a number.
-                (drop (call $pop))
                 ;; TODO: Give error
-                (return (i32.const -1)))))
+                (set_local $error (i32.const -1))
+                (br $endLoop))))
           (else ;; Found the word. 
             (set_local $body (call $body (get_local $findToken)))
             ;; Are we compiling?
@@ -1344,7 +1349,13 @@ EOF
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
-    (return (i32.load (i32.const !stateBase))))
+    (set_global $inputBufferEnd (i32.const !inputBufferBase))
+    (if (i32.eqz (get_local $error))
+      (then
+        (return (i32.load (i32.const !stateBase))))
+      (else
+        (return (get_local $error))))
+    (unreachable))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
@@ -1672,7 +1683,13 @@ EOF
     (local $n i32)
     (if (i32.eq (get_global $preludeDataP) (get_global $preludeDataEnd))
       (then 
-        (return (call $shell_key)))
+        (if (i32.ge_u (get_global $inputBufferP) (get_global $inputBufferEnd))
+          (then
+            (return (i32.const -1)))
+          (else
+            (set_local $n (i32.load8_s (get_global $inputBufferP)))
+            (set_global $inputBufferP (i32.add (get_global $inputBufferP) (i32.const 1)))
+            (return (get_local $n)))))
       (else
         (set_local $n (i32.load8_s (get_global $preludeDataP)))
         (set_global $preludeDataP (i32.add (get_global $preludeDataP) (i32.const 1)))
@@ -1783,6 +1800,10 @@ EOF
         (call $shell_emit (i32.const 114))))
     (call $shell_emit (i32.const 10))
     (get_local $result))
+
+  (func (export "read") (param $char i32)
+    (i32.store8 (get_global $inputBufferEnd) (get_local $char))
+    (set_global $inputBufferEnd (i32.add (get_global $inputBufferEnd) (i32.const 1))))
 
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
