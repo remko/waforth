@@ -1,6 +1,7 @@
 import WAForth from "../src/shell/WAForth";
 import { mocha } from "mocha";
 import { expect } from "chai";
+import sieve from "../src/shell/sieve";
 mocha.setup("bdd");
 
 describe("WAForth", () => {
@@ -1227,29 +1228,20 @@ describe("WAForth", () => {
   });
 
   describe("system", () => {
-    it.skip("should run sieve", () => {
-      run(`
-: prime? HERE + C@ 0= ;
-: composite! HERE + 1 SWAP C! ;
+    beforeEach(() => {
+      core.loadPrelude();
+    });
 
-: sieve
-  HERE OVER ERASE
-  2
-  BEGIN
-    2DUP DUP * >
-  WHILE
-    DUP prime? IF
-      2DUP DUP * DO
-        I composite!
-      DUP +LOOP
-    THEN
-    1+
-  REPEAT
-  DROP
-  ." Primes: " 2 DO I prime? IF I . THEN LOOP 
-;`);
-      run("10 sieve");
-      expect(output).to.eql("");
+    it("should run sieve", () => {
+      run(sieve);
+      run("100 sieve");
+      expect(output.trim()).to.eql("97");
+    });
+
+    it("should run direct sieve", () => {
+      run(sieve);
+      run("100 sieve_direct");
+      expect(stack[0]).to.eql(97);
     });
   });
 });
