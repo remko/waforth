@@ -1172,6 +1172,16 @@
     (set_global $tos (get_local $bbtos)))
   (!def_word "ERASE" "$erase")
 
+  ;; 6.2.2030
+  (func $PICK (param i32)
+    (local $btos i32)
+    (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
+               (i32.load (i32.sub (get_global $tos) 
+                                  (i32.shl (i32.add (i32.load (get_local $btos))
+                                                    (i32.const 2))
+                                           (i32.const 2))))))
+  (!def_word "PICK" "$PICK")
+
   (func $dspFetch (param i32)
     (i32.store
      (get_global $tos)
@@ -1190,9 +1200,38 @@
 
   ;; High-level words
   (!prelude #<<EOF
+    : '\n' 10 ;
+    : 'A' [ CHAR A ] LITERAL ;
+    : '0' [ CHAR 0 ] LITERAL ;
+    : '(' [ CHAR ( ] LITERAL ;
+    : ')' [ CHAR ) ] LITERAL ;
+
+    : ( 
+      1
+      BEGIN
+        KEY
+        DUP '(' = IF
+          DROP
+          1+
+        ELSE
+          ')' = IF 1- THEN
+        THEN
+      DUP 0= UNTIL
+      DROP
+    ; IMMEDIATE
+    
 
     \ 6.1.1170 
     : DECIMAL 10 BASE ! ;
+
+    \ 6.2.1660
+    : HEX ( -- ) 16 BASE ! ;
+
+    \ 6.2.1930
+    : NIP ( x y -- y ) SWAP DROP ;
+
+    \ 6.2.2300
+    : TUCK ( x y -- y x y ) SWAP OVER ;
 
     \ 6.1.0897
     : CHAR+ 1+ ;
@@ -1214,26 +1253,6 @@
 
     : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
 
-    : '\n' 10 ;
-    : 'A' [ CHAR A ] LITERAL ;
-    : '0' [ CHAR 0 ] LITERAL ;
-    : '(' [ CHAR ( ] LITERAL ;
-    : ')' [ CHAR ) ] LITERAL ;
-
-    : ( 
-      1
-      BEGIN
-        KEY
-        DUP '(' = IF
-          DROP
-          1+
-        ELSE
-          ')' = IF 1- THEN
-        THEN
-      DUP 0= UNTIL
-      DROP
-    ; IMMEDIATE
-    
     \ 6.1.0990
     : CR '\n' EMIT ;
 
