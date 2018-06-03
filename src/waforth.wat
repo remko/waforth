@@ -1182,6 +1182,11 @@
                                            (i32.const 2))))))
   (!def_word "PICK" "$PICK")
 
+  ;; 6.1.2395
+  (func $UNUSED (param i32)
+    (call $push (i32.shr_s (i32.sub (i32.const !memorySize) (get_global $here)) (i32.const 2))))
+  (!def_word "UNUSED" "$UNUSED")
+
   ;; 6.1.2250
   (func $SOURCE-ID (param i32)
     (call $push (get_global $sourceID)))
