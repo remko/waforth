@@ -815,11 +815,7 @@
 
   ;; 6.1.1710
   (func $immediate (param i32)
-    (i32.store 
-      (i32.add (get_global $latest) (i32.const 4))
-      (i32.or 
-        (i32.load (i32.add (get_global $latest) (i32.const 4)))
-        (i32.const !fImmediate))))
+    (call $setFlag (i32.const !fImmediate)))
   (!def_word "IMMEDIATE" "$immediate")
 
   ;; 6.1.1720
@@ -1404,25 +1400,18 @@ EOF
                 (br $endLoop))))
           (else ;; Found the word. 
             (set_local $body (call $body (get_local $findToken)))
-            ;; Are we compiling?
-            (if (i32.eqz (i32.load (i32.const !stateBase)))
+            ;; Are we compiling or is it immediate?
+            (if (i32.or (i32.eqz (i32.load (i32.const !stateBase)))
+                        (i32.eq (get_local $findResult) (i32.const 1)))
               (then
-                ;; We're not compiling. Execute the word.
-                (call_indirect (type $word) 
-                               (i32.add (get_local $body) (i32.const 4))
-                               (i32.load (get_local $body))))
+                (call $push (get_local $findToken))
+                (call $EXECUTE (i32.const -1)))
               (else
-                ;; We're compiling. Is it immediate?
-                (if (i32.eq (get_local $findResult) (i32.const 1))
-                  (then ;; Immediate. Execute the word.
-                    (call_indirect (type $word) 
-                                   (i32.add (get_local $body) (i32.const 4))
-                                   (i32.load (get_local $body))))
-                  (else ;; Not Immediate. Compile the word call.
-                    (call $emitConst (i32.add (get_local $body) (i32.const 4)))
-                    (call $emitICall 
-                          (i32.const 1) 
-                          (i32.load (get_local $body)))))))))
+                ;; We're compiling a non-immediate
+                (call $emitConst (i32.add (get_local $body) (i32.const 4)))
+                (call $emitICall 
+                      (i32.const 1) 
+                      (i32.load (get_local $body)))))))
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
@@ -1646,6 +1635,13 @@ EOF
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Helper functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (func $setFlag (param $v i32)
+    (i32.store 
+      (i32.add (get_global $latest) (i32.const 4))
+      (i32.or 
+        (i32.load (i32.add (get_global $latest) (i32.const 4)))
+        (get_local $v))))
 
   (func $ensureCompiling
     (if (i32.eqz (i32.load (i32.const !stateBase)))
