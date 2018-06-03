@@ -142,6 +142,7 @@
 
 (module
   (import "shell" "emit" (func $shell_emit (param i32)))
+  (import "shell" "key" (func $shell_key (result i32)))
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
@@ -1315,6 +1316,8 @@ EOF
     (local $body i32)
     (local $error i32)
     (set_local $error (i32.const 0))
+    (set_global $tors (i32.const !returnStackBase))
+    (call $readInput)
     (i32.store (i32.const !inBase) (i32.const 0))
     (block $endLoop
       (loop $loop
@@ -1361,7 +1364,6 @@ EOF
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
-    (set_global $inputBufferSize (i32.const 0))
     (if (i32.eqz (get_local $error))
       (then
         (return (i32.load (i32.const !stateBase))))
@@ -1710,6 +1712,17 @@ EOF
         (return (get_local $n))))
     (unreachable))
 
+  (func $readInput
+    (local $char i32)
+    (set_global $inputBufferSize (i32.const 0))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.eq (tee_local $char (call $shell_key)) (i32.const -1)))
+        (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
+                   (get_local $char))
+        (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1)))
+        (br $loop))))
+
   (func $loadPrelude (export "loadPrelude")
     (set_global $preludeDataP (i32.const !preludeDataBase))
     (if (i32.ne (call $interpret) (i32.const 0))
@@ -1815,11 +1828,6 @@ EOF
         (call $shell_emit (i32.const 114))))
     (call $shell_emit (i32.const 10))
     (get_local $result))
-
-  (func (export "read") (param $char i32)
-    (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
-                (get_local $char))
-    (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1))))
 
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))

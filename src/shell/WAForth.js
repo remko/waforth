@@ -17,6 +17,7 @@ class WAForth {
     const { skipPrelude } = options;
     let table;
     let memory;
+    const buffer = (this.buffer = []);
 
     return WebAssembly.instantiate(wasmModule, {
       shell: {
@@ -25,6 +26,13 @@ class WAForth {
         ////////////////////////////////////////
 
         emit: this.onEmit,
+
+        key: () => {
+          if (buffer.length === 0) {
+            return -1;
+          }
+          return buffer.pop();
+        },
 
         debug: d => {
           console.log("DEBUG: ", d);
@@ -71,8 +79,8 @@ class WAForth {
 
   read(s) {
     const data = new TextEncoder().encode(s);
-    for (let i = 0; i < data.length; ++i) {
-      this.core.exports.read(data[i]);
+    for (let i = data.length - 1; i >= 0; --i) {
+      this.buffer.push(data[i]);
     }
   }
 

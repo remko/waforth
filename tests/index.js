@@ -769,56 +769,56 @@ describe("WAForth", () => {
     });
   });
 
-  describe("word", () => {
-    it("should read a word", () => {
-      forth.read(" FOO BAR BAZ ");
-      core.WORD();
-      expect(getCountedString(stack[0])).to.eql("FOO");
-    });
-
-    it("should read two words", () => {
-      forth.read(" FOO BAR BAZ ");
-      core.WORD();
-      core.WORD();
-      expect(getCountedString(stack[1])).to.eql("BAR");
-    });
-
-    it("should skip comments", () => {
-      forth.read("  \\ FOO BAZ\n BART BAZ");
-      core.WORD();
-      expect(getCountedString(stack[0])).to.eql("BART");
-    });
-
-    it("should stop at end of buffer while parsing word", () => {
-      forth.read("FOO");
-      core.WORD();
-      expect(getCountedString(stack[0])).to.eql("FOO");
-    });
-
-    it("should stop at end of buffer while parsing comments", () => {
-      forth.read(" \\FOO");
-      core.WORD();
-      expect(getCountedString()).to.eql("");
-    });
-
-    it("should stop when parsing empty line", () => {
-      forth.read(" ");
-      core.WORD();
-      expect(getCountedString()).to.eql("");
-    });
-
-    it("should stop when parsing nothing", () => {
-      forth.read("");
-      core.WORD();
-      expect(getCountedString()).to.eql("");
-    });
-  });
+  // describe("word", () => {
+  //   it("should read a word", () => {
+  //     forth.read(" FOO BAR BAZ ");
+  //     core.WORD();
+  //     expect(getCountedString(stack[0])).to.eql("FOO");
+  //   });
+  //
+  //   it("should read two words", () => {
+  //     forth.read(" FOO BAR BAZ ");
+  //     core.WORD();
+  //     core.WORD();
+  //     expect(getCountedString(stack[1])).to.eql("BAR");
+  //   });
+  //
+  //   it("should skip comments", () => {
+  //     forth.read("  \\ FOO BAZ\n BART BAZ");
+  //     core.WORD();
+  //     expect(getCountedString(stack[0])).to.eql("BART");
+  //   });
+  //
+  //   it("should stop at end of buffer while parsing word", () => {
+  //     forth.read("FOO");
+  //     core.WORD();
+  //     expect(getCountedString(stack[0])).to.eql("FOO");
+  //   });
+  //
+  //   it("should stop at end of buffer while parsing comments", () => {
+  //     forth.read(" \\FOO");
+  //     core.WORD();
+  //     expect(getCountedString()).to.eql("");
+  //   });
+  //
+  //   it("should stop when parsing empty line", () => {
+  //     forth.read(" ");
+  //     core.WORD();
+  //     expect(getCountedString()).to.eql("");
+  //   });
+  //
+  //   it("should stop when parsing nothing", () => {
+  //     forth.read("");
+  //     core.WORD();
+  //     expect(getCountedString()).to.eql("");
+  //   });
+  // });
 
   describe("FIND", () => {
     it("should find a word", () => {
       loadString("DUP");
       run("FIND");
-      expect(stack[0]).to.eql(131756);
+      expect(stack[0]).to.eql(131768);
       expect(stack[1]).to.eql(-1);
     });
 
