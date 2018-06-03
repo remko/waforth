@@ -170,6 +170,15 @@ describe("WAForth", () => {
       expect(core.interpret()).to.eql(0);
       expect(stack[0]).to.eql(-123);
     });
+    it("should interpret a hex", () => {
+      forth.read("16 BASE ! DF");
+      expect(core.interpret()).to.eql(0);
+      expect(stack[0]).to.eql(223);
+    });
+    it("should not interpret hex in decimal mode", () => {
+      forth.read("DF");
+      expect(core.interpret()).to.eql(-1);
+    });
 
     it("should fail on half a word", () => {
       forth.read("23FOO");

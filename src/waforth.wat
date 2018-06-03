@@ -1307,6 +1307,7 @@ EOF
     (local $base i32)
     (local $p i32)
     (local $end i32)
+    (local $n i32)
 
     (if (i32.eqz (tee_local $length (i32.load (i32.const !wordBase))))
       (return (i32.const -1)))
@@ -1320,19 +1321,29 @@ EOF
                 (i32.const 0x2d #| '-' |#))
       (then 
         (set_local $sign (i32.const -1))
-        (set_local $char (i32.const 48)))
-      (else (set_local $sign (i32.const 1))))
+        (set_local $char (i32.const 48 #| '0' |# )))
+      (else 
+        (set_local $sign (i32.const 1))))
 
     ;; Read all characters
     (set_local $value (i32.const 0))
     (block $endLoop
       (loop $loop
-        (if (i32.or (i32.lt_s (get_local $char) (i32.const 48 #| '0' |# ))
-                    (i32.gt_s (get_local $char) (i32.const 57 #| '9' |# )))
-          (then (return (i32.const -1))))
+        (if (i32.lt_s (get_local $char) (i32.const 48 #| '0' |# ))
+          (return (i32.const -1)))
+
+        (if (i32.le_s (get_local $char) (i32.const 57 #| '9' |# ))
+          (then
+            (set_local $n (i32.sub (get_local $char) (i32.const 48))))
+          (else
+            (if (i32.lt_s (get_local $char) (i32.const 65 #| 'A' |# ))
+              (return (i32.const -1)))
+            (set_local $n (i32.sub (get_local $char) (i32.const 55)))
+            (if (i32.ge_s (get_local $n) (get_local $base))
+              (return (i32.const -1)))))
+
         (set_local $value (i32.add (i32.mul (get_local $value) (get_local $base))
-                                   (i32.sub (get_local $char)
-                                            (i32.const 48))))
+                                   (get_local $n)))
         (set_local $p (i32.add (get_local $p) (i32.const 1)))
         (br_if $endLoop (i32.eq (get_local $p) (get_local $end)))
         (set_local $char (i32.load8_s (get_local $p)))
