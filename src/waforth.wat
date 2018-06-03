@@ -25,6 +25,7 @@
 
 (define !baseBase #x100)
 (define !stateBase #x104)
+(define !inBase #x108)
 (define !wordBase #x200)
 (define !inputBufferBase #x300)
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
@@ -150,8 +151,7 @@
 
   (global $tos (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
-  (global $inputBufferEnd (mut i32) (i32.const !inputBufferBase))
-  (global $inputBufferP (mut i32) (i32.const !inputBufferBase))
+  (global $inputBufferSize (mut i32) (i32.const 0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -499,6 +499,12 @@
                (i32.add (call $body (i32.load (get_local $btos)))
                         (i32.const 4))))
   (!def_word ">BODY" "$>BODY")
+
+  ;; 6.1.0560
+  (func $>IN (param i32)
+    (i32.store (get_global $tos) (i32.const !inBase))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (!def_word ">IN" "$>IN")
 
   ;; 6.1.0580
   (func $>R (param i32)
@@ -1303,7 +1309,7 @@ EOF
     (local $body i32)
     (local $error i32)
     (set_local $error (i32.const 0))
-    (set_global $inputBufferP (i32.const !inputBufferBase))
+    (i32.store (i32.const !inBase) (i32.const 0))
     (block $endLoop
       (loop $loop
         (call $word (i32.const -1))
@@ -1349,7 +1355,7 @@ EOF
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
-    (set_global $inputBufferEnd (i32.const !inputBufferBase))
+    (set_global $inputBufferSize (i32.const 0))
     (if (i32.eqz (get_local $error))
       (then
         (return (i32.load (i32.const !stateBase))))
@@ -1681,14 +1687,16 @@ EOF
 
   (func $readChar (result i32)
     (local $n i32)
+    (local $in i32)
     (if (i32.eq (get_global $preludeDataP) (get_global $preludeDataEnd))
       (then 
-        (if (i32.ge_u (get_global $inputBufferP) (get_global $inputBufferEnd))
+        (if (i32.ge_u (tee_local $in (i32.load (i32.const !inBase)))
+                      (get_global $inputBufferSize))
           (then
             (return (i32.const -1)))
           (else
-            (set_local $n (i32.load8_s (get_global $inputBufferP)))
-            (set_global $inputBufferP (i32.add (get_global $inputBufferP) (i32.const 1)))
+            (set_local $n (i32.load8_s (i32.add (i32.const !inputBufferBase) (get_local $in))))
+            (i32.store (i32.const !inBase) (i32.add (get_local $in) (i32.const 1)))
             (return (get_local $n)))))
       (else
         (set_local $n (i32.load8_s (get_global $preludeDataP)))
@@ -1775,6 +1783,7 @@ EOF
 
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
   (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
+  (data (i32.const !inBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !moduleHeaderBase) !moduleHeader)
 
   (data (i32.const !preludeDataBase)  !preludeData)
@@ -1802,8 +1811,9 @@ EOF
     (get_local $result))
 
   (func (export "read") (param $char i32)
-    (i32.store8 (get_global $inputBufferEnd) (get_local $char))
-    (set_global $inputBufferEnd (i32.add (get_global $inputBufferEnd) (i32.const 1))))
+    (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
+                (get_local $char))
+    (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1))))
 
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
