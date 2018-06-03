@@ -1182,6 +1182,11 @@
                                            (i32.const 2))))))
   (!def_word "PICK" "$PICK")
 
+  ;; 6.1.2250
+  (func $SOURCE-ID (param i32)
+    (call $push (get_global $sourceID)))
+  (!def_word "SOURCE-ID" "$SOURCE-ID")
+
   (func $dspFetch (param i32)
     (i32.store
      (get_global $tos)
