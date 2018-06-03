@@ -989,6 +989,12 @@
     (call $ALIGN (i32.const -1)))
   (!def_word "S\"" "$Sq" !fImmediate)
 
+  ;; 6.1.2216
+  (func $SOURCE (param i32) 
+    (call $push (i32.const !inputBufferBase))
+    (call $push (get_global $inputBufferSize)))
+  (!def_word "SOURCE" "$SOURCE")
+
   ;; 6.1.2220
   (func $space (param i32) (call $bl (i32.const -1)) (call $emit (i32.const -1)))
   (!def_word "SPACE" "$space")
