@@ -153,6 +153,7 @@
   (global $tos (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
   (global $inputBufferSize (mut i32) (i32.const 0))
+  (global $sourceID (mut i32) (i32.const 0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -712,6 +713,22 @@
     (call_indirect (type $word) (i32.add (get_local $body) (i32.const 4))
                                 (i32.load (get_local $body))))
   (!def_word "EXECUTE" "$EXECUTE")
+
+  ;; 6.1.1360
+  (func $EVALUATE (param i32)
+    (local $bbtos i32)
+    (local $inputSize i32)
+    (set_global $sourceID (i32.const -1))
+    (call $memmove (i32.const !inputBufferBase)
+                   (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8))))
+                   (tee_local $inputSize (i32.load (i32.sub (get_global $tos) (i32.const 4)))))
+    (set_global $inputBufferSize (get_local $inputSize))
+    (i32.store (i32.const !inBase) (i32.const 0))
+    (set_global $tos (get_local $bbtos))
+    (if (i32.ne (call $interpret) (i32.const 0))
+      ;; TODO: ABORT
+      (unreachable)))
+  (!def_word "EVALUATE" "$EVALUATE")
 
   ;; 6.1.1380
   (func $EXIT (param i32)
@@ -1317,7 +1334,6 @@ EOF
     (local $error i32)
     (set_local $error (i32.const 0))
     (set_global $tors (i32.const !returnStackBase))
-    (call $readInput)
     (i32.store (i32.const !inBase) (i32.const 0))
     (block $endLoop
       (loop $loop
@@ -1696,20 +1712,20 @@ EOF
   (func $readChar (result i32)
     (local $n i32)
     (local $in i32)
-    (if (i32.eq (get_global $preludeDataP) (get_global $preludeDataEnd))
-      (then 
-        (if (i32.ge_u (tee_local $in (i32.load (i32.const !inBase)))
-                      (get_global $inputBufferSize))
-          (then
-            (return (i32.const -1)))
-          (else
-            (set_local $n (i32.load8_s (i32.add (i32.const !inputBufferBase) (get_local $in))))
-            (i32.store (i32.const !inBase) (i32.add (get_local $in) (i32.const 1)))
-            (return (get_local $n)))))
-      (else
-        (set_local $n (i32.load8_s (get_global $preludeDataP)))
-        (set_global $preludeDataP (i32.add (get_global $preludeDataP) (i32.const 1)))
-        (return (get_local $n))))
+    (loop $loop
+      (if (i32.ge_u (tee_local $in (i32.load (i32.const !inBase)))
+                    (get_global $inputBufferSize))
+        (then
+          (if (i32.eqz (get_global $sourceID))
+            (then
+              (return (i32.const -1)))
+            (else
+              (set_global $sourceID (i32.const 0))
+              (br $loop))))
+        (else
+          (set_local $n (i32.load8_s (i32.add (i32.const !inputBufferBase) (get_local $in))))
+          (i32.store (i32.const !inBase) (i32.add (get_local $in) (i32.const 1)))
+          (return (get_local $n)))))
     (unreachable))
 
   (func $readInput
@@ -1724,9 +1740,10 @@ EOF
         (br $loop))))
 
   (func $loadPrelude (export "loadPrelude")
-    (set_global $preludeDataP (i32.const !preludeDataBase))
-    (if (i32.ne (call $interpret) (i32.const 0))
-      (unreachable)))
+    (set_global $sourceID (i32.const -1))
+    (call $push (i32.const !preludeDataBase))
+    (call $push (i32.const (!+ (string-length !preludeData) 0)))
+    (call $EVALUATE (i32.const -1)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; A sieve with direct calls. Only here for benchmarking
@@ -1804,16 +1821,14 @@ EOF
   (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !inBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !moduleHeaderBase) !moduleHeader)
-
   (data (i32.const !preludeDataBase)  !preludeData)
-  (global $preludeDataEnd i32 (i32.const (!+ !preludeDataBase (string-length !preludeData))))
-  (global $preludeDataP (mut i32) (i32.const (!+ !preludeDataBase (string-length !preludeData))))
 
   (func (export "tos") (result i32)
     (get_global $tos))
 
   (func (export "interpret") (result i32)
     (local $result i32)
+    (call $readInput)
     (if (i32.ge_s (tee_local $result (call $interpret)) (i32.const 0))
       (then
         ;; Write ok
