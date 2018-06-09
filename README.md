@@ -59,9 +59,10 @@ macros for convenience.
 The interpreter runs a loop that processes commands, and switches to and from
 compiler mode. 
 
-Contrary to some other Forth systems, this system doesn't use a strict threading system
+Contrary to some other Forth systems, this system doesn't use direct threading 
 for executing code. WebAssembly doesn't allow unstructured jumps, let alone dynamic jumps.
-Instead, each word is implemented as a single WebAssembly function, and the system uses
+Instead, WAForth uses subroutine threading, where each word is implemented as a single 
+WebAssembly function, and the system uses
 calls and indirect calls (see below) to execute words.
 
 
