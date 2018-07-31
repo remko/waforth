@@ -1,5 +1,6 @@
 {
   "private": true,
+  "license": "MIT",
   "dependencies": {
     "immutability-helper": "^2.7.0",
     "jq-console": "^2.13.2",
