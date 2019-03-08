@@ -49,10 +49,10 @@
         "\u0060\u0000\u0001\u007F" ;; (func (result i32))
         "\u0060\u0001\u007f\u0001\u007F" ;; (func (param i32) (result i32))
 
-    "\u0002" "\u0028" ;; Import section
+    "\u0002" "\u002B" ;; Import section
       "\u0003" ;; #Entries
       "\u0003\u0065\u006E\u0076" "\u0005\u0074\u0061\u0062\u006C\u0065" ;; 'env' . 'table'
-        "\u0001" "\u0070" "\u0000" "\u0004" ;; table, anyfunc, flags, initial size
+        "\u0001" "\u0070" "\u0000" "\u00FB\u0000\u0000\u0000" ;; table, anyfunc, flags, initial size
       "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
         "\u0002" "\u0000" "\u0001" ;; memory
       "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
@@ -81,12 +81,14 @@
 (define !moduleHeaderBodySizeOffset (char-index (string->list !moduleHeader) #\u00FE 0))
 (define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
 (define !moduleHeaderTableIndexOffset (char-index (string->list !moduleHeader) #\u00FC 0))
+(define !moduleHeaderTableInitialSizeOffset (char-index (string->list !moduleHeader) #\u00FB 0))
 
 (define !moduleBodyBase (+ !moduleHeaderBase !moduleHeaderSize))
 (define !moduleHeaderCodeSizeBase (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
 (define !moduleHeaderBodySizeBase (+ !moduleHeaderBase !moduleHeaderBodySizeOffset))
 (define !moduleHeaderLocalCountBase (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
 (define !moduleHeaderTableIndexBase (+ !moduleHeaderBase !moduleHeaderTableIndexOffset))
+(define !moduleHeaderTableInitialSizeBase (+ !moduleHeaderBase !moduleHeaderTableInitialSizeOffset))
 
 
 (define !fNone #x0)
@@ -420,6 +422,10 @@
     (i32.store 
       (i32.const !moduleHeaderTableIndexBase)
       (call $leb128-4p (get_global $nextTableIndex)))
+    ;; Also store the initial table size to satisfy other tools (e.g. wasm-as)
+    (i32.store 
+      (i32.const !moduleHeaderTableInitialSizeBase)
+      (call $leb128-4p (i32.add (get_global $nextTableIndex) (i32.const 1))))
 
     ;; Write a name section
     (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
