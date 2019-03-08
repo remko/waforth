@@ -63,7 +63,7 @@ class WAForth {
           // console.log("Load", index, new Uint8Array(data), arrayToBase64(data));
           var module = new WebAssembly.Module(data);
           new WebAssembly.Instance(module, {
-            env: { table, tableBase: index, memory, tos: -1 }
+            env: { table, memory, tos: -1 }
           });
         }
       }

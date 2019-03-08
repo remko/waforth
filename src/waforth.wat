@@ -49,12 +49,10 @@
         "\u0060\u0000\u0001\u007F" ;; (func (result i32))
         "\u0060\u0001\u007f\u0001\u007F" ;; (func (param i32) (result i32))
 
-    "\u0002" "\u0039" ;; Import section
-      "\u0004" ;; #Entries
+    "\u0002" "\u0028" ;; Import section
+      "\u0003" ;; #Entries
       "\u0003\u0065\u006E\u0076" "\u0005\u0074\u0061\u0062\u006C\u0065" ;; 'env' . 'table'
         "\u0001" "\u0070" "\u0000" "\u0004" ;; table, anyfunc, flags, initial size
-      "\u0003\u0065\u006E\u0076" "\u0009\u0074\u0061\u0062\u006C\u0065\u0042\u0061\u0073\u0065" ;; 'env' . 'tableBase
-        "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
       "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
         "\u0002" "\u0000" "\u0001" ;; memory
       "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
@@ -65,10 +63,10 @@
       "\u0001" ;; #Entries
       "\u0000" ;; Type 0
       
-    "\u0009" "\u0007" ;; Element section
+    "\u0009" "\u000a" ;; Element section
       "\u0001" ;; #Entries
       "\u0000" ;; Table 0
-      "\u0023\u0000\u000B" ;; get_global 0, end
+      "\u0041\u00FC\u0000\u0000\u0000\u000B" ;; i32.const ..., end
       "\u0001" ;; #elements
         "\u0000" ;; function 0
 
@@ -82,11 +80,13 @@
 (define !moduleHeaderCodeSizeOffset (char-index (string->list !moduleHeader) #\u00FF 0))
 (define !moduleHeaderBodySizeOffset (char-index (string->list !moduleHeader) #\u00FE 0))
 (define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
+(define !moduleHeaderTableIndexOffset (char-index (string->list !moduleHeader) #\u00FC 0))
 
 (define !moduleBodyBase (+ !moduleHeaderBase !moduleHeaderSize))
 (define !moduleHeaderCodeSizeBase (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
 (define !moduleHeaderBodySizeBase (+ !moduleHeaderBase !moduleHeaderBodySizeOffset))
 (define !moduleHeaderLocalCountBase (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
+(define !moduleHeaderTableIndexBase (+ !moduleHeaderBase !moduleHeaderTableIndexOffset))
 
 
 (define !fNone #x0)
@@ -415,6 +415,11 @@
     (i32.store 
       (i32.const !moduleHeaderLocalCountBase)
       (call $leb128-4p (i32.add (get_global $lastLocal) (i32.const 1))))
+
+    ;; Update table offset
+    (i32.store 
+      (i32.const !moduleHeaderTableIndexBase)
+      (call $leb128-4p (get_global $nextTableIndex)))
 
     ;; Write a name section
     (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
