@@ -815,7 +815,7 @@
   (!def_word "FIND" "$find")
 
   ;; 6.1.1650
-  (func $here
+  (func $here (export "HERE")
    (i32.store (get_global $tos) (get_global $here))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "HERE" "$here")
@@ -1906,6 +1906,11 @@ EOF
         (call $shell_emit (i32.const 114))))
     (call $shell_emit (i32.const 10))
     (get_local $result))
+
+  ;; Used for experiments
+  (func (export "set_state") (param $latest i32) (param $here i32)
+    (set_global $latest (get_local $latest))
+    (set_global $here (get_local $here)))
 
   (table (export "table") !tableStartIndex anyfunc)
   (global $latest (mut i32) (i32.const !dictionaryLatest))
