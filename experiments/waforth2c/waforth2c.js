@@ -94,15 +94,7 @@ WebAssembly.instantiate(coreWasm, {
     fs.mkdirSync("waforth.gen");
   }
 
-  const make = [
-    "waforth.gen/waforth_module_%.c waforth.gen/waforth_module_%.h: waforth.gen/waforth_module_%.wasm",
-    "\twasm2c $< -o $(subst .wasm,.c,$<)",
-    "",
-    "waforth.gen/waforth_module_%.wasm: waforth.gen/waforth_module_%.in.wasm",
-    "\twasm-dis $< -o $(subst .wasm,.wat,$@)",
-    "\twasm-as $(subst .wasm,.wat,$@) -o $@",
-    ""
-  ];
+  const make = [];
   const include = [
     "#pragma once",
     "",
@@ -125,40 +117,20 @@ WebAssembly.instantiate(coreWasm, {
       (savedHere - dictionaryStart) +
       ");"
   ];
-  const objects = ["waforth.gen/waforth_modules.o"];
-  const moduleHeaders = [];
-  const moduleSources = [];
+  const moduleFiles = [];
   for (let i = 0; i < modules.length; ++i) {
     fs.writeFileSync(
       "waforth.gen/waforth_module_" + i + ".in.wasm",
       modules[i]
     );
-    make.push(
-      "waforth.gen/waforth_module_" +
-        i +
-        ".o: waforth.gen/waforth_module_" +
-        i +
-        ".c"
-    );
-    make.push(
-      "\t$(CC) $(CPPFLAGS) $(CFLAGS) -DWASM_RT_MODULE_PREFIX=waforth_module_" +
-        i +
-        "_ -c $< -o $@"
-    );
-    make.push("");
     include.push("#define WASM_RT_MODULE_PREFIX waforth_module_" + i + "_");
     include.push('#include "waforth.gen/waforth_module_' + i + '.h"');
     include.push("#undef WASM_RT_MODULE_PREFIX");
     init.push("waforth_module_" + i + "_init();");
-    objects.push("waforth.gen/waforth_module_" + i + ".o");
-    moduleHeaders.push("waforth.gen/waforth_module_" + i + ".h");
-    moduleSources.push("waforth.gen/waforth_module_" + i + ".c");
+    moduleFiles.push("waforth.gen/waforth_module_" + i + ".wasm");
   }
   include.push("#define WASM_RT_MODULE_PREFIX");
-  make.push("WAFORTH_MODULE_OBJECTS = " + objects.join(" ") + "\n");
-  make.push("WAFORTH_MODULE_HEADERS = " + moduleHeaders.join(" ") + "\n");
-  make.push("WAFORTH_MODULE_SOURCES = " + moduleSources.join(" ") + "\n");
-  make.push("waforth.gen/waforth_modules.h: $(WAFORTH_MODULE_HEADERS)");
+  make.push("WAFORTH_MODULES = " + moduleFiles.join(" ") + "\n");
   init.push("}");
   fs.writeFileSync("waforth.gen/Makefile.inc", make.join("\n") + "\n");
   fs.writeFileSync("waforth.gen/waforth_modules.h", include.join("\n") + "\n");
