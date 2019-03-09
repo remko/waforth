@@ -22,8 +22,10 @@ function config({ entry, outputDir, title, template, mode }) {
           use: {
             loader: "babel-loader",
             options: {
-              presets: ["es2015"],
-              plugins: [["transform-react-jsx", { pragma: "h" }]]
+              presets: [
+                ["@babel/preset-env", { modules: false }],
+                "@babel/preset-react"
+              ]
             }
           }
         },
