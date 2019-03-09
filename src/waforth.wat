@@ -1894,9 +1894,11 @@ EOF
   ;; - name (n bytes): Name characters. End is 4-byte aligned.
   ;; - code pointer (4 bytes): Index into the function 
   ;;   table of code to execute
-  ;; - code argument (4 bytes) (optional): In case the function in the
-  ;;   code pointer takes an argument (i.e. 'flags' has fData set).
+  ;; - code argument (4 bytes) (optional): In case the function is
+  ;;   pushDataValue (used by CONST), contains data used by the function.
   ;; - data (m bytes)
+  ;;
+  ;; Execution tokens are addresses of dictionary entries
 
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
   (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
