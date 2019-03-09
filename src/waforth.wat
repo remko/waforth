@@ -1880,6 +1880,17 @@ EOF
   ;; Data
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+  ;; The dictionary has entries of the following form:
+  ;; - prev (4 bytes): Pointer to start of previous entry
+  ;; - flags|name-length (1 byte): Length of the entry name, ORed with
+  ;;   flags in the top 3 bits.
+  ;; - name (n bytes): Name characters. End is 4-byte aligned.
+  ;; - code pointer (4 bytes): Index into the function 
+  ;;   table of code to execute
+  ;; - code argument (4 bytes) (optional): In case the function in the
+  ;;   code pointer takes an argument (i.e. 'flags' has fData set).
+  ;; - data (m bytes)
+
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
   (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !inBase) "\u0000\u0000\u0000\u0000")
