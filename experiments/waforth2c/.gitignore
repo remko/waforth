@@ -1,0 +1,4 @@
+waforth.gen
+*.o
+waforth_core.*
+main
