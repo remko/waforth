@@ -2,7 +2,6 @@
 ;; Used to 'reverse engineer' the binary code to emit from the compiler
 (module $quadruple
   (import "env" "table" (table 4 anyfunc))
-  (import "env" "tableBase" (global $tableBase i32))
   (import "env" "memory" (memory 1))
   (import "env" "tos" (global $tos i32))
 
@@ -51,4 +50,4 @@
     
     (call $word (get_local $n)))
 
-  (elem (get_global $tableBase) $word))
+  (elem (i32.const 44) $word))
