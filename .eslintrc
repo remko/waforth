@@ -9,3 +9,6 @@ globals:
   require: true
 rules:
   no-console: 0
+settings:
+  react: 
+    version: "16.0"

@@ -44,9 +44,9 @@ describe("WAForth", () => {
     return name.join("");
   }
 
-  function getCountedString(p) {
-    return getString(p + 4, memory[p / 4]);
-  }
+  // function getCountedString(p) {
+  //   return getString(p + 4, memory[p / 4]);
+  // }
 
   function loadString(s) {
     run("HERE");
