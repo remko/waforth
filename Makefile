@@ -3,8 +3,8 @@ WAT2WASM_FLAGS=
 ifeq ($(DEBUG),1)
 WAT2WASM_FLAGS=--debug-names
 endif
-WEBPACK=npx webpack
-WEBPACK_DEV_SERVER=npx webpack-dev-server
+WEBPACK=yarn exec webpack
+WEBPACK_DEV_SERVER=yarn exec webpack-dev-server
 
 WASM_FILES=src/waforth.wasm tests/benchmarks/sieve-vanilla.wasm
 
