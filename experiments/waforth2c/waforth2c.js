@@ -119,10 +119,7 @@ WebAssembly.instantiate(coreWasm, {
   ];
   const moduleFiles = [];
   for (let i = 0; i < modules.length; ++i) {
-    fs.writeFileSync(
-      "waforth.gen/waforth_module_" + i + ".in.wasm",
-      modules[i]
-    );
+    fs.writeFileSync("waforth.gen/waforth_module_" + i + ".wasm", modules[i]);
     include.push("#define WASM_RT_MODULE_PREFIX waforth_module_" + i + "_");
     include.push('#include "waforth.gen/waforth_module_' + i + '.h"');
     include.push("#undef WASM_RT_MODULE_PREFIX");

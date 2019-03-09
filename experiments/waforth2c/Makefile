@@ -38,10 +38,6 @@ waforth_core.o: waforth_core.c
 waforth.gen/waforth_module_%.c waforth.gen/waforth_module_%.h: waforth.gen/waforth_module_%.wasm
 	wasm2c $< -o $(subst .wasm,.c,$<)
 
-waforth.gen/waforth_module_%.wasm: waforth.gen/waforth_module_%.in.wasm
-	wasm-dis $< -o $(subst .wasm,.wat,$@)
-	wasm-as $(subst .wasm,.wat,$@) -o $@
-
 waforth.gen/waforth_module_%.o: waforth.gen/waforth_module_%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -DWASM_RT_MODULE_PREFIX=$(subst waforth.gen/,,$(subst .o,,$@))_ -c $< -o $@
 
