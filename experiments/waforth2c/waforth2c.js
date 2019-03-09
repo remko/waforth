@@ -113,12 +113,18 @@ WebAssembly.instantiate(coreWasm, {
     "#undef WASM_RT_MODULE_PREFIX"
   ];
   const init = [
+    "#include <memory.h>",
     '#include "waforth_modules.h"',
-    "void waforth_modules_init() {"
+    "static const u8 dictionary[] = { " +
+      Array.from(memory8.slice(dictionaryStart, savedHere)).join(", ") +
+      " };",
+    "void waforth_modules_init() {",
+    "memcpy(&Z_envZ_memory->data[" +
+      dictionaryStart +
+      "], dictionary, " +
+      (savedHere - dictionaryStart) +
+      ");"
   ];
-  for (let i = dictionaryStart; i < savedHere; ++i) {
-    init.push("Z_envZ_memory->data[" + i + "] = " + memory8[i] + ";\n");
-  }
   const objects = ["waforth.gen/waforth_modules.o"];
   const moduleHeaders = [];
   const moduleSources = [];

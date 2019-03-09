@@ -1,5 +1,6 @@
 CFLAGS=
 CPPFLAGS=-I. -Iwaforth.gen -Iwasm2c
+LINKFLAGS=-g
 
 .DEFAULT_GOAL := all
 
@@ -17,7 +18,7 @@ example:
 	./main
 	
 main: $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS)
+	$(CC) $(LINKFLAGS) -o $@ $(OBJECTS)
 
 clean:
 	-rm -rf $(OBJECTS) waforth_core.c waforth_core.h main $(WAFORTH_MODULE_HEADERS) $(WAFORTH_MODULE_SOURCES)
