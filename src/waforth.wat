@@ -385,6 +385,14 @@
   (func $colon
     (call $create)
     (call $hidden)
+
+    ;; Turn off (default) data flag
+    (i32.store 
+      (i32.add (get_global $latest) (i32.const 4))
+      (i32.xor 
+        (i32.load (i32.add (get_global $latest) (i32.const 4)))
+        (i32.const !fData)))
+
     (set_global $cp (i32.const !moduleBodyBase))
     (set_global $currentLocal (i32.const -1))
     (set_global $lastLocal (i32.const -1))
@@ -671,9 +679,11 @@
 
     (call $ALIGN)
 
-    ;; Leave space for the code pointer
+    (i32.store (get_global $here) (i32.const !pushDataAddressIndex))
+    (set_global $here (i32.add (get_global $here) (i32.const 4)))
     (i32.store (get_global $here) (i32.const 0))
-    (set_global $here (i32.add (get_global $here) (i32.const 4))))
+
+    (call $setFlag (i32.const !fData)))
   (!def_word "CREATE" "$create")
 
   ;; 6.1.1200
@@ -1091,9 +1101,6 @@
   ;; 6.1.2410
   (func $VARIABLE
     (call $create)
-    (i32.store (call $body (get_global $latest)) (i32.const !pushDataAddressIndex))
-    (i32.store (get_global $here) (i32.const 0))
-    (call $setFlag (i32.const !fData))
     (set_global $here (i32.add (get_global $here) (i32.const 4))))
   (!def_word "VARIABLE" "$VARIABLE")
 
