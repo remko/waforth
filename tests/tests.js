@@ -1213,7 +1213,12 @@ function loadTests(wasmModule) {
 
     // describe.only("DOES>", () => {
     //   it("should work", () => {
-    //     run(": ID CREATE 1 , DOES> @");
+    //     run(": ID CREATE 23 , DOES> @ ;");
+    //     run("CREATE boo");
+    //     run("boo boo 44");
+    //     expect(stack[0]).to.eql(23);
+    //     expect(stack[1]).to.eql(23);
+    //     expect(stack[2]).to.eql(44);
     //   });
     // });
 
