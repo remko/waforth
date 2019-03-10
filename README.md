@@ -41,7 +41,11 @@ To run the development server:
 
 ## Testing
 
-The tests are served from `/tests`.
+The tests are served from `/tests` by the development server.
+
+You can also run the tests in Node.JS by running
+
+    make check
 
 ## Design
 

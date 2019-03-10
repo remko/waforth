@@ -1,0 +1,14 @@
+# Doesn't work yet, because there is no 'wabt' package in Ubuntu yet
+# This will have to wait until disco.
+# TODO: Add racket.
+language: node_js
+node_js:
+  - "node"
+script:
+  - yarn build
+  - yarn test
+cache: yarn
+addons:
+  apt:
+    packages:
+      - wabt
