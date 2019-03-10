@@ -61,7 +61,7 @@
     
     "\u0003" "\u0002" ;; Function section
       "\u0001" ;; #Entries
-      "\u0000" ;; Type 0
+      "\u00FA" ;; Type 0
       
     "\u0009" "\u000a" ;; Element section
       "\u0001" ;; #Entries
@@ -82,6 +82,7 @@
 (define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
 (define !moduleHeaderTableIndexOffset (char-index (string->list !moduleHeader) #\u00FC 0))
 (define !moduleHeaderTableInitialSizeOffset (char-index (string->list !moduleHeader) #\u00FB 0))
+(define !moduleHeaderFunctionTypeOffset (char-index (string->list !moduleHeader) #\u00FA 0))
 
 (define !moduleBodyBase (+ !moduleHeaderBase !moduleHeaderSize))
 (define !moduleHeaderCodeSizeBase (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
@@ -89,6 +90,7 @@
 (define !moduleHeaderLocalCountBase (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
 (define !moduleHeaderTableIndexBase (+ !moduleHeaderBase !moduleHeaderTableIndexOffset))
 (define !moduleHeaderTableInitialSizeBase (+ !moduleHeaderBase !moduleHeaderTableInitialSizeOffset))
+(define !moduleHeaderFunctionTypeBase (+ !moduleHeaderBase !moduleHeaderFunctionTypeOffset))
 
 
 (define !fNone #x0)
@@ -103,7 +105,8 @@
 (define !typeIndex 3)
 (define !pushDataAddressIndex 4)
 (define !pushDataValueIndex 5)
-(define !tableStartIndex 6)
+(define !setLatestBodyIndex 6)
+(define !tableStartIndex 7)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -399,14 +402,27 @@
     ;; agnostic about whether it is compiling a word or a DOES>.
     (i32.store (call $body (get_global $latest)) (get_global $nextTableIndex))
 
-    (set_global $cp (i32.const !moduleBodyBase))
-    (set_global $currentLocal (i32.const -1))
-    (set_global $lastLocal (i32.const -1))
+    (call $startColon (i32.const 0))
     (call $right-bracket))
   (!def_word ":" "$colon")
 
   ;; 6.1.0460
   (func $semicolon
+    (call $endColon)
+    (call $hidden)
+    (call $left-bracket))
+  (!def_word ";" "$semicolon" !fImmediate)
+
+  ;; Initializes compilation.
+  ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
+  ;; or type 1 (1 param)
+  (func $startColon (param $params i32)
+    (i32.store8 (i32.const !moduleHeaderFunctionTypeBase) (get_local $params))
+    (set_global $cp (i32.const !moduleBodyBase))
+    (set_global $currentLocal (i32.add (i32.const -1) (get_local $params)))
+    (set_global $lastLocal (i32.add (i32.const -1) (get_local $params))))
+
+  (func $endColon
     (local $bodySize i32)
     (local $nameLength i32)
 
@@ -484,11 +500,7 @@
                       (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))
                       (get_global $nextTableIndex))
 
-    (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1)))
-
-    (call $hidden)
-    (call $left-bracket))
-  (!def_word ";" "$semicolon" !fImmediate)
+    (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1))))
 
   ;; 6.1.0480
   (func $less-than
@@ -710,8 +722,13 @@
   (!def_word "DO" "$do" !fImmediate)
 
   ;; 6.1.1250
-  ; (func $DOES>)
-  ; (!def_word "DOES>" "$DOES>")
+  (func $DOES>
+    (call $emitConst (i32.add (get_global $nextTableIndex) (i32.const 1)))
+    (call $emitICall (i32.const 1) (i32.const !setLatestBodyIndex))
+    (call $endColon)
+    (call $startColon (i32.const 1))
+    (call $compilePushLocal (i32.const 0)))
+  (!def_word "DOES>" "$DOES>" !fImmediate)
 
   ;; 6.1.1260
   (func $drop
@@ -1668,6 +1685,10 @@ EOF
   (func $pushDataValue (param $d i32)
     (call $push (i32.load (get_local $d))))
   (elem (i32.const !pushDataValueIndex) $pushDataValue)
+
+  (func $setLatestBody (param $v i32)
+    (i32.store (call $body (get_global $latest)) (get_local $v)))
+  (elem (i32.const !setLatestBodyIndex) $setLatestBody)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Helper functions

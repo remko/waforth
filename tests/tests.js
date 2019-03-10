@@ -2,12 +2,12 @@ import WAForth from "../src/shell/WAForth";
 import sieve from "../src/shell/sieve";
 import { expect } from "chai";
 
-function loadTests(wasmModule) {
+function loadTests(wasmModule, arrayToBase64) {
   describe("WAForth", () => {
     let forth, stack, output, core, memory, memory8;
 
     beforeEach(() => {
-      forth = new WAForth(wasmModule);
+      forth = new WAForth(wasmModule, arrayToBase64);
       forth.onEmit = c => {
         output = output + String.fromCharCode(c);
       };
@@ -827,7 +827,7 @@ function loadTests(wasmModule) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131768);
+        expect(stack[0]).to.eql(131784);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -1211,16 +1211,16 @@ function loadTests(wasmModule) {
       });
     });
 
-    // describe.only("DOES>", () => {
-    //   it("should work", () => {
-    //     run(": ID CREATE 23 , DOES> @ ;");
-    //     run("CREATE boo");
-    //     run("boo boo 44");
-    //     expect(stack[0]).to.eql(23);
-    //     expect(stack[1]).to.eql(23);
-    //     expect(stack[2]).to.eql(44);
-    //   });
-    // });
+    describe("DOES>", () => {
+      it("should work", () => {
+        run(": ID CREATE 23 , DOES> @ ;");
+        run("ID boo");
+        run("boo boo 44");
+        expect(stack[0]).to.eql(23);
+        expect(stack[1]).to.eql(23);
+        expect(stack[2]).to.eql(44);
+      });
+    });
 
     describe("UWIDTH", () => {
       beforeEach(() => {

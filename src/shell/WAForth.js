@@ -2,23 +2,23 @@ const isSafari =
   typeof navigator != "undefined" &&
   /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-// eslint-disable-next-line no-unused-vars
-function arrayToBase64(bytes) {
-  var binary = "";
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
-
 class WAForth {
-  constructor(wasmModule) {
+  constructor(wasmModule, arrayToBase64) {
     if (wasmModule == null) {
       this.wasmModule = require("../waforth.wasm");
     } else {
       this.wasmModule = wasmModule;
     }
+    this.arrayToBase64 =
+      arrayToBase64 ||
+      function arrayToBase64(bytes) {
+        var binary = "";
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+      };
   }
 
   start(options = {}) {
@@ -68,7 +68,7 @@ class WAForth {
           if (index >= table.length) {
             table.grow(table.length); // Double size
           }
-          // console.log("Load", index, new Uint8Array(data), arrayToBase64(data));
+          // console.log("Load", index, this.arrayToBase64(data));
           var module = new WebAssembly.Module(data);
           new WebAssembly.Instance(module, {
             env: { table, memory, tos: -1 }

@@ -1,4 +1,4 @@
-/* global __dirname */
+/* global __dirname, Buffer */
 const fs = require("fs");
 const path = require("path");
 require("@babel/register")({
@@ -6,4 +6,6 @@ require("@babel/register")({
 });
 const loadTests = require("./tests.js").default;
 const wasmModule = fs.readFileSync(path.join(__dirname, "../src/waforth.wasm"));
-loadTests(wasmModule);
+loadTests(wasmModule, s => {
+  return Buffer.from(s).toString("base64");
+});
