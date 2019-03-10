@@ -1108,6 +1108,13 @@ function loadTests(wasmModule) {
         run("HERE");
         expect(stack[0] % 4).to.eql(0);
       });
+
+      it("should assign default semantics to created words", () => {
+        run("CREATE DUP");
+        run("HERE");
+        run("DUP");
+        expect(stack[0]).to.eql(stack[1]);
+      });
     });
 
     describe("IMMEDIATE", () => {
