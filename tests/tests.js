@@ -827,7 +827,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131784);
+        expect(stack[0]).to.eql(131764);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -1186,6 +1186,10 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("CONSTANT", () => {
+      beforeEach(() => {
+        core.loadPrelude();
+      });
+
       it("should work", () => {
         run("12 CONSTANT FOO");
         run("FOO 5");
@@ -1195,6 +1199,10 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("VALUE", () => {
+      beforeEach(() => {
+        core.loadPrelude();
+      });
+
       it("should store a value", () => {
         run("12 VALUE FOO");
         run("FOO 5");

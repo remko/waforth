@@ -104,9 +104,8 @@
 (define !popIndex 2)
 (define !typeIndex 3)
 (define !pushDataAddressIndex 4)
-(define !pushDataValueIndex 5)
-(define !setLatestBodyIndex 6)
-(define !tableStartIndex 7)
+(define !setLatestBodyIndex 5)
+(define !tableStartIndex 6)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -661,15 +660,6 @@
                (i32.load8_u (i32.const (!+ !wordBase 4)))))
   (!def_word "CHAR" "$CHAR")
 
-  ;; 6.1.0950
-  (func $CONSTANT
-    (call $create)
-    (i32.store (call $body (get_global $latest)) (i32.const !pushDataValueIndex))
-    (i32.store (get_global $here) (call $pop))
-    (call $setFlag (i32.const !fData))
-    (set_global $here (i32.add (get_global $here) (i32.const 4))))
-  (!def_word "CONSTANT" "$CONSTANT")
-
   ;; 6.1.0980
   (func $COUNT
     (local $btos i32)
@@ -1121,9 +1111,6 @@
     (call $compileUntil))
   (!def_word "UNTIL" "$UNTIL" !fImmediate)
 
-  ;; 6.2.2405
-  (!def_word "VALUE" "$CONSTANT")
-
   ;; 6.1.2410
   (func $VARIABLE
     (call $create)
@@ -1279,6 +1266,9 @@
       DROP
     ; IMMEDIATE
     
+    
+    \ 6.1.0950
+    : CONSTANT CREATE , DOES> @ ;
 
     \ 6.1.1170 
     : DECIMAL 10 BASE ! ;
@@ -1358,6 +1348,9 @@
 
     \ 6.1.0180
     : . 0 .R SPACE ;
+
+    \ 6.2.2405
+    : VALUE CONSTANT ;
 EOF
 )
 
@@ -1682,10 +1675,6 @@ EOF
     (call $push (get_local $d)))
   (elem (i32.const !pushDataAddressIndex) $pushDataAddress)
 
-  (func $pushDataValue (param $d i32)
-    (call $push (i32.load (get_local $d))))
-  (elem (i32.const !pushDataValueIndex) $pushDataValue)
-
   (func $setLatestBody (param $v i32)
     (i32.store (call $body (get_global $latest)) (get_local $v)))
   (elem (i32.const !setLatestBodyIndex) $setLatestBody)
@@ -1924,8 +1913,6 @@ EOF
   ;; - name (n bytes): Name characters. End is 4-byte aligned.
   ;; - code pointer (4 bytes): Index into the function 
   ;;   table of code to execute
-  ;; - code argument (4 bytes) (optional): In case the function is
-  ;;   pushDataValue (used by CONST), contains data used by the function.
   ;; - data (m bytes)
   ;;
   ;; Execution tokens are addresses of dictionary entries
