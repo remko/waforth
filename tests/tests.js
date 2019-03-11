@@ -1264,6 +1264,23 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("[']", () => {
+      beforeEach(() => {
+        core.loadPrelude();
+      });
+
+      it("should work", () => {
+        run(': HELLO ." Hello " ;');
+        run(': GOODBYE ." Goodbye " ;');
+        run("VARIABLE 'aloha ' HELLO 'aloha !");
+        run(": ALOHA 'aloha @ EXECUTE ;");
+        run(": GOING ['] GOODBYE 'aloha ! ;");
+        run("GOING");
+        run("ALOHA");
+        expect(output.trim()).to.eql("Goodbye");
+      });
+    });
+
     describe("system", () => {
       beforeEach(() => {
         core.loadPrelude();
