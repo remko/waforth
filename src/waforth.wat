@@ -851,9 +851,9 @@
   (!def_word "FIND" "$find")
 
   ;; 6.1.1650
-  (func $here (export "HERE")
-   (i32.store (get_global $tos) (get_global $here))
-   (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (func $here
+    (i32.store (get_global $tos) (get_global $here))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "HERE" "$here")
 
   ;; 6.1.1680
