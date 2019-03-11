@@ -751,12 +751,16 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("( / )", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should work", () => {
         run(": FOO ( bad -- x ) 7 ;");
+        run("1 FOO 5");
+        expect(stack[0]).to.eql(1);
+        expect(stack[1]).to.eql(7);
+        expect(stack[2]).to.eql(5);
+      });
+
+      it("should ignore nesting", () => {
+        run(": FOO ( ( bad -- x ) 7 ;");
         run("1 FOO 5");
         expect(stack[0]).to.eql(1);
         expect(stack[1]).to.eql(7);
@@ -847,7 +851,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131764);
+        expect(stack[0]).to.eql(131776);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -861,7 +865,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stack[0]).to.eql(131160);
+        expect(stack[0]).to.eql(131172);
         expect(stack[1]).to.eql(1);
       });
 
@@ -886,14 +890,14 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
-    describe("KEY", () => {
-      it("should read a key", () => {
-        run("KEY F");
-        run("5");
-        expect(stack[0]).to.eql(70);
-        expect(stack[1]).to.eql(5);
-      });
-    });
+    // describe("KEY", () => {
+    //   it("should read a key", () => {
+    //     run("KEY F");
+    //     run("5");
+    //     expect(stack[0]).to.eql(70);
+    //     expect(stack[1]).to.eql(5);
+    //   });
+    // });
 
     describe("LITERAL", () => {
       it("should put a literal on the stack", () => {

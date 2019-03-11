@@ -181,6 +181,16 @@
     (drop (call $pop)))
   (!def_word "'" "$tick")
 
+  ;; 6.1.0080
+  (func $paren
+    (local $c i32)
+    (block $endLoop
+      (loop $loop
+        (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0)) (then (unreachable)))
+        (br_if $endLoop (i32.eq (get_local $c) (i32.const 41)))
+        (br $loop))))
+  (!def_word "(" "$paren" !fImmediate)
+
   ;; 6.1.0090
   (func $star
     (local $btos i32)
@@ -877,10 +887,10 @@
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
-  (func $key
-    (i32.store (get_global $tos) (call $readChar))
-    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
-  (!def_word "KEY" "$key")
+;;   (func $key
+;;     (i32.store (get_global $tos) (call $readChar))
+;;     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+;;   (!def_word "KEY" "$key")
 
   ;; 6.1.1760
   (func $LEAVE
@@ -1275,21 +1285,6 @@
     : '(' [ CHAR ( ] LITERAL ;
     : ')' [ CHAR ) ] LITERAL ;
 
-    : ( 
-      1
-      BEGIN
-        KEY
-        DUP '(' = IF
-          DROP
-          1+
-        ELSE
-          ')' = IF 1- THEN
-        THEN
-      DUP 0= UNTIL
-      DROP
-    ; IMMEDIATE
-    
-    
     \ 6.1.0950
     : CONSTANT CREATE , DOES> @ ;
 
