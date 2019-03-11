@@ -1201,6 +1201,12 @@
     (call $compilePushConst (call $pop)))
   (!def_word "[']" "$bracket-tick" !fImmediate)
 
+  ;; 6.1.2520
+  (func $bracket-char
+    (call $CHAR)
+    (call $compilePushConst (call $pop)))
+  (!def_word "[CHAR]" "$bracket-char" !fImmediate)
+
   ;; 6.1.2540
   (func $right-bracket
     (i32.store (i32.const !stateBase) (i32.const 1)))

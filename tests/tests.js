@@ -778,6 +778,26 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("[CHAR]", () => {
+      it("should work with a single character", () => {
+        run(": FOO [CHAR] A 5 ;");
+        run("4 FOO 6");
+        expect(stack[0]).to.eql(4);
+        expect(stack[1]).to.eql(65);
+        expect(stack[2]).to.eql(5);
+        expect(stack[3]).to.eql(6);
+      });
+
+      it("should work with multiple characters", () => {
+        run(": FOO [CHAR] ABC 5 ;");
+        run("4 FOO 6");
+        expect(stack[0]).to.eql(4);
+        expect(stack[1]).to.eql(65);
+        expect(stack[2]).to.eql(5);
+        expect(stack[3]).to.eql(6);
+      });
+    });
+
     // describe("word", () => {
     //   it("should read a word", () => {
     //     forth.read(" FOO BAR BAZ ");
