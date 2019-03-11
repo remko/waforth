@@ -979,6 +979,17 @@
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "OVER" "$over")
 
+  ;; 6.1.2033
+  (func $POSTPONE
+    (local $findToken i32)
+    (call $word)
+    (if (i32.eqz (i32.load (i32.const !wordBase))) (then (unreachable)))
+    (call $find)
+    (if (i32.eqz (call $pop)) (unreachable))
+    (set_local $findToken (call $pop))
+    (call $compileCall (get_local $findToken)))
+  (!def_word "POSTPONE" "$POSTPONE" !fImmediate)
+
   ;; 6.1.2060
   (func $R>
     (set_global $tors (i32.sub (get_global $tors) (i32.const 4)))
@@ -1418,7 +1429,6 @@ EOF
   (func $interpret (result i32)
     (local $findResult i32)
     (local $findToken i32)
-    (local $body i32)
     (local $error i32)
     (set_local $error (i32.const 0))
     (set_global $tors (i32.const !returnStackBase))
@@ -1445,7 +1455,6 @@ EOF
                 (set_local $error (i32.const -1))
                 (br $endLoop))))
           (else ;; Found the word. 
-            (set_local $body (call $body (get_local $findToken)))
             ;; Are we compiling or is it immediate?
             (if (i32.or (i32.eqz (i32.load (i32.const !stateBase)))
                         (i32.eq (get_local $findResult) (i32.const 1)))
@@ -1454,17 +1463,7 @@ EOF
                 (call $EXECUTE))
               (else
                 ;; We're compiling a non-immediate
-                (if (i32.and (i32.load (i32.add (get_local $findToken) (i32.const 4)))
-                             (i32.const !fData))
-                  (then
-                    (call $emitConst (i32.add (get_local $body) (i32.const 4)))
-                    (call $emitICall 
-                          (i32.const 1) 
-                          (i32.load (get_local $body))))
-                  (else
-                    (call $emitICall 
-                          (i32.const 0) 
-                          (i32.load (get_local $body)))))))))
+                (call $compileCall (get_local $findToken))))))
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
@@ -1575,6 +1574,22 @@ EOF
 
   (func $compilePop
     (call $emitICall (i32.const 2) (i32.const !popIndex)))
+
+
+  (func $compileCall (param $findToken i32)
+    (local $body i32)
+    (set_local $body (call $body (get_local $findToken)))
+    (if (i32.and (i32.load (i32.add (get_local $findToken) (i32.const 4)))
+                (i32.const !fData))
+      (then
+        (call $emitConst (i32.add (get_local $body) (i32.const 4)))
+        (call $emitICall 
+              (i32.const 1) 
+              (i32.load (get_local $body))))
+      (else
+        (call $emitICall 
+              (i32.const 0) 
+            (i32.load (get_local $body))))))
 
   (func $emitICall (param $type i32) (param $n i32)
     (call $emitConst (get_local $n))

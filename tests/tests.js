@@ -1128,7 +1128,7 @@ function loadTests(wasmModule, arrayToBase64) {
 
       it("should make immediate words", () => {
         run(': FOOBAR ." Hello World" ; IMMEDIATE');
-        run(': FOO FOOBAR ." Out There" ; IMMEDIATE');
+        run(': FOO FOOBAR ." Out There" ;');
         expect(output).to.eql("Hello World");
       });
     });
@@ -1170,6 +1170,17 @@ function loadTests(wasmModule, arrayToBase64) {
 
       it("should compile a name with an illegal WASM character", () => {
         run(': F" 3 0 DO 2 LOOP ;');
+      });
+    });
+
+    describe("POSTPONE", () => {
+      it("should make immediate words", () => {
+        run(': FOOBAR ." Hello World" ; IMMEDIATE');
+        run(': FOO POSTPONE FOOBAR ." !!" ;');
+        expect(output).to.eql("");
+        run("FOO 5");
+        expect(stack[0]).to.eql(5);
+        expect(output).to.eql("Hello World!!");
       });
     });
 
