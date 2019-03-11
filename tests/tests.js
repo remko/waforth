@@ -1118,11 +1118,18 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("IMMEDIATE", () => {
-      it("should make words immediate", () => {
-        run("CREATE FOOBAR IMMEDIATE");
-        loadString("FOOBAR");
-        run("FIND");
-        expect(stack[1]).to.eql(1);
+      it("should make executable words", () => {
+        run(': FOOBAR ." Hello World" ; IMMEDIATE');
+        expect(output).to.eql("");
+        run("FOOBAR 5");
+        expect(stack[0]).to.eql(5);
+        expect(output).to.eql("Hello World");
+      });
+
+      it("should make immediate words", () => {
+        run(': FOOBAR ." Hello World" ; IMMEDIATE');
+        run(': FOO FOOBAR ." Out There" ; IMMEDIATE');
+        expect(output).to.eql("Hello World");
       });
     });
 
