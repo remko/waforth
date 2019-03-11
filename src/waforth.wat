@@ -1871,7 +1871,7 @@ EOF
     (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
     (call $swap)
     (call $c-store))
-;
+
   (func $sieve
     (local $i i32)
     (local $end i32)
