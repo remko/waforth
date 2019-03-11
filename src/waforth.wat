@@ -1279,12 +1279,6 @@
 
   ;; High-level words
   (!prelude #<<EOF
-    : '\n' 10 ;
-    : 'A' [ CHAR A ] LITERAL ;
-    : '0' [ CHAR 0 ] LITERAL ;
-    : '(' [ CHAR ( ] LITERAL ;
-    : ')' [ CHAR ) ] LITERAL ;
-
     \ 6.1.0950
     : CONSTANT CREATE , DOES> @ ;
 
@@ -1327,7 +1321,7 @@
     : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
 
     \ 6.1.0990
-    : CR '\n' EMIT ;
+    : CR 10 EMIT ;
 
     \ 6.1.2230
     : SPACES BEGIN DUP 0> WHILE SPACE 1- REPEAT DROP ;
