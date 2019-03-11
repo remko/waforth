@@ -6,3 +6,4 @@ dist/
 *.wasm.hex
 *.tmp
 *.bin
+*.assembled.wat
