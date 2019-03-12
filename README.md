@@ -11,12 +11,11 @@ support JIT
 yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
 and the I/O primitives to read and write a character.
 
-The implementation was influenced by
+Parts of the implementation were influenced by
 [jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary), and I
-shamelessly stole the Forth implementation of some of its high-level words.
+shamelessly stole the Forth code of some of its high-level words.
 
-WAForth is still just an experiment, and doesn't implement all the ANS standard
-words yet. 
+WAForth is still in an experimental stage.
 
 ## Install Dependencies
 
