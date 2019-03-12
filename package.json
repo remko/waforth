@@ -29,6 +29,7 @@
   "scripts": {
     "build": "webpack --mode=production",
     "test": "mocha tests/index-node.js",
+    "test-watch": "mocha --watch tests/index-node.js",
     "lint": "eslint .",
     "dev-server":
       "webpack-dev-server --open --openPage waforth --content-base public"

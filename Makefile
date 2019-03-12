@@ -40,5 +40,8 @@ clean:
 check: $(WASM_FILES)
 	yarn -s test
 
+check-watch: $(WASM_FILES)
+	yarn -s test-watch
+
 lint:
 	yarn -s lint
