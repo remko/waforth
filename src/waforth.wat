@@ -585,6 +585,12 @@
                (i32.load (i32.load (get_local $btos)))))
   (!def_word "@" "$@")
 
+  ;; 6.1.0670 ABORT 
+  (func $ABORT
+    (set_global $tos (i32.const !stackBase))
+    (call $QUIT))
+  (!def_word "ABORT" "$ABORT")
+
   ;; 6.1.0690
   (func $ABS
     (local $btos i32)
@@ -1011,6 +1017,13 @@
     (set_local $findToken (call $pop))
     (call $compileCall (get_local $findToken)))
   (!def_word "POSTPONE" "$POSTPONE" !fImmediate)
+
+  ;; 6.1.2050
+  (func $QUIT
+    (set_global $tors (i32.const !returnStackBase))
+    (set_global $sourceID (i32.const 0))
+    (unreachable))
+  (!def_word "QUIT" "$QUIT")
 
   ;; 6.1.2060
   (func $R>

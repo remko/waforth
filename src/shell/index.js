@@ -28,7 +28,11 @@ function prompt() {
     $el.html($el.html().replace(/\n$/, ""));
 
     forth.run(input);
-    jqconsole.Write(outputBuffer.join(""), "jqconsole-output");
+    let output = outputBuffer.join("");
+    if (output.length === 0) {
+      output = "\n";
+    }
+    jqconsole.Write(output, "jqconsole-output");
     outputBuffer = [];
     prompt();
   });
