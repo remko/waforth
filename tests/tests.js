@@ -161,7 +161,8 @@ function loadTests(wasmModule, arrayToBase64) {
     describe("interpret", () => {
       it("should return an error when word is not found", () => {
         forth.read("BADWORD");
-        expect(core.interpret()).to.eql(-1);
+        expect(() => core.interpret()).to.throw();
+        expect(output.trim()).to.eql("undefined word");
       });
 
       it("should interpret a positive number", () => {
@@ -182,12 +183,14 @@ function loadTests(wasmModule, arrayToBase64) {
       });
       it("should not interpret hex in decimal mode", () => {
         forth.read("DF");
-        expect(core.interpret()).to.eql(-1);
+        expect(() => core.interpret()).to.throw();
+        expect(output.trim()).to.eql("undefined word");
       });
 
       it("should fail on half a word", () => {
         forth.read("23FOO");
-        expect(core.interpret()).to.eql(-1);
+        expect(() => core.interpret()).to.throw();
+        expect(output.trim()).to.eql("undefined word");
       });
     });
 
@@ -856,21 +859,21 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131824);
+        expect(stack[0]).to.eql(131956);
         expect(stack[1]).to.eql(-1);
       });
 
       it("should find a short word", () => {
         loadString("!");
         run("FIND");
-        expect(stack[0]).to.eql(131072);
+        expect(stack[0]).to.eql(131204);
         expect(stack[1]).to.eql(-1);
       });
 
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stack[0]).to.eql(131172);
+        expect(stack[0]).to.eql(131304);
         expect(stack[1]).to.eql(1);
       });
 

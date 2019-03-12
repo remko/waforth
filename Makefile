@@ -37,7 +37,7 @@ src/tools/quadruple.wasm.hex: src/tools/quadruple.wasm
 clean:
 	-rm -rf $(WASM_FILES) src/tools/quadruple.wasm src/tools/quadruple.wasm.hex src/waforth.wat.tmp dist
 
-check:
+check: $(WASM_FILES)
 	yarn -s test
 
 lint:
