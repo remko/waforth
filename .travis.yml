@@ -1,14 +1,21 @@
-# Doesn't work yet, because there is no 'wabt' package in Ubuntu yet
-# This will have to wait until disco.
-# TODO: Add racket.
+# - racket version in xenial is too old; need bionic?
+# - 'wabt' package is only in Ubuntu disco
 language: node_js
 node_js:
   - "node"
+dist: xenial
+install:
+  - wget https://github.com/WebAssembly/wabt/releases/download/1.0.10/wabt-1.0.10-linux.tar.gz -O wabt-1.0.10-linux.tar.gz 
+  - tar xzf wabt-1.0.10-linux.tar.gz 
+  - export PATH=$PWD/wabt-1.0.10:$PATH
+  - yarn
 script:
-  - yarn build
-  - yarn test
+  - make
+  - make check
 cache: yarn
 addons:
   apt:
     packages:
-      - wabt
+      - make
+      - racket
+      # - wabt
