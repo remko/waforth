@@ -13,7 +13,7 @@ all: $(WASM_FILES)
 dev-server: $(WASM_FILES)
 	yarn -s dev-server
 
-wasm: $(WASM_FILES) src/tools/quadruple.wasm.hex
+wasm: $(WASM_FILES) src/waforth.assembled.wat src/tools/quadruple.wasm.hex
 
 src/waforth.wasm: src/waforth.wat dist
 	racket -f $< > src/waforth.wat.tmp

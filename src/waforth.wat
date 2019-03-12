@@ -103,9 +103,10 @@
 (define !pushIndex 1)
 (define !popIndex 2)
 (define !typeIndex 3)
-(define !pushDataAddressIndex 4)
-(define !setLatestBodyIndex 5)
-(define !tableStartIndex 6)
+(define !abortIndex 4)
+(define !pushDataAddressIndex 5)
+(define !setLatestBodyIndex 6)
+(define !tableStartIndex 7)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -589,7 +590,16 @@
   (func $ABORT
     (set_global $tos (i32.const !stackBase))
     (call $QUIT))
-  (!def_word "ABORT" "$ABORT")
+  (!def_word "ABORT" "$ABORT" !fNone !abortIndex)
+
+  ;; 6.1.0680 ABORT"
+  (func $ABORT-quote
+    (call $compileIf)
+    (call $Sq)
+    (call $emitICall (i32.const 0) (i32.const !typeIndex))
+    (call $emitICall (i32.const 0) (i32.const !abortIndex))
+    (call $compileThen))
+  (!def_word "ABORT\"" "$ABORT-quote" !fImmediate)
 
   ;; 6.1.0690
   (func $ABS

@@ -76,10 +76,15 @@ function loadTests(wasmModule, arrayToBase64) {
       console.log("Entry:", p, previous, length, name, code, data, end);
     }
 
-    function run(s) {
+    function run(s, expectErrors = false) {
       const r = forth.run(s);
-      expect(r).to.not.be.below(0);
-      output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
+      if (expectErrors) {
+        expect(r).to.be.undefined;
+        output = output.substr(0, output.length);
+      } else {
+        expect(r).to.not.be.below(0);
+        output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
+      }
       return r;
     }
 
@@ -851,7 +856,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131792);
+        expect(stack[0]).to.eql(131824);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -1310,6 +1315,27 @@ function loadTests(wasmModule, arrayToBase64) {
         run("GOING");
         run("ALOHA");
         expect(output.trim()).to.eql("Goodbye");
+      });
+    });
+
+    describe('ABORT"', () => {
+      it("should not abort if check fails", () => {
+        run(': FOO 5 = ABORT" Error occurred" 6 ;');
+        run("1 2 FOO 7");
+        run("8");
+        expect(output.trim()).to.eql("");
+        expect(stack[0]).to.eql(1);
+        expect(stack[1]).to.eql(6);
+        expect(stack[2]).to.eql(7);
+        expect(stack[3]).to.eql(8);
+      });
+
+      it("should abort if check succeeds", () => {
+        run(': FOO 5 = ABORT" Error occurred" 6 ;');
+        run("1 5 FOO 7", true);
+        run("8");
+        expect(output.trim()).to.eql("Error occurred");
+        expect(stack[0]).to.eql(8);
       });
     });
 
