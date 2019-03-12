@@ -1178,6 +1178,19 @@
     (call $compileThen))
   (!def_word "THEN" "$then" !fImmediate)
 
+  ;; 6.1.2310 TYPE 
+  (func $TYPE
+    (local $p i32)
+    (local $end i32)
+    (set_local $end (i32.add (call $pop) (tee_local $p (call $pop))))
+    (block $endLoop
+     (loop $loop
+       (br_if $endLoop (i32.eq (get_local $p) (get_local $end)))
+       (call $shell_emit (i32.load8_u (get_local $p)))
+       (set_local $p (i32.add (get_local $p) (i32.const 1)))
+       (br $loop))))
+  (!def_word "TYPE" "$TYPE" !fNone !typeIndex)
+
   ;; 6.2.2295
   (func $TO
     (call $word)
@@ -1508,12 +1521,14 @@ EOF
     (call $shell_emit (i32.const 10))
     (call $ABORT))
 
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; Interprets the string in the input, until the end of string is reached.
-  ;; Returns 0 if processed, 1 if still compiling, -1 if a word was not found.
+  ;; Returns 0 if processed, 1 if still compiling, or traps if a word 
+  ;; was not found.
   (func $interpret (result i32)
     (local $findResult i32)
     (local $findToken i32)
@@ -1661,16 +1676,12 @@ EOF
     (local $body i32)
     (set_local $body (call $body (get_local $findToken)))
     (if (i32.and (i32.load (i32.add (get_local $findToken) (i32.const 4)))
-                (i32.const !fData))
+                 (i32.const !fData))
       (then
         (call $emitConst (i32.add (get_local $body) (i32.const 4)))
-        (call $emitICall 
-              (i32.const 1) 
-              (i32.load (get_local $body))))
+        (call $emitICall (i32.const 1) (i32.load (get_local $body))))
       (else
-        (call $emitICall 
-              (i32.const 0) 
-            (i32.load (get_local $body))))))
+        (call $emitICall (i32.const 0) (i32.load (get_local $body))))))
 
   (func $emitICall (param $type i32) (param $n i32)
     (call $emitConst (get_local $n))
@@ -1754,18 +1765,6 @@ EOF
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
     (i32.load (get_global $tos)))
   (elem (i32.const !popIndex) $pop)
-
-  (func $TYPE
-    (local $p i32)
-    (local $end i32)
-    (set_local $end (i32.add (call $pop) (tee_local $p (call $pop))))
-    (block $endLoop
-     (loop $loop
-       (br_if $endLoop (i32.eq (get_local $p) (get_local $end)))
-       (call $shell_emit (i32.load8_u (get_local $p)))
-       (set_local $p (i32.add (get_local $p) (i32.const 1)))
-       (br $loop))))
-  (!def_word "TYPE" "$TYPE" !fNone !typeIndex)
 
   (func $pushDataAddress (param $d i32)
     (call $push (get_local $d)))
