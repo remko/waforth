@@ -46,6 +46,24 @@ class WAForth {
           console.log("DEBUG: ", d);
         },
 
+        key: () => {
+          let c;
+          while (c == null || c == "") {
+            c = window.prompt("Enter character");
+          }
+          return c.charCodeAt(0);
+        },
+
+        accept: (p, n) => {
+          const input = (window.prompt("Enter text") || "").substr(0, n);
+          const target = new Uint8Array(memory.buffer, p, input.length);
+          for (let i = 0; i < input.length; ++i) {
+            target[i] = input.charCodeAt(i);
+          }
+          console.log("ACCEPT", p, n, input.length);
+          return input.length;
+        },
+
         ////////////////////////////////////////
         // Loader
         ////////////////////////////////////////

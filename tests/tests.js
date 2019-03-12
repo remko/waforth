@@ -851,7 +851,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131776);
+        expect(stack[0]).to.eql(131792);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -1013,6 +1013,14 @@ function loadTests(wasmModule, arrayToBase64) {
         expect(getString(stack[0], stack[1])).to.eql("Foo Bar");
         expect(stack[3]).to.eql(6);
         expect(getString(stack[2], stack[3])).to.eql("Baz Ba");
+      });
+    });
+
+    describe("TYPE", () => {
+      it("should work", () => {
+        run(': FOO S" Foo Bar" TYPE ;');
+        run("FOO");
+        expect(output).to.eql("Foo Bar");
       });
     });
 

@@ -116,8 +116,8 @@
          (name-entry-length (* (ceiling (/ (+ (string-length name) 1) 4)) 4))
          (size (+ 8 name-entry-length)))
     (cond ((= idx !tableStartIndex)
-           (set! !tableStartIndex (+ !tableStartIndex 1))
-           (set! !dictionaryLatest !dictionaryTop)))
+           (set! !tableStartIndex (+ !tableStartIndex 1))))
+    (set! !dictionaryLatest !dictionaryTop)
     (set! !dictionaryTop (+ !dictionaryTop size))
     `((elem (i32.const ,(eval idx)) ,(string->symbol f))
       (data 
@@ -148,6 +148,8 @@
 (module
   (import "shell" "emit" (func $shell_emit (param i32)))
   (import "shell" "getc" (func $shell_getc (result i32)))
+  (import "shell" "key" (func $shell_key (result i32)))
+  (import "shell" "accept" (func $shell_accept (param i32) (param i32) (result i32)))
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
@@ -594,6 +596,16 @@
                         (get_local $y))))
   (!def_word "ABS" "$ABS")
 
+  ;; 6.1.0695
+  (func $ACCEPT
+    (local $btos i32)
+    (local $bbtos i32)
+    (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
+               (call $shell_accept (i32.load (get_local $bbtos))
+                                   (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
+    (set_global $tos (get_local $btos)))
+  (!def_word "ACCEPT" "$ACCEPT")
+
   ;; 6.1.0710
   (func $ALLOT
     (set_global $here (i32.add (get_global $here) (call $pop))))
@@ -887,10 +899,10 @@
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
-;;   (func $key
-;;     (i32.store (get_global $tos) (call $readChar))
-;;     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
-;;   (!def_word "KEY" "$key")
+  (func $key
+    (i32.store (get_global $tos) (call $shell_key))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (!def_word "KEY" "$key")
 
   ;; 6.1.1760
   (func $LEAVE
@@ -1273,8 +1285,8 @@
   (!def_word "S0" "$S0")
 
   (func $latest
-   (i32.store (get_global $tos) (get_global $latest))
-   (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+    (i32.store (get_global $tos) (get_global $latest))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "LATEST" "$latest")
 
   ;; High-level words
