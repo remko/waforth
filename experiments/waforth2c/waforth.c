@@ -8,7 +8,7 @@
 #include "waforth.gen/waforth_modules.h"
 
 void (*Z_shellZ_emitZ_vi)(u32);
-u32 (*Z_shellZ_keyZ_iv)(void);
+u32 (*Z_shellZ_getcZ_iv)(void);
 void (*Z_shellZ_loadZ_viii)(u32, u32, u32);
 void (*Z_shellZ_debugZ_vi)(u32);
 wasm_rt_table_t (*Z_envZ_table);
@@ -22,7 +22,7 @@ static void shellEmit(u32 c) {
 static int bufferIndex;
 char* buffer = "main\n";
 
-static u32 shellKey() {
+static u32 shellGetC() {
   if (bufferIndex >= strlen(buffer)) {
     return -1;
   }
@@ -51,7 +51,7 @@ void waforth_init() {
   }
 
   Z_shellZ_emitZ_vi = &shellEmit;
-  Z_shellZ_keyZ_iv = &shellKey;
+  Z_shellZ_getcZ_iv = &shellGetC;
   Z_shellZ_loadZ_viii = &shellLoad;
   Z_shellZ_debugZ_vi = &shellDebug;
 

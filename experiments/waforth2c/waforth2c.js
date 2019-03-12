@@ -44,7 +44,7 @@ WebAssembly.instantiate(coreWasm, {
       process.stdout.write(String.fromCharCode(c));
     },
 
-    key: () => {
+    getc: () => {
       if (buffer.length === 0) {
         return -1;
       }

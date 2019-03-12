@@ -147,7 +147,7 @@
 
 (module
   (import "shell" "emit" (func $shell_emit (param i32)))
-  (import "shell" "key" (func $shell_key (result i32)))
+  (import "shell" "getc" (func $shell_getc (result i32)))
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
@@ -1838,7 +1838,7 @@ EOF
     (set_global $inputBufferSize (i32.const 0))
     (block $endLoop
       (loop $loop
-        (br_if $endLoop (i32.eq (tee_local $char (call $shell_key)) (i32.const -1)))
+        (br_if $endLoop (i32.eq (tee_local $char (call $shell_getc)) (i32.const -1)))
         (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
                    (get_local $char))
         (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1)))

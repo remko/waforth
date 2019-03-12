@@ -35,7 +35,7 @@ class WAForth {
 
         emit: this.onEmit,
 
-        key: () => {
+        getc: () => {
           if (buffer.length === 0) {
             return -1;
           }
