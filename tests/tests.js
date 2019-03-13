@@ -12,6 +12,7 @@ function loadTests(wasmModule, arrayToBase64) {
       forth = new WAForth(wasmModule, arrayToBase64);
       forth.onEmit = c => {
         output = output + String.fromCharCode(c);
+        // console.log(output);
       };
       const x = forth.start({ skipPrelude: true }).then(
         () => {

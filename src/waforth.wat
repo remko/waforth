@@ -987,6 +987,15 @@
     (set_global $tos (get_local $btos)))
   (!def_word "LSHIFT" "$LSHIFT")
 
+  ;; 6.1.1810
+  (func $m-star
+    (local $bbtos i32)
+    (i64.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
+               (i64.mul (i64.extend_s/i32 (i32.load (get_local $bbtos)))
+                        (i64.extend_s/i32 (i32.load (i32.sub (get_global $tos) 
+                                                             (i32.const 4)))))))
+  (!def_word "M*" "$m-star")
+
   ;; 6.1.1870
   (func $MAX
     (local $btos i32)
@@ -1218,6 +1227,15 @@
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
   (!def_word "U<" "$U<")
+
+  ;; 6.1.2360
+  (func $um-star
+    (local $bbtos i32)
+    (i64.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
+               (i64.mul (i64.extend_u/i32 (i32.load (get_local $bbtos)))
+                        (i64.extend_u/i32 (i32.load (i32.sub (get_global $tos) 
+                                                             (i32.const 4)))))))
+  (!def_word "UM*" "$um-star")
 
   ;; 6.1.2380
   (func $UNLOOP
