@@ -1344,6 +1344,28 @@
                                            (i32.const 2))))))
   (!def_word "PICK" "$PICK")
 
+  ;; 6.2.2125
+  (func $refill
+    (local $char i32)
+    (set_global $inputBufferSize (i32.const 0))
+    (if (i32.eq (get_global $sourceID) (i32.const -1))
+      (then
+        (call $push (i32.const -1))
+        (return)))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.eq (tee_local $char (call $shell_getc)) (i32.const -1)))
+        (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
+                   (get_local $char))
+        (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1)))
+        (br $loop)))
+    (if (i32.eqz (get_global $inputBufferSize))
+      (then (call $push (i32.const 0)))
+      (else 
+        (i32.store (i32.const !inBase) (i32.const 0))
+        (call $push (i32.const -1)))))
+  (!def_word "REFILL" "$refill")
+
   ;; 6.1.2395
   (func $UNUSED
     (call $push (i32.shr_s (i32.sub (i32.const !memorySize) (get_global $here)) (i32.const 2))))
@@ -1535,7 +1557,6 @@ EOF
     (local $error i32)
     (set_local $error (i32.const 0))
     (set_global $tors (i32.const !returnStackBase))
-    (i32.store (i32.const !inBase) (i32.const 0))
     (block $endLoop
       (loop $loop
         (call $word)
@@ -1911,17 +1932,6 @@ EOF
           (return (get_local $n)))))
     (unreachable))
 
-  (func $readInput
-    (local $char i32)
-    (set_global $inputBufferSize (i32.const 0))
-    (block $endLoop
-      (loop $loop
-        (br_if $endLoop (i32.eq (tee_local $char (call $shell_getc)) (i32.const -1)))
-        (i32.store8 (i32.add (i32.const !inputBufferBase) (get_global $inputBufferSize)) 
-                   (get_local $char))
-        (set_global $inputBufferSize (i32.add (get_global $inputBufferSize) (i32.const 1)))
-        (br $loop))))
-
   (func $loadPrelude (export "loadPrelude")
     (set_global $sourceID (i32.const -1))
     (call $push (i32.const !preludeDataBase))
@@ -2022,7 +2032,8 @@ EOF
 
   (func (export "interpret") (result i32)
     (local $result i32)
-    (call $readInput)
+    (call $refill)
+    (drop (call $pop))
     (if (i32.ge_s (tee_local $result (call $interpret)) (i32.const 0))
       (then
         ;; Write ok

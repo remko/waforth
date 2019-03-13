@@ -78,16 +78,17 @@ function loadTests(wasmModule, arrayToBase64) {
       console.log("Entry:", p, previous, length, name, code, data, end);
     }
 
-    function run(s, expectErrors = false) {
-      const r = forth.run(s);
-      if (expectErrors) {
-        expect(r).to.be.undefined;
-        output = output.substr(0, output.length);
-      } else {
-        expect(r).to.not.be.below(0);
-        output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
-      }
-      return r;
+    function run(ss, expectErrors = false) {
+      ss.split("\n").forEach(s => {
+        const r = forth.run(s);
+        if (expectErrors) {
+          expect(r).to.be.undefined;
+          output = output.substr(0, output.length);
+        } else {
+          expect(r).to.not.be.below(0);
+          output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
+        }
+      });
     }
 
     function here() {
@@ -1370,7 +1371,7 @@ function loadTests(wasmModule, arrayToBase64) {
 
       it("should run core word tests", () => {
         run(standardCoreWordsTestSuite);
-        // console.log("Output: ", output);
+        console.log("Output: ", output);
       });
     });
   });
