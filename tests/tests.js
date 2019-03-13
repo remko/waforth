@@ -2,7 +2,7 @@ import WAForth from "../src/shell/WAForth";
 import sieve from "../src/shell/sieve";
 import standardTestSuiteTester from "./standard-testsuite/tester.f";
 import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
-import { expect } from "chai";
+import { expect, assert } from "chai";
 
 function loadTests(wasmModule, arrayToBase64) {
   describe("WAForth", () => {
@@ -80,6 +80,7 @@ function loadTests(wasmModule, arrayToBase64) {
 
     function run(ss, expectErrors = false) {
       ss.split("\n").forEach(s => {
+        // console.log("Running: ", s);
         const r = forth.run(s);
         if (expectErrors) {
           expect(r).to.be.undefined;
@@ -103,6 +104,10 @@ function loadTests(wasmModule, arrayToBase64) {
       const result = memory[core.tos() / 4 - 1];
       run("DROP");
       return result;
+    }
+
+    function tosValue() {
+      return memory[core.tos() / 4 - 1];
     }
 
     describe("leb128", () => {
@@ -1363,15 +1368,19 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
-    describe.skip("standard test suite", () => {
+    describe("standard test suite", () => {
       beforeEach(() => {
         core.loadPrelude();
         run(standardTestSuiteTester);
+        run("TRUE VERBOSE !");
       });
 
       it("should run core word tests", () => {
         run(standardCoreWordsTestSuite);
-        console.log("Output: ", output);
+        run("#ERRORS @");
+        if (tosValue() !== 0) {
+          assert.fail(output);
+        }
       });
     });
   });
