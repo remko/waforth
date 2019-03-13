@@ -1,5 +1,7 @@
 import WAForth from "../src/shell/WAForth";
 import sieve from "../src/shell/sieve";
+import standardTestSuiteTester from "./standard-testsuite/tester.f";
+import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
 import { expect } from "chai";
 
 function loadTests(wasmModule, arrayToBase64) {
@@ -1357,6 +1359,18 @@ function loadTests(wasmModule, arrayToBase64) {
         run(sieve);
         run("100 sieve_direct");
         expect(stack[0]).to.eql(97);
+      });
+    });
+
+    describe.skip("standard test suite", () => {
+      beforeEach(() => {
+        core.loadPrelude();
+        run(standardTestSuiteTester);
+      });
+
+      it("should run core word tests", () => {
+        run(standardCoreWordsTestSuite);
+        // console.log("Output: ", output);
       });
     });
   });
