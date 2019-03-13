@@ -270,5 +270,16 @@ T{ 1 ABS -> 1 }T
 T{ -1 ABS -> 1 }T
 T{ MIN-INT ABS -> MID-UINT+1 }T
 
+\\ ------------------------------------------------------------------------
+TESTING MULTIPLY: S>D * M* UM*
+
+T{ 0 S>D -> 0 0 }T
+T{ 1 S>D -> 1 0 }T
+T{ 2 S>D -> 2 0 }T
+T{ -1 S>D -> -1 -1 }T
+T{ -2 S>D -> -2 -1 }T
+T{ MIN-INT S>D -> MIN-INT -1 }T
+T{ MAX-INT S>D -> MAX-INT 0 }T
+
 
 `;

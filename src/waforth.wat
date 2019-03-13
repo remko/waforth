@@ -1145,6 +1145,14 @@
     (call $ALIGN))
   (!def_word "S\"" "$Sq" !fImmediate)
 
+  ;; 6.1.2170
+  (func $s-to-d
+    (local $btos i32)
+    (i64.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
+               (i64.extend_s/i32 (i32.load (get_local $btos))))
+    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (!def_word "S>D" "$s-to-d")
+
   ;; 6.1.2216
   (func $SOURCE 
     (call $push (i32.const !inputBufferBase))

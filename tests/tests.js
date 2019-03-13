@@ -1350,6 +1350,20 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("S>D", () => {
+      it("should work with positive number", () => {
+        run("2 S>D");
+        expect(stack[0]).to.eql(2);
+        expect(stack[1]).to.eql(0);
+      });
+
+      it("should work with negative number", () => {
+        run("-2 S>D");
+        expect(stack[0]).to.eql(-2);
+        expect(stack[1]).to.eql(-1);
+      });
+    });
+
     describe("system", () => {
       beforeEach(() => {
         core.loadPrelude();
