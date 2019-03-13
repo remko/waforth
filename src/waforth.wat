@@ -916,6 +916,20 @@
     (call $push (i32.const 0)))
   (!def_word "FIND" "$find")
 
+  ;; 6.1.1561
+  (func $f-m-slash-mod
+    (local $btos i32)
+    (local $bbbtos i32)
+    (local $n1 i64)
+    (local $n2 i32)
+    (i32.store (tee_local $bbbtos (i32.sub (get_global $tos) (i32.const 12)))
+               (i32.wrap/i64 (i64.rem_s (tee_local $n1 (i64.load (get_local $bbbtos)))
+                             (i64.extend_s/i32 (tee_local $n2 (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))))))))
+    (i32.store (i32.sub (get_global $tos) (i32.const 8))
+               (i32.wrap/i64 (i64.div_s (get_local $n1) (i64.extend_s/i32 (get_local $n2)))))
+    (set_global $tos (get_local $btos)))
+  (!def_word "FM/MOD" "$f-m-slash-mod")
+
   ;; 6.1.1650
   (func $here
     (i32.store (get_global $tos) (get_global $here))
