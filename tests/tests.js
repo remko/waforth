@@ -6,7 +6,7 @@ import { expect, assert } from "chai";
 
 function loadTests(wasmModule, arrayToBase64) {
   describe("WAForth", () => {
-    let forth, stack, output, core, memory, memory8;
+    let forth, stack, output, core, memory, memory8, initialTOS;
 
     beforeEach(() => {
       forth = new WAForth(wasmModule, arrayToBase64);
@@ -23,6 +23,7 @@ function loadTests(wasmModule, arrayToBase64) {
           memory8 = new Uint8Array(core.memory.buffer, 0, 0x30000);
           // dictionary = new Uint8Array(core.memory.buffer, 0x1000, 0x1000);
           stack = new Int32Array(core.memory.buffer, core.tos(), 0x100);
+          initialTOS = core.tos();
         },
         err => {
           console.error(err);
@@ -109,6 +110,15 @@ function loadTests(wasmModule, arrayToBase64) {
 
     function tosValue() {
       return memory[core.tos() / 4 - 1];
+    }
+
+    function stackValues() {
+      const result = [];
+      const tos = core.tos();
+      for (let i = initialTOS; i < tos; i += 4) {
+        result.push(memory[i / 4]);
+      }
+      return result;
     }
 
     describe("leb128", () => {
@@ -646,13 +656,19 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("LEAVE", () => {
-      it("should leave", () => {
+      it.only("should leave", () => {
         run(`: FOO 4 0 DO 3 LEAVE 6 LOOP 4 ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(4);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()).to.eql([3, 4, 5]);
       });
+
+      // it.only("should leave an if in a loop", () => {
+      //   run(`: FOO 5 0 DO I I 3 = IF LEAVE THEN I LOOP 123 ;`);
+      //   run("FOO 5");
+      //   expect(stack[0]).to.eql(3);
+      //   expect(stack[1]).to.eql(4);
+      //   expect(stack[2]).to.eql(5);
+      // });
     });
 
     describe("+LOOP", () => {
