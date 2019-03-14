@@ -49,7 +49,7 @@ T{ 1S 1S XOR -> 0S }T
 \\ ------------------------------------------------------------------------
 TESTING 2* 2/ LSHIFT RSHIFT
 
-\\ ( WE TRUST 1S, INVERT, AND BITSSET?; WE WILL CONFIRM RSHIFT LATER )
+( WE TRUST 1S, INVERT, AND BITSSET?; WE WILL CONFIRM RSHIFT LATER )
 1S 1 RSHIFT INVERT CONSTANT MSB
 T{ MSB BITSSET? -> 0 0 }T
 
@@ -344,8 +344,8 @@ T{ 2 S>D 2 FM/MOD -> 0 1 }T
 T{ -1 S>D -1 FM/MOD -> 0 1 }T
 T{ -2 S>D -2 FM/MOD -> 0 1 }T
 T{  7 S>D  3 FM/MOD -> 1 2 }T
-\\TODO T{  7 S>D -3 FM/MOD -> -2 -3 }T
-\\TODO T{ -7 S>D  3 FM/MOD -> 2 -3 }T
+\\ TODO T{  7 S>D -3 FM/MOD -> -2 -3 }T
+\\ TODO T{ -7 S>D  3 FM/MOD -> 2 -3 }T
 T{ -7 S>D -3 FM/MOD -> -1 2 }T
 T{ MAX-INT S>D 1 FM/MOD -> 0 MAX-INT }T
 T{ MIN-INT S>D 1 FM/MOD -> 0 MIN-INT }T
@@ -365,170 +365,170 @@ T{ MIN-INT MAX-INT M* MIN-INT FM/MOD -> 0 MAX-INT }T
 T{ MIN-INT MAX-INT M* MAX-INT FM/MOD -> 0 MIN-INT }T
 T{ MAX-INT MAX-INT M* MAX-INT FM/MOD -> 0 MAX-INT }T
 
-\\TODO T{ 0 S>D 1 SM/REM -> 0 0 }T
-\\TODO T{ 1 S>D 1 SM/REM -> 0 1 }T
-\\TODO T{ 2 S>D 1 SM/REM -> 0 2 }T
-\\TODO T{ -1 S>D 1 SM/REM -> 0 -1 }T
-\\TODO T{ -2 S>D 1 SM/REM -> 0 -2 }T
-\\TODO T{ 0 S>D -1 SM/REM -> 0 0 }T
-\\TODO T{ 1 S>D -1 SM/REM -> 0 -1 }T
-\\TODO T{ 2 S>D -1 SM/REM -> 0 -2 }T
-\\TODO T{ -1 S>D -1 SM/REM -> 0 1 }T
-\\TODO T{ -2 S>D -1 SM/REM -> 0 2 }T
-\\TODO T{ 2 S>D 2 SM/REM -> 0 1 }T
-\\TODO T{ -1 S>D -1 SM/REM -> 0 1 }T
-\\TODO T{ -2 S>D -2 SM/REM -> 0 1 }T
-\\TODO T{  7 S>D  3 SM/REM -> 1 2 }T
-\\TODO T{  7 S>D -3 SM/REM -> 1 -2 }T
-\\TODO T{ -7 S>D  3 SM/REM -> -1 -2 }T
-\\TODO T{ -7 S>D -3 SM/REM -> -1 2 }T
-\\TODO T{ MAX-INT S>D 1 SM/REM -> 0 MAX-INT }T
-\\TODO T{ MIN-INT S>D 1 SM/REM -> 0 MIN-INT }T
-\\TODO T{ MAX-INT S>D MAX-INT SM/REM -> 0 1 }T
-\\TODO T{ MIN-INT S>D MIN-INT SM/REM -> 0 1 }T
-\\TODO T{ 1S 1 4 SM/REM -> 3 MAX-INT }T
-\\TODO T{ 2 MIN-INT M* 2 SM/REM -> 0 MIN-INT }T
-\\TODO T{ 2 MIN-INT M* MIN-INT SM/REM -> 0 2 }T
-\\TODO T{ 2 MAX-INT M* 2 SM/REM -> 0 MAX-INT }T
-\\TODO T{ 2 MAX-INT M* MAX-INT SM/REM -> 0 2 }T
-\\TODO T{ MIN-INT MIN-INT M* MIN-INT SM/REM -> 0 MIN-INT }T
-\\TODO T{ MIN-INT MAX-INT M* MIN-INT SM/REM -> 0 MAX-INT }T
-\\TODO T{ MIN-INT MAX-INT M* MAX-INT SM/REM -> 0 MIN-INT }T
-\\TODO T{ MAX-INT MAX-INT M* MAX-INT SM/REM -> 0 MAX-INT }T
-\\TODO 
-\\TODO T{ 0 0 1 UM/MOD -> 0 0 }T
-\\TODO T{ 1 0 1 UM/MOD -> 0 1 }T
-\\TODO T{ 1 0 2 UM/MOD -> 1 0 }T
-\\TODO T{ 3 0 2 UM/MOD -> 1 1 }T
-\\TODO T{ MAX-UINT 2 UM* 2 UM/MOD -> 0 MAX-UINT }T
-\\TODO T{ MAX-UINT 2 UM* MAX-UINT UM/MOD -> 0 2 }T
-\\TODO T{ MAX-UINT MAX-UINT UM* MAX-UINT UM/MOD -> 0 MAX-UINT }T
+\\ TODO T{ 0 S>D 1 SM/REM -> 0 0 }T
+\\ TODO T{ 1 S>D 1 SM/REM -> 0 1 }T
+\\ TODO T{ 2 S>D 1 SM/REM -> 0 2 }T
+\\ TODO T{ -1 S>D 1 SM/REM -> 0 -1 }T
+\\ TODO T{ -2 S>D 1 SM/REM -> 0 -2 }T
+\\ TODO T{ 0 S>D -1 SM/REM -> 0 0 }T
+\\ TODO T{ 1 S>D -1 SM/REM -> 0 -1 }T
+\\ TODO T{ 2 S>D -1 SM/REM -> 0 -2 }T
+\\ TODO T{ -1 S>D -1 SM/REM -> 0 1 }T
+\\ TODO T{ -2 S>D -1 SM/REM -> 0 2 }T
+\\ TODO T{ 2 S>D 2 SM/REM -> 0 1 }T
+\\ TODO T{ -1 S>D -1 SM/REM -> 0 1 }T
+\\ TODO T{ -2 S>D -2 SM/REM -> 0 1 }T
+\\ TODO T{  7 S>D  3 SM/REM -> 1 2 }T
+\\ TODO T{  7 S>D -3 SM/REM -> 1 -2 }T
+\\ TODO T{ -7 S>D  3 SM/REM -> -1 -2 }T
+\\ TODO T{ -7 S>D -3 SM/REM -> -1 2 }T
+\\ TODO T{ MAX-INT S>D 1 SM/REM -> 0 MAX-INT }T
+\\ TODO T{ MIN-INT S>D 1 SM/REM -> 0 MIN-INT }T
+\\ TODO T{ MAX-INT S>D MAX-INT SM/REM -> 0 1 }T
+\\ TODO T{ MIN-INT S>D MIN-INT SM/REM -> 0 1 }T
+\\ TODO T{ 1S 1 4 SM/REM -> 3 MAX-INT }T
+\\ TODO T{ 2 MIN-INT M* 2 SM/REM -> 0 MIN-INT }T
+\\ TODO T{ 2 MIN-INT M* MIN-INT SM/REM -> 0 2 }T
+\\ TODO T{ 2 MAX-INT M* 2 SM/REM -> 0 MAX-INT }T
+\\ TODO T{ 2 MAX-INT M* MAX-INT SM/REM -> 0 2 }T
+\\ TODO T{ MIN-INT MIN-INT M* MIN-INT SM/REM -> 0 MIN-INT }T
+\\ TODO T{ MIN-INT MAX-INT M* MIN-INT SM/REM -> 0 MAX-INT }T
+\\ TODO T{ MIN-INT MAX-INT M* MAX-INT SM/REM -> 0 MIN-INT }T
+\\ TODO T{ MAX-INT MAX-INT M* MAX-INT SM/REM -> 0 MAX-INT }T
+\\ TODO 
+\\ TODO T{ 0 0 1 UM/MOD -> 0 0 }T
+\\ TODO T{ 1 0 1 UM/MOD -> 0 1 }T
+\\ TODO T{ 1 0 2 UM/MOD -> 1 0 }T
+\\ TODO T{ 3 0 2 UM/MOD -> 1 1 }T
+\\ TODO T{ MAX-UINT 2 UM* 2 UM/MOD -> 0 MAX-UINT }T
+\\ TODO T{ MAX-UINT 2 UM* MAX-UINT UM/MOD -> 0 2 }T
+\\ TODO T{ MAX-UINT MAX-UINT UM* MAX-UINT UM/MOD -> 0 MAX-UINT }T
 
-\\TODO : IFFLOORED
-\\TODO    [ -3 2 / -2 = INVERT ] LITERAL IF POSTPONE \\ THEN ;
-\\TODO 
-\\TODO : IFSYM
-\\TODO    [ -3 2 / -1 = INVERT ] LITERAL IF POSTPONE \\ THEN ;
+: IFFLOORED
+   [ -3 2 / -2 = INVERT ] LITERAL IF POSTPONE \\ THEN ;
+
+: IFSYM
+   [ -3 2 / -1 = INVERT ] LITERAL IF POSTPONE \\ THEN ;
 
 \\ THE SYSTEM MIGHT DO EITHER FLOORED OR SYMMETRIC DIVISION.
 \\ SINCE WE HAVE ALREADY TESTED M*, FM/MOD, AND SM/REM WE CAN USE THEM IN TEST.
 
-\\TODO IFFLOORED : T/MOD  >R S>D R> FM/MOD ;
-\\TODO IFFLOORED : T/     T/MOD SWAP DROP ;
-\\TODO IFFLOORED : TMOD   T/MOD DROP ;
-\\TODO IFFLOORED : T*/MOD >R M* R> FM/MOD ;
-\\TODO IFFLOORED : T*/    T*/MOD SWAP DROP ;
-\\TODO IFSYM     : T/MOD  >R S>D R> SM/REM ;
-\\TODO IFSYM     : T/     T/MOD SWAP DROP ;
-\\TODO IFSYM     : TMOD   T/MOD DROP ;
-\\TODO IFSYM     : T*/MOD >R M* R> SM/REM ;
-\\TODO IFSYM     : T*/    T*/MOD SWAP DROP ;
+\\ TODO IFFLOORED : T/MOD  >R S>D R> FM/MOD ;
+\\ TODO IFFLOORED : T/     T/MOD SWAP DROP ;
+\\ TODO IFFLOORED : TMOD   T/MOD DROP ;
+\\ TODO IFFLOORED : T*/MOD >R M* R> FM/MOD ;
+\\ TODO IFFLOORED : T*/    T*/MOD SWAP DROP ;
+\\ TODO IFSYM     : T/MOD  >R S>D R> SM/REM ;
+\\ TODO IFSYM     : T/     T/MOD SWAP DROP ;
+\\ TODO IFSYM     : TMOD   T/MOD DROP ;
+\\ TODO IFSYM     : T*/MOD >R M* R> SM/REM ;
+\\ TODO IFSYM     : T*/    T*/MOD SWAP DROP ;
 
-\\TODO T{ 0 1 /MOD -> 0 1 T/MOD }T
-\\TODO T{ 1 1 /MOD -> 1 1 T/MOD }T
-\\TODO T{ 2 1 /MOD -> 2 1 T/MOD }T
-\\TODO T{ -1 1 /MOD -> -1 1 T/MOD }T
-\\TODO T{ -2 1 /MOD -> -2 1 T/MOD }T
-\\TODO T{ 0 -1 /MOD -> 0 -1 T/MOD }T
-\\TODO T{ 1 -1 /MOD -> 1 -1 T/MOD }T
-\\TODO T{ 2 -1 /MOD -> 2 -1 T/MOD }T
-\\TODO T{ -1 -1 /MOD -> -1 -1 T/MOD }T
-\\TODO T{ -2 -1 /MOD -> -2 -1 T/MOD }T
-\\TODO T{ 2 2 /MOD -> 2 2 T/MOD }T
-\\TODO T{ -1 -1 /MOD -> -1 -1 T/MOD }T
-\\TODO T{ -2 -2 /MOD -> -2 -2 T/MOD }T
-\\TODO T{ 7 3 /MOD -> 7 3 T/MOD }T
-\\TODO T{ 7 -3 /MOD -> 7 -3 T/MOD }T
-\\TODO T{ -7 3 /MOD -> -7 3 T/MOD }T
-\\TODO T{ -7 -3 /MOD -> -7 -3 T/MOD }T
-\\TODO T{ MAX-INT 1 /MOD -> MAX-INT 1 T/MOD }T
-\\TODO T{ MIN-INT 1 /MOD -> MIN-INT 1 T/MOD }T
-\\TODO T{ MAX-INT MAX-INT /MOD -> MAX-INT MAX-INT T/MOD }T
-\\TODO T{ MIN-INT MIN-INT /MOD -> MIN-INT MIN-INT T/MOD }T
-\\TODO 
-\\TODO T{ 0 1 / -> 0 1 T/ }T
-\\TODO T{ 1 1 / -> 1 1 T/ }T
-\\TODO T{ 2 1 / -> 2 1 T/ }T
-\\TODO T{ -1 1 / -> -1 1 T/ }T
-\\TODO T{ -2 1 / -> -2 1 T/ }T
-\\TODO T{ 0 -1 / -> 0 -1 T/ }T
-\\TODO T{ 1 -1 / -> 1 -1 T/ }T
-\\TODO T{ 2 -1 / -> 2 -1 T/ }T
-\\TODO T{ -1 -1 / -> -1 -1 T/ }T
-\\TODO T{ -2 -1 / -> -2 -1 T/ }T
-\\TODO T{ 2 2 / -> 2 2 T/ }T
-\\TODO T{ -1 -1 / -> -1 -1 T/ }T
-\\TODO T{ -2 -2 / -> -2 -2 T/ }T
-\\TODO T{ 7 3 / -> 7 3 T/ }T
-\\TODO T{ 7 -3 / -> 7 -3 T/ }T
-\\TODO T{ -7 3 / -> -7 3 T/ }T
-\\TODO T{ -7 -3 / -> -7 -3 T/ }T
-\\TODO T{ MAX-INT 1 / -> MAX-INT 1 T/ }T
-\\TODO T{ MIN-INT 1 / -> MIN-INT 1 T/ }T
-\\TODO T{ MAX-INT MAX-INT / -> MAX-INT MAX-INT T/ }T
-\\TODO T{ MIN-INT MIN-INT / -> MIN-INT MIN-INT T/ }T
-\\TODO 
-\\TODO T{ 0 1 MOD -> 0 1 TMOD }T
-\\TODO T{ 1 1 MOD -> 1 1 TMOD }T
-\\TODO T{ 2 1 MOD -> 2 1 TMOD }T
-\\TODO T{ -1 1 MOD -> -1 1 TMOD }T
-\\TODO T{ -2 1 MOD -> -2 1 TMOD }T
-\\TODO T{ 0 -1 MOD -> 0 -1 TMOD }T
-\\TODO T{ 1 -1 MOD -> 1 -1 TMOD }T
-\\TODO T{ 2 -1 MOD -> 2 -1 TMOD }T
-\\TODO T{ -1 -1 MOD -> -1 -1 TMOD }T
-\\TODO T{ -2 -1 MOD -> -2 -1 TMOD }T
-\\TODO T{ 2 2 MOD -> 2 2 TMOD }T
-\\TODO T{ -1 -1 MOD -> -1 -1 TMOD }T
-\\TODO T{ -2 -2 MOD -> -2 -2 TMOD }T
-\\TODO T{ 7 3 MOD -> 7 3 TMOD }T
-\\TODO T{ 7 -3 MOD -> 7 -3 TMOD }T
-\\TODO T{ -7 3 MOD -> -7 3 TMOD }T
-\\TODO T{ -7 -3 MOD -> -7 -3 TMOD }T
-\\TODO T{ MAX-INT 1 MOD -> MAX-INT 1 TMOD }T
-\\TODO T{ MIN-INT 1 MOD -> MIN-INT 1 TMOD }T
-\\TODO T{ MAX-INT MAX-INT MOD -> MAX-INT MAX-INT TMOD }T
-\\TODO T{ MIN-INT MIN-INT MOD -> MIN-INT MIN-INT TMOD }T
-\\TODO 
-\\TODO T{ 0 2 1 */ -> 0 2 1 T*/ }T
-\\TODO T{ 1 2 1 */ -> 1 2 1 T*/ }T
-\\TODO T{ 2 2 1 */ -> 2 2 1 T*/ }T
-\\TODO T{ -1 2 1 */ -> -1 2 1 T*/ }T
-\\TODO T{ -2 2 1 */ -> -2 2 1 T*/ }T
-\\TODO T{ 0 2 -1 */ -> 0 2 -1 T*/ }T
-\\TODO T{ 1 2 -1 */ -> 1 2 -1 T*/ }T
-\\TODO T{ 2 2 -1 */ -> 2 2 -1 T*/ }T
-\\TODO T{ -1 2 -1 */ -> -1 2 -1 T*/ }T
-\\TODO T{ -2 2 -1 */ -> -2 2 -1 T*/ }T
-\\TODO T{ 2 2 2 */ -> 2 2 2 T*/ }T
-\\TODO T{ -1 2 -1 */ -> -1 2 -1 T*/ }T
-\\TODO T{ -2 2 -2 */ -> -2 2 -2 T*/ }T
-\\TODO T{ 7 2 3 */ -> 7 2 3 T*/ }T
-\\TODO T{ 7 2 -3 */ -> 7 2 -3 T*/ }T
-\\TODO T{ -7 2 3 */ -> -7 2 3 T*/ }T
-\\TODO T{ -7 2 -3 */ -> -7 2 -3 T*/ }T
-\\TODO T{ MAX-INT 2 MAX-INT */ -> MAX-INT 2 MAX-INT T*/ }T
-\\TODO T{ MIN-INT 2 MIN-INT */ -> MIN-INT 2 MIN-INT T*/ }T
-\\TODO 
-\\TODO T{ 0 2 1 */MOD -> 0 2 1 T*/MOD }T
-\\TODO T{ 1 2 1 */MOD -> 1 2 1 T*/MOD }T
-\\TODO T{ 2 2 1 */MOD -> 2 2 1 T*/MOD }T
-\\TODO T{ -1 2 1 */MOD -> -1 2 1 T*/MOD }T
-\\TODO T{ -2 2 1 */MOD -> -2 2 1 T*/MOD }T
-\\TODO T{ 0 2 -1 */MOD -> 0 2 -1 T*/MOD }T
-\\TODO T{ 1 2 -1 */MOD -> 1 2 -1 T*/MOD }T
-\\TODO T{ 2 2 -1 */MOD -> 2 2 -1 T*/MOD }T
-\\TODO T{ -1 2 -1 */MOD -> -1 2 -1 T*/MOD }T
-\\TODO T{ -2 2 -1 */MOD -> -2 2 -1 T*/MOD }T
-\\TODO T{ 2 2 2 */MOD -> 2 2 2 T*/MOD }T
-\\TODO T{ -1 2 -1 */MOD -> -1 2 -1 T*/MOD }T
-\\TODO T{ -2 2 -2 */MOD -> -2 2 -2 T*/MOD }T
-\\TODO T{ 7 2 3 */MOD -> 7 2 3 T*/MOD }T
-\\TODO T{ 7 2 -3 */MOD -> 7 2 -3 T*/MOD }T
-\\TODO T{ -7 2 3 */MOD -> -7 2 3 T*/MOD }T
-\\TODO T{ -7 2 -3 */MOD -> -7 2 -3 T*/MOD }T
-\\TODO T{ MAX-INT 2 MAX-INT */MOD -> MAX-INT 2 MAX-INT T*/MOD }T
-\\TODO T{ MIN-INT 2 MIN-INT */MOD -> MIN-INT 2 MIN-INT T*/MOD }T
+\\ TODO T{ 0 1 /MOD -> 0 1 T/MOD }T
+\\ TODO T{ 1 1 /MOD -> 1 1 T/MOD }T
+\\ TODO T{ 2 1 /MOD -> 2 1 T/MOD }T
+\\ TODO T{ -1 1 /MOD -> -1 1 T/MOD }T
+\\ TODO T{ -2 1 /MOD -> -2 1 T/MOD }T
+\\ TODO T{ 0 -1 /MOD -> 0 -1 T/MOD }T
+\\ TODO T{ 1 -1 /MOD -> 1 -1 T/MOD }T
+\\ TODO T{ 2 -1 /MOD -> 2 -1 T/MOD }T
+\\ TODO T{ -1 -1 /MOD -> -1 -1 T/MOD }T
+\\ TODO T{ -2 -1 /MOD -> -2 -1 T/MOD }T
+\\ TODO T{ 2 2 /MOD -> 2 2 T/MOD }T
+\\ TODO T{ -1 -1 /MOD -> -1 -1 T/MOD }T
+\\ TODO T{ -2 -2 /MOD -> -2 -2 T/MOD }T
+\\ TODO T{ 7 3 /MOD -> 7 3 T/MOD }T
+\\ TODO T{ 7 -3 /MOD -> 7 -3 T/MOD }T
+\\ TODO T{ -7 3 /MOD -> -7 3 T/MOD }T
+\\ TODO T{ -7 -3 /MOD -> -7 -3 T/MOD }T
+\\ TODO T{ MAX-INT 1 /MOD -> MAX-INT 1 T/MOD }T
+\\ TODO T{ MIN-INT 1 /MOD -> MIN-INT 1 T/MOD }T
+\\ TODO T{ MAX-INT MAX-INT /MOD -> MAX-INT MAX-INT T/MOD }T
+\\ TODO T{ MIN-INT MIN-INT /MOD -> MIN-INT MIN-INT T/MOD }T
+\\ TODO 
+\\ TODO T{ 0 1 / -> 0 1 T/ }T
+\\ TODO T{ 1 1 / -> 1 1 T/ }T
+\\ TODO T{ 2 1 / -> 2 1 T/ }T
+\\ TODO T{ -1 1 / -> -1 1 T/ }T
+\\ TODO T{ -2 1 / -> -2 1 T/ }T
+\\ TODO T{ 0 -1 / -> 0 -1 T/ }T
+\\ TODO T{ 1 -1 / -> 1 -1 T/ }T
+\\ TODO T{ 2 -1 / -> 2 -1 T/ }T
+\\ TODO T{ -1 -1 / -> -1 -1 T/ }T
+\\ TODO T{ -2 -1 / -> -2 -1 T/ }T
+\\ TODO T{ 2 2 / -> 2 2 T/ }T
+\\ TODO T{ -1 -1 / -> -1 -1 T/ }T
+\\ TODO T{ -2 -2 / -> -2 -2 T/ }T
+\\ TODO T{ 7 3 / -> 7 3 T/ }T
+\\ TODO T{ 7 -3 / -> 7 -3 T/ }T
+\\ TODO T{ -7 3 / -> -7 3 T/ }T
+\\ TODO T{ -7 -3 / -> -7 -3 T/ }T
+\\ TODO T{ MAX-INT 1 / -> MAX-INT 1 T/ }T
+\\ TODO T{ MIN-INT 1 / -> MIN-INT 1 T/ }T
+\\ TODO T{ MAX-INT MAX-INT / -> MAX-INT MAX-INT T/ }T
+\\ TODO T{ MIN-INT MIN-INT / -> MIN-INT MIN-INT T/ }T
+\\ TODO 
+\\ TODO T{ 0 1 MOD -> 0 1 TMOD }T
+\\ TODO T{ 1 1 MOD -> 1 1 TMOD }T
+\\ TODO T{ 2 1 MOD -> 2 1 TMOD }T
+\\ TODO T{ -1 1 MOD -> -1 1 TMOD }T
+\\ TODO T{ -2 1 MOD -> -2 1 TMOD }T
+\\ TODO T{ 0 -1 MOD -> 0 -1 TMOD }T
+\\ TODO T{ 1 -1 MOD -> 1 -1 TMOD }T
+\\ TODO T{ 2 -1 MOD -> 2 -1 TMOD }T
+\\ TODO T{ -1 -1 MOD -> -1 -1 TMOD }T
+\\ TODO T{ -2 -1 MOD -> -2 -1 TMOD }T
+\\ TODO T{ 2 2 MOD -> 2 2 TMOD }T
+\\ TODO T{ -1 -1 MOD -> -1 -1 TMOD }T
+\\ TODO T{ -2 -2 MOD -> -2 -2 TMOD }T
+\\ TODO T{ 7 3 MOD -> 7 3 TMOD }T
+\\ TODO T{ 7 -3 MOD -> 7 -3 TMOD }T
+\\ TODO T{ -7 3 MOD -> -7 3 TMOD }T
+\\ TODO T{ -7 -3 MOD -> -7 -3 TMOD }T
+\\ TODO T{ MAX-INT 1 MOD -> MAX-INT 1 TMOD }T
+\\ TODO T{ MIN-INT 1 MOD -> MIN-INT 1 TMOD }T
+\\ TODO T{ MAX-INT MAX-INT MOD -> MAX-INT MAX-INT TMOD }T
+\\ TODO T{ MIN-INT MIN-INT MOD -> MIN-INT MIN-INT TMOD }T
+\\ TODO 
+\\ TODO T{ 0 2 1 */ -> 0 2 1 T*/ }T
+\\ TODO T{ 1 2 1 */ -> 1 2 1 T*/ }T
+\\ TODO T{ 2 2 1 */ -> 2 2 1 T*/ }T
+\\ TODO T{ -1 2 1 */ -> -1 2 1 T*/ }T
+\\ TODO T{ -2 2 1 */ -> -2 2 1 T*/ }T
+\\ TODO T{ 0 2 -1 */ -> 0 2 -1 T*/ }T
+\\ TODO T{ 1 2 -1 */ -> 1 2 -1 T*/ }T
+\\ TODO T{ 2 2 -1 */ -> 2 2 -1 T*/ }T
+\\ TODO T{ -1 2 -1 */ -> -1 2 -1 T*/ }T
+\\ TODO T{ -2 2 -1 */ -> -2 2 -1 T*/ }T
+\\ TODO T{ 2 2 2 */ -> 2 2 2 T*/ }T
+\\ TODO T{ -1 2 -1 */ -> -1 2 -1 T*/ }T
+\\ TODO T{ -2 2 -2 */ -> -2 2 -2 T*/ }T
+\\ TODO T{ 7 2 3 */ -> 7 2 3 T*/ }T
+\\ TODO T{ 7 2 -3 */ -> 7 2 -3 T*/ }T
+\\ TODO T{ -7 2 3 */ -> -7 2 3 T*/ }T
+\\ TODO T{ -7 2 -3 */ -> -7 2 -3 T*/ }T
+\\ TODO T{ MAX-INT 2 MAX-INT */ -> MAX-INT 2 MAX-INT T*/ }T
+\\ TODO T{ MIN-INT 2 MIN-INT */ -> MIN-INT 2 MIN-INT T*/ }T
+\\ TODO 
+\\ TODO T{ 0 2 1 */MOD -> 0 2 1 T*/MOD }T
+\\ TODO T{ 1 2 1 */MOD -> 1 2 1 T*/MOD }T
+\\ TODO T{ 2 2 1 */MOD -> 2 2 1 T*/MOD }T
+\\ TODO T{ -1 2 1 */MOD -> -1 2 1 T*/MOD }T
+\\ TODO T{ -2 2 1 */MOD -> -2 2 1 T*/MOD }T
+\\ TODO T{ 0 2 -1 */MOD -> 0 2 -1 T*/MOD }T
+\\ TODO T{ 1 2 -1 */MOD -> 1 2 -1 T*/MOD }T
+\\ TODO T{ 2 2 -1 */MOD -> 2 2 -1 T*/MOD }T
+\\ TODO T{ -1 2 -1 */MOD -> -1 2 -1 T*/MOD }T
+\\ TODO T{ -2 2 -1 */MOD -> -2 2 -1 T*/MOD }T
+\\ TODO T{ 2 2 2 */MOD -> 2 2 2 T*/MOD }T
+\\ TODO T{ -1 2 -1 */MOD -> -1 2 -1 T*/MOD }T
+\\ TODO T{ -2 2 -2 */MOD -> -2 2 -2 T*/MOD }T
+\\ TODO T{ 7 2 3 */MOD -> 7 2 3 T*/MOD }T
+\\ TODO T{ 7 2 -3 */MOD -> 7 2 -3 T*/MOD }T
+\\ TODO T{ -7 2 3 */MOD -> -7 2 3 T*/MOD }T
+\\ TODO T{ -7 2 -3 */MOD -> -7 2 -3 T*/MOD }T
+\\ TODO T{ MAX-INT 2 MAX-INT */MOD -> MAX-INT 2 MAX-INT T*/MOD }T
+\\ TODO T{ MIN-INT 2 MIN-INT */MOD -> MIN-INT 2 MIN-INT T*/MOD }T
 
 \\ ------------------------------------------------------------------------
 TESTING HERE , @ ! CELL+ CELLS C, C@ C! CHARS 2@ 2! ALIGN ALIGNED +! ALLOT
@@ -539,7 +539,7 @@ CONSTANT 2NDA
 CONSTANT 1STA
 T{ 1STA 2NDA U< -> <TRUE> }T      \\ HERE MUST GROW WITH ALLOT
 T{ 1STA 1+ -> 2NDA }T         \\ ... BY ONE ADDRESS UNIT
-\\ ( MISSING TEST: NEGATIVE ALLOT )
+( MISSING TEST: NEGATIVE ALLOT )
 
 \\ Added by GWJ so that ALIGN can be used before , (comma) is tested
 1 ALIGNED CONSTANT ALMNT   \\ -- 1|2|4|8 for 8|16|32|64 bit alignment
@@ -590,12 +590,12 @@ T{ 123 456 A-ADDR CELL+ 2!  A-ADDR CELL+ 2@ -> 123 456 }T
 
 : BITS ( X -- U )
    0 SWAP BEGIN DUP WHILE DUP MSB AND IF >R 1+ R> THEN 2* REPEAT DROP ;
-\\ ( CHARACTERS >= 1 AU, <= SIZE OF CELL, >= 8 BITS )
+( CHARACTERS >= 1 AU, <= SIZE OF CELL, >= 8 BITS )
 T{ 1 CHARS 1 < -> <FALSE> }T
 T{ 1 CHARS 1 CELLS > -> <FALSE> }T
-\\ ( TBD: HOW TO FIND NUMBER OF BITS? )
+( TBD: HOW TO FIND NUMBER OF BITS? )
 
-\\ ( CELLS >= 1 AU, INTEGRAL MULTIPLE OF CHAR SIZE, >= 16 BITS )
+( CELLS >= 1 AU, INTEGRAL MULTIPLE OF CHAR SIZE, >= 16 BITS )
 T{ 1 CELLS 1 < -> <FALSE> }T
 T{ 1 CELLS 1 CHARS MOD -> 0 }T
 T{ 1S BITS 10 < -> <FALSE> }T
@@ -628,26 +628,26 @@ T{ : GT1 123 ; -> }T
 T{ ' GT1 EXECUTE -> 123 }T
 T{ : GT2 ['] GT1 ; IMMEDIATE -> }T
 T{ GT2 EXECUTE -> 123 }T
-\\TODO HERE 3 C, CHAR G C, CHAR T C, CHAR 1 C, CONSTANT GT1STRING
-\\TODO HERE 3 C, CHAR G C, CHAR T C, CHAR 2 C, CONSTANT GT2STRING
-\\TODO T{ GT1STRING FIND -> ' GT1 -1 }T
-\\TODO T{ GT2STRING FIND -> ' GT2 1 }T
-\\TODO ( HOW TO SEARCH FOR NON-EXISTENT WORD? )
-\\TODO T{ : GT3 GT2 LITERAL ; -> }T
-\\TODO T{ GT3 -> ' GT1 }T
-\\TODO T{ GT1STRING COUNT -> GT1STRING CHAR+ 3 }T
-\\TODO 
-\\TODO T{ : GT4 POSTPONE GT1 ; IMMEDIATE -> }T
-\\TODO T{ : GT5 GT4 ; -> }T
-\\TODO T{ GT5 -> 123 }T
-\\TODO T{ : GT6 345 ; IMMEDIATE -> }T
-\\TODO T{ : GT7 POSTPONE GT6 ; -> }T
-\\TODO T{ GT7 -> 345 }T
-\\TODO 
-\\TODO T{ : GT8 STATE @ ; IMMEDIATE -> }T
-\\TODO T{ GT8 -> 0 }T
-\\TODO T{ : GT9 GT8 LITERAL ; -> }T
-\\TODO T{ GT9 0= -> <FALSE> }T
+HERE 3 C, CHAR G C, CHAR T C, CHAR 1 C, CONSTANT GT1STRING
+HERE 3 C, CHAR G C, CHAR T C, CHAR 2 C, CONSTANT GT2STRING
+\\ TODO T{ GT1STRING FIND -> ' GT1 -1 }T
+\\ TODO T{ GT2STRING FIND -> ' GT2 1 }T
+( HOW TO SEARCH FOR NON-EXISTENT WORD? )
+\\ TODO T{ : GT3 GT2 LITERAL ; -> }T
+\\ TODO T{ GT3 -> ' GT1 }T
+\\ TODO T{ GT1STRING COUNT -> GT1STRING CHAR+ 3 }T
+\\ TODO 
+\\ TODO T{ : GT4 POSTPONE GT1 ; IMMEDIATE -> }T
+\\ TODO T{ : GT5 GT4 ; -> }T
+\\ TODO T{ GT5 -> 123 }T
+\\ TODO T{ : GT6 345 ; IMMEDIATE -> }T
+\\ TODO T{ : GT7 POSTPONE GT6 ; -> }T
+\\ TODO T{ GT7 -> 345 }T
+\\ TODO 
+\\ TODO T{ : GT8 STATE @ ; IMMEDIATE -> }T
+\\ TODO T{ GT8 -> 0 }T
+\\ TODO T{ : GT9 GT8 LITERAL ; -> }T
+\\ TODO T{ GT9 0= -> <FALSE> }T
 
 \\ ------------------------------------------------------------------------
 TESTING IF ELSE THEN BEGIN WHILE REPEAT UNTIL RECURSE
@@ -672,13 +672,13 @@ T{ 3 GI4 -> 3 4 5 6 }T
 T{ 5 GI4 -> 5 6 }T
 T{ 6 GI4 -> 6 7 }T
 
-\\TODO T{ : GI5 BEGIN DUP 2 >
-\\TODO          WHILE DUP 5 < WHILE DUP 1+ REPEAT 123 ELSE 345 THEN ; -> }T
-\\TODO T{ 1 GI5 -> 1 345 }T
-\\TODO T{ 2 GI5 -> 2 345 }T
-\\TODO T{ 3 GI5 -> 3 4 5 123 }T
-\\TODO T{ 4 GI5 -> 4 5 123 }T
-\\TODO T{ 5 GI5 -> 5 123 }T
+\\ TODO T{ : GI5 BEGIN DUP 2 >
+\\ TODO          WHILE DUP 5 < WHILE DUP 1+ REPEAT 123 ELSE 345 THEN ; -> }T
+\\ TODO T{ 1 GI5 -> 1 345 }T
+\\ TODO T{ 2 GI5 -> 2 345 }T
+\\ TODO T{ 3 GI5 -> 3 4 5 123 }T
+\\ TODO T{ 4 GI5 -> 4 5 123 }T
+\\ TODO T{ 5 GI5 -> 5 123 }T
 
 T{ : GI6 ( N -- 0,1,..N ) DUP IF DUP >R 1- RECURSE R> THEN ; -> }T
 T{ 0 GI6 -> 0 }T
@@ -698,7 +698,7 @@ T{ MID-UINT+1 MID-UINT GD1 -> MID-UINT }T
 T{ : GD2 DO I -1 +LOOP ; -> }T
 T{ 1 4 GD2 -> 4 3 2 1 }T
 T{ -1 2 GD2 -> 2 1 0 -1 }T
-\\TODO T{ MID-UINT MID-UINT+1 GD2 -> MID-UINT+1 MID-UINT }T
+\\ TODO T{ MID-UINT MID-UINT+1 GD2 -> MID-UINT+1 MID-UINT }T
 
 T{ : GD3 DO 1 0 DO J LOOP LOOP ; -> }T
 T{ 4 1 GD3 -> 1 2 3 }T
@@ -708,7 +708,7 @@ T{ MID-UINT+1 MID-UINT GD3 -> MID-UINT }T
 T{ : GD4 DO 1 0 DO J LOOP -1 +LOOP ; -> }T
 T{ 1 4 GD4 -> 4 3 2 1 }T
 T{ -1 2 GD4 -> 2 1 0 -1 }T
-\\TODO T{ MID-UINT MID-UINT+1 GD4 -> MID-UINT+1 MID-UINT }T
+\\ TODO T{ MID-UINT MID-UINT+1 GD4 -> MID-UINT+1 MID-UINT }T
 
 T{ : GD5 123 SWAP 0 DO I 4 > IF DROP 234 LEAVE THEN LOOP ; -> }T
 T{ 1 GD5 -> 123 }T
@@ -721,7 +721,7 @@ T{ : GD6  ( PAT: T{0 0},{0 0}{1 0}{1 1},{0 0}{1 0}{1 1}{2 0}{2 1}{2 2} )
     LOOP ; -> }T
 T{ 1 GD6 -> 1 }T
 T{ 2 GD6 -> 3 }T
-\\TODO T{ 3 GD6 -> 4 1 2 }T
+\\ TODO T{ 3 GD6 -> 4 1 2 }T
 
 \\ ------------------------------------------------------------------------
 TESTING DEFINING WORDS: : ; CONSTANT VARIABLE CREATE DOES> >BODY
@@ -760,29 +760,29 @@ T{ W1 -> HERE 1 + }T
 T{ W1 -> HERE 2 + }T
 
 \\ ------------------------------------------------------------------------
-\\TODO TESTING EVALUATE
-\\TODO 
-\\TODO : GE1 S" 123" ; IMMEDIATE
-\\TODO : GE2 S" 123 1+" ; IMMEDIATE
-\\TODO : GE3 S" : GE4 345 ;" ;
-\\TODO : GE5 EVALUATE ; IMMEDIATE
-\\TODO 
-\\TODO T{ GE1 EVALUATE -> 123 }T         ( TEST EVALUATE IN INTERP. STATE )
-\\TODO T{ GE2 EVALUATE -> 124 }T
-\\TODO T{ GE3 EVALUATE -> }T
-\\TODO T{ GE4 -> 345 }T
-\\TODO 
-\\TODO T{ : GE6 GE1 GE5 ; -> }T         ( TEST EVALUATE IN COMPILE STATE )
-\\TODO T{ GE6 -> 123 }T
-\\TODO T{ : GE7 GE2 GE5 ; -> }T
-\\TODO T{ GE7 -> 124 }T
+TESTING EVALUATE
+
+: GE1 S" 123" ; IMMEDIATE
+: GE2 S" 123 1+" ; IMMEDIATE
+: GE3 S" : GE4 345 ;" ;
+: GE5 EVALUATE ; IMMEDIATE
+
+\\ TODO T{ GE1 EVALUATE -> 123 }T         ( TEST EVALUATE IN INTERP. STATE )
+\\ TODO T{ GE2 EVALUATE -> 124 }T
+\\ TODO T{ GE3 EVALUATE -> }T
+\\ TODO T{ GE4 -> 345 }T
+
+\\ TODO T{ : GE6 GE1 GE5 ; -> }T         ( TEST EVALUATE IN COMPILE STATE )
+\\ TODO T{ GE6 -> 123 }T
+\\ TODO T{ : GE7 GE2 GE5 ; -> }T
+\\ TODO T{ GE7 -> 124 }T
 
 \\ ------------------------------------------------------------------------
 TESTING SOURCE >IN WORD
 
 : GS1 S" SOURCE" 2DUP EVALUATE
        >R SWAP >R = R> R> = ;
-\\TODO T{ GS1 -> <TRUE> <TRUE> }T
+\\ TODO T{ GS1 -> <TRUE> <TRUE> }T
 
 VARIABLE SCANS
 : RESCAN?  -1 SCANS +! SCANS @ IF 0 >IN ! THEN ;
@@ -792,124 +792,124 @@ T{ 2 SCANS !
 -> 345 345 }T
 
 : GS2  5 SCANS ! S" 123 RESCAN?" EVALUATE ;
-\\TODO T{ GS2 -> 123 123 123 123 123 }T
+\\ TODO T{ GS2 -> 123 123 123 123 123 }T
 
-\\TODO : GS3 WORD COUNT SWAP C@ ;
-\\TODO T{ BL GS3 HELLO -> 5 CHAR H }T
-\\TODO T{ CHAR " GS3 GOODBYE" -> 7 CHAR G }T
-\\TODO T{ BL GS3
-\\TODO DROP -> 0 }T            \\ BLANK LINE RETURN ZERO-LENGTH STRING
+\\ TODO : GS3 WORD COUNT SWAP C@ ;
+\\ TODO T{ BL GS3 HELLO -> 5 CHAR H }T
+\\ TODO T{ CHAR " GS3 GOODBYE" -> 7 CHAR G }T
+\\ TODO T{ BL GS3
+\\ TODO DROP -> 0 }T            \\ BLANK LINE RETURN ZERO-LENGTH STRING
 
 : GS4 SOURCE >IN ! DROP ;
 T{ GS4 123 456
 -> }T
 
 \\ ------------------------------------------------------------------------
-\\TODO TESTING <# # #S #> HOLD SIGN BASE >NUMBER HEX DECIMAL
+\\ TODO TESTING <# # #S #> HOLD SIGN BASE >NUMBER HEX DECIMAL
 
-\\TODO : S=  \\ ( ADDR1 C1 ADDR2 C2 -- T/F ) COMPARE TWO STRINGS.
-\\TODO    >R SWAP R@ = IF         \\ MAKE SURE STRINGS HAVE SAME LENGTH
-\\TODO       R> ?DUP IF         \\ IF NON-EMPTY STRINGS
-\\TODO     0 DO
-\\TODO        OVER C@ OVER C@ - IF 2DROP <FALSE> UNLOOP EXIT THEN
-\\TODO        SWAP CHAR+ SWAP CHAR+
-\\TODO          LOOP
-\\TODO       THEN
-\\TODO       2DROP <TRUE>         \\ IF WE GET HERE, STRINGS MATCH
-\\TODO    ELSE
-\\TODO       R> DROP 2DROP <FALSE>      \\ LENGTHS MISMATCH
-\\TODO    THEN ;
-\\TODO 
-\\TODO : GP1  <# 41 HOLD 42 HOLD 0 0 #> S" BA" S= ;
-\\TODO T{ GP1 -> <TRUE> }T
-\\TODO 
-\\TODO : GP2  <# -1 SIGN 0 SIGN -1 SIGN 0 0 #> S" --" S= ;
-\\TODO T{ GP2 -> <TRUE> }T
-\\TODO 
-\\TODO : GP3  <# 1 0 # # #> S" 01" S= ;
-\\TODO T{ GP3 -> <TRUE> }T
-\\TODO 
-\\TODO : GP4  <# 1 0 #S #> S" 1" S= ;
-\\TODO T{ GP4 -> <TRUE> }T
-\\TODO 
-\\TODO 24 CONSTANT MAX-BASE         \\ BASE 2 .. 36
-\\TODO : COUNT-BITS
-\\TODO    0 0 INVERT BEGIN DUP WHILE >R 1+ R> 2* REPEAT DROP ;
-\\TODO COUNT-BITS 2* CONSTANT #BITS-UD      \\ NUMBER OF BITS IN UD
-\\TODO 
-\\TODO : GP5
-\\TODO    BASE @ <TRUE>
-\\TODO    MAX-BASE 1+ 2 DO         \\ FOR EACH POSSIBLE BASE
-\\TODO       I BASE !            \\ TBD: ASSUMES BASE WORKS
-\\TODO       I 0 <# #S #> S" 10" S= AND
-\\TODO    LOOP
-\\TODO    SWAP BASE ! ;
-\\TODO T{ GP5 -> <TRUE> }T
-\\TODO 
-\\TODO : GP6
-\\TODO    BASE @ >R  2 BASE !
-\\TODO    MAX-UINT MAX-UINT <# #S #>      \\ MAXIMUM UD TO BINARY
-\\TODO    R> BASE !            \\ S: C-ADDR U
-\\TODO    DUP #BITS-UD = SWAP
-\\TODO    0 DO               \\ S: C-ADDR FLAG
-\\TODO       OVER C@ [CHAR] 1 = AND      \\ ALL ONES
-\\TODO       >R CHAR+ R>
-\\TODO    LOOP SWAP DROP ;
-\\TODO T{ GP6 -> <TRUE> }T
-\\TODO 
-\\TODO : GP7
-\\TODO    BASE @ >R    MAX-BASE BASE !
-\\TODO    <TRUE>
-\\TODO    A 0 DO
-\\TODO       I 0 <# #S #>
-\\TODO       1 = SWAP C@ I 30 + = AND AND
-\\TODO    LOOP
-\\TODO    MAX-BASE A DO
-\\TODO       I 0 <# #S #>
-\\TODO       1 = SWAP C@ 41 I A - + = AND AND
-\\TODO    LOOP
-\\TODO    R> BASE ! ;
-\\TODO 
-\\TODO T{ GP7 -> <TRUE> }T
-\\TODO 
-\\TODO \\ >NUMBER TESTS
-\\TODO CREATE GN-BUF 0 C,
-\\TODO : GN-STRING   GN-BUF 1 ;
-\\TODO : GN-CONSUMED   GN-BUF CHAR+ 0 ;
-\\TODO : GN'      [CHAR] ' WORD CHAR+ C@ GN-BUF C!  GN-STRING ;
-\\TODO 
-\\TODO T{ 0 0 GN' 0' >NUMBER -> 0 0 GN-CONSUMED }T
-\\TODO T{ 0 0 GN' 1' >NUMBER -> 1 0 GN-CONSUMED }T
-\\TODO T{ 1 0 GN' 1' >NUMBER -> BASE @ 1+ 0 GN-CONSUMED }T
-\\TODO T{ 0 0 GN' -' >NUMBER -> 0 0 GN-STRING }T   \\ SHOULD FAIL TO CONVERT THESE
-\\TODO T{ 0 0 GN' +' >NUMBER -> 0 0 GN-STRING }T
-\\TODO T{ 0 0 GN' .' >NUMBER -> 0 0 GN-STRING }T
-\\TODO 
-\\TODO : >NUMBER-BASED
-\\TODO    BASE @ >R BASE ! >NUMBER R> BASE ! ;
-\\TODO 
-\\TODO T{ 0 0 GN' 2' 10 >NUMBER-BASED -> 2 0 GN-CONSUMED }T
-\\TODO T{ 0 0 GN' 2'  2 >NUMBER-BASED -> 0 0 GN-STRING }T
-\\TODO T{ 0 0 GN' F' 10 >NUMBER-BASED -> F 0 GN-CONSUMED }T
-\\TODO T{ 0 0 GN' G' 10 >NUMBER-BASED -> 0 0 GN-STRING }T
-\\TODO T{ 0 0 GN' G' MAX-BASE >NUMBER-BASED -> 10 0 GN-CONSUMED }T
-\\TODO T{ 0 0 GN' Z' MAX-BASE >NUMBER-BASED -> 23 0 GN-CONSUMED }T
-\\TODO 
-\\TODO : GN1   \\ ( UD BASE -- UD' LEN ) UD SHOULD EQUAL UD' AND LEN SHOULD BE ZERO.
-\\TODO    BASE @ >R BASE !
-\\TODO    <# #S #>
-\\TODO    0 0 2SWAP >NUMBER SWAP DROP      \\ RETURN LENGTH ONLY
-\\TODO    R> BASE ! ;
-\\TODO T{ 0 0 2 GN1 -> 0 0 0 }T
-\\TODO T{ MAX-UINT 0 2 GN1 -> MAX-UINT 0 0 }T
-\\TODO T{ MAX-UINT DUP 2 GN1 -> MAX-UINT DUP 0 }T
-\\TODO T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
-\\TODO T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
-\\TODO T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
-\\TODO 
-\\TODO : GN2   \\ ( -- 16 10 )
-\\TODO    BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;
-\\TODO T{ GN2 -> 10 A }T
+\\ TODO : S=  \\ ( ADDR1 C1 ADDR2 C2 -- T/F ) COMPARE TWO STRINGS.
+\\ TODO    >R SWAP R@ = IF         \\ MAKE SURE STRINGS HAVE SAME LENGTH
+\\ TODO       R> ?DUP IF         \\ IF NON-EMPTY STRINGS
+\\ TODO     0 DO
+\\ TODO        OVER C@ OVER C@ - IF 2DROP <FALSE> UNLOOP EXIT THEN
+\\ TODO        SWAP CHAR+ SWAP CHAR+
+\\ TODO          LOOP
+\\ TODO       THEN
+\\ TODO       2DROP <TRUE>         \\ IF WE GET HERE, STRINGS MATCH
+\\ TODO    ELSE
+\\ TODO       R> DROP 2DROP <FALSE>      \\ LENGTHS MISMATCH
+\\ TODO    THEN ;
+\\ TODO 
+\\ TODO : GP1  <# 41 HOLD 42 HOLD 0 0 #> S" BA" S= ;
+\\ TODO T{ GP1 -> <TRUE> }T
+\\ TODO 
+\\ TODO : GP2  <# -1 SIGN 0 SIGN -1 SIGN 0 0 #> S" --" S= ;
+\\ TODO T{ GP2 -> <TRUE> }T
+\\ TODO 
+\\ TODO : GP3  <# 1 0 # # #> S" 01" S= ;
+\\ TODO T{ GP3 -> <TRUE> }T
+\\ TODO 
+\\ TODO : GP4  <# 1 0 #S #> S" 1" S= ;
+\\ TODO T{ GP4 -> <TRUE> }T
+\\ TODO 
+\\ TODO 24 CONSTANT MAX-BASE         \\ BASE 2 .. 36
+\\ TODO : COUNT-BITS
+\\ TODO    0 0 INVERT BEGIN DUP WHILE >R 1+ R> 2* REPEAT DROP ;
+\\ TODO COUNT-BITS 2* CONSTANT #BITS-UD      \\ NUMBER OF BITS IN UD
+\\ TODO 
+\\ TODO : GP5
+\\ TODO    BASE @ <TRUE>
+\\ TODO    MAX-BASE 1+ 2 DO         \\ FOR EACH POSSIBLE BASE
+\\ TODO       I BASE !            \\ TBD: ASSUMES BASE WORKS
+\\ TODO       I 0 <# #S #> S" 10" S= AND
+\\ TODO    LOOP
+\\ TODO    SWAP BASE ! ;
+\\ TODO T{ GP5 -> <TRUE> }T
+\\ TODO 
+\\ TODO : GP6
+\\ TODO    BASE @ >R  2 BASE !
+\\ TODO    MAX-UINT MAX-UINT <# #S #>      \\ MAXIMUM UD TO BINARY
+\\ TODO    R> BASE !            \\ S: C-ADDR U
+\\ TODO    DUP #BITS-UD = SWAP
+\\ TODO    0 DO               \\ S: C-ADDR FLAG
+\\ TODO       OVER C@ [CHAR] 1 = AND      \\ ALL ONES
+\\ TODO       >R CHAR+ R>
+\\ TODO    LOOP SWAP DROP ;
+\\ TODO T{ GP6 -> <TRUE> }T
+\\ TODO 
+\\ TODO : GP7
+\\ TODO    BASE @ >R    MAX-BASE BASE !
+\\ TODO    <TRUE>
+\\ TODO    A 0 DO
+\\ TODO       I 0 <# #S #>
+\\ TODO       1 = SWAP C@ I 30 + = AND AND
+\\ TODO    LOOP
+\\ TODO    MAX-BASE A DO
+\\ TODO       I 0 <# #S #>
+\\ TODO       1 = SWAP C@ 41 I A - + = AND AND
+\\ TODO    LOOP
+\\ TODO    R> BASE ! ;
+\\ TODO 
+\\ TODO T{ GP7 -> <TRUE> }T
+\\ TODO 
+\\ TODO \\ >NUMBER TESTS
+\\ TODO CREATE GN-BUF 0 C,
+\\ TODO : GN-STRING   GN-BUF 1 ;
+\\ TODO : GN-CONSUMED   GN-BUF CHAR+ 0 ;
+\\ TODO : GN'      [CHAR] ' WORD CHAR+ C@ GN-BUF C!  GN-STRING ;
+\\ TODO 
+\\ TODO T{ 0 0 GN' 0' >NUMBER -> 0 0 GN-CONSUMED }T
+\\ TODO T{ 0 0 GN' 1' >NUMBER -> 1 0 GN-CONSUMED }T
+\\ TODO T{ 1 0 GN' 1' >NUMBER -> BASE @ 1+ 0 GN-CONSUMED }T
+\\ TODO T{ 0 0 GN' -' >NUMBER -> 0 0 GN-STRING }T   \\ SHOULD FAIL TO CONVERT THESE
+\\ TODO T{ 0 0 GN' +' >NUMBER -> 0 0 GN-STRING }T
+\\ TODO T{ 0 0 GN' .' >NUMBER -> 0 0 GN-STRING }T
+\\ TODO 
+\\ TODO : >NUMBER-BASED
+\\ TODO    BASE @ >R BASE ! >NUMBER R> BASE ! ;
+\\ TODO 
+\\ TODO T{ 0 0 GN' 2' 10 >NUMBER-BASED -> 2 0 GN-CONSUMED }T
+\\ TODO T{ 0 0 GN' 2'  2 >NUMBER-BASED -> 0 0 GN-STRING }T
+\\ TODO T{ 0 0 GN' F' 10 >NUMBER-BASED -> F 0 GN-CONSUMED }T
+\\ TODO T{ 0 0 GN' G' 10 >NUMBER-BASED -> 0 0 GN-STRING }T
+\\ TODO T{ 0 0 GN' G' MAX-BASE >NUMBER-BASED -> 10 0 GN-CONSUMED }T
+\\ TODO T{ 0 0 GN' Z' MAX-BASE >NUMBER-BASED -> 23 0 GN-CONSUMED }T
+\\ TODO 
+\\ TODO : GN1   \\ ( UD BASE -- UD' LEN ) UD SHOULD EQUAL UD' AND LEN SHOULD BE ZERO.
+\\ TODO    BASE @ >R BASE !
+\\ TODO    <# #S #>
+\\ TODO    0 0 2SWAP >NUMBER SWAP DROP      \\ RETURN LENGTH ONLY
+\\ TODO    R> BASE ! ;
+\\ TODO T{ 0 0 2 GN1 -> 0 0 0 }T
+\\ TODO T{ MAX-UINT 0 2 GN1 -> MAX-UINT 0 0 }T
+\\ TODO T{ MAX-UINT DUP 2 GN1 -> MAX-UINT DUP 0 }T
+\\ TODO T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
+\\ TODO T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
+\\ TODO T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
+\\ TODO 
+\\ TODO : GN2   \\ ( -- 16 10 )
+\\ TODO    BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;
+\\ TODO T{ GN2 -> 10 A }T
 
 \\ ------------------------------------------------------------------------
 TESTING FILL MOVE

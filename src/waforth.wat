@@ -217,7 +217,6 @@
   ;; 6.1.0080
   (func $paren
     (local $c i32)
-    (call $ensureCompiling)
     (block $endLoop
       (loop $loop
         (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0)) 
@@ -1281,21 +1280,11 @@
 
     ;; Search for first non-blank character
     (block $endSkipBlanks
-     (loop $skipBlanks
-       (set_local $char (call $readChar))
-       
-       ;; Skip comments (if necessary)
-       (if (i32.eq (get_local $char) (i32.const 0x5C #| '\' |#))
-         (then 
-          (loop $skipComments
-            (set_local $char (call $readChar))
-            (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| '\n' |#)))
-            (br_if $endSkipBlanks (i32.eq (get_local $char) (i32.const -1)))
-            (br $skipComments))))
-
-       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
-       (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
-       (br $endSkipBlanks)))
+      (loop $skipBlanks
+        (set_local $char (call $readChar))
+        (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x20 #| ' ' |#)))
+        (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
+        (br $endSkipBlanks)))
 
     (if (i32.ne (get_local $char) (i32.const -1)) 
       (then 
@@ -1406,6 +1395,18 @@
         (i32.store (i32.const !inBase) (i32.const 0))
         (call $push (i32.const -1)))))
   (!def_word "REFILL" "$refill")
+
+  ;; 6.2.2535
+  (func $backslash
+    (local $char i32)
+    (block $endSkipComments
+      (loop $skipComments
+        (set_local $char (call $readChar))
+        (br_if $endSkipComments (i32.eq (get_local $char) 
+                                        (i32.const 0x0a #| '\n' |#)))
+        (br_if $endSkipComments (i32.eq (get_local $char) (i32.const -1)))
+        (br $skipComments))))
+  (!def_word "\\" "$backslash" !fImmediate)
 
   ;; 6.1.2395
   (func $UNUSED
