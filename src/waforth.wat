@@ -288,7 +288,9 @@
 
   ;; 6.1.0140
   (func $plus-loop
+
     (call $ensureCompiling)
+
     (call $compilePlusLoop))
   (!def_word "+LOOP" "$plus-loop" !fImmediate)
 
@@ -468,7 +470,8 @@
     (i32.store8 (i32.const !moduleHeaderFunctionTypeBase) (get_local $params))
     (set_global $cp (i32.const !moduleBodyBase))
     (set_global $currentLocal (i32.add (i32.const -1) (get_local $params)))
-    (set_global $lastLocal (i32.add (i32.const -1) (get_local $params))))
+    (set_global $lastLocal (i32.add (i32.const -1) (get_local $params)))
+    (set_global $branchNesting (i32.const -1)))
 
   (func $endColon
     (local $bodySize i32)
@@ -1655,19 +1658,29 @@ EOF
     (i32.store8 (get_global $cp) (i32.const 0x04))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
     (i32.store8 (get_global $cp) (i32.const 0x40))
-    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+
+    (set_global $branchNesting (i32.add (get_global $branchNesting) (i32.const 1))))
 
   (func $compileElse
     (i32.store8 (get_global $cp) (i32.const 0x05))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
-  (func $compileThen (call $emitEnd))
+  (func $compileThen 
+    (set_global $branchNesting (i32.sub (get_global $branchNesting) (i32.const 1)))
+    (call $emitEnd))
 
   (func $compileDo
     (set_global $currentLocal (i32.add (get_global $currentLocal) (i32.const 2)))
     (if (i32.gt_s (get_global $currentLocal) (get_global $lastLocal))
       (then
         (set_global $lastLocal (get_global $currentLocal))))
+
+    ;; Save branch nesting
+    (i32.store (get_global $tors) (get_global $branchNesting))
+    (set_global $tors (i32.add (get_global $tors) (i32.const 4)))
+    (set_global $branchNesting (i32.const 0))
+
     (call $compilePop)
     (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
     (call $compilePop)
@@ -1685,6 +1698,8 @@ EOF
 
   ;; Assumes increment is on the operand stack
   (func $compileLoopEnd
+    (local $btors i32)
+
     (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
     (call $emitAdd)
     (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
@@ -1695,14 +1710,20 @@ EOF
     (call $emitBr (i32.const 0))
     (call $emitEnd)
     (call $emitEnd)
-    (set_global $currentLocal (i32.sub (get_global $currentLocal) (i32.const 2))))
+    (set_global $currentLocal (i32.sub (get_global $currentLocal) (i32.const 2)))
+
+    ;; Restore branch nesting
+    (set_global $branchNesting (i32.load (tee_local $btors (i32.sub (get_global $tors) (i32.const 4)))))
+    (set_global $tors (get_local $btors)))
+
 
   (func $compileLeave
-    (call $emitBr (i32.const 1)))
+    (call $emitBr (i32.add (get_global $branchNesting) (i32.const 1))))
 
   (func $compileBegin
     (call $emitBlock)
-    (call $emitLoop))
+    (call $emitLoop)
+    (set_global $branchNesting (i32.add (get_global $branchNesting) (i32.const 2))))
 
   (func $compileWhile
     (call $compilePop)
@@ -1712,7 +1733,8 @@ EOF
   (func $compileRepeat
     (call $emitBr (i32.const 0))
     (call $emitEnd)
-    (call $emitEnd))
+    (call $emitEnd)
+    (set_global $branchNesting (i32.sub (get_global $branchNesting) (i32.const 2))))
 
   (func $compileUntil
     (call $compilePop)
@@ -1720,7 +1742,8 @@ EOF
     (call $emitBrIf (i32.const 0))
     (call $emitBr (i32.const 1))
     (call $emitEnd)
-    (call $emitEnd))
+    (call $emitEnd)
+    (set_global $branchNesting (i32.sub (get_global $branchNesting) (i32.const 2))))
 
   (func $compileRecurse
     ;; call 0
@@ -2105,6 +2128,7 @@ EOF
 
   (global $currentLocal (mut i32) (i32.const 0))
   (global $lastLocal (mut i32) (i32.const -1))
+  (global $branchNesting (mut i32) (i32.const -1))
 
   ;; Compilation pointer
   (global $cp (mut i32) (i32.const !moduleBodyBase)))

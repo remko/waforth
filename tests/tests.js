@@ -88,6 +88,7 @@ function loadTests(wasmModule, arrayToBase64) {
           expect(r).to.be.undefined;
           output = output.substr(0, output.length);
         } else {
+          expect(r).to.not.be.an("undefined", "Error running: " + s);
           expect(r).to.not.be.below(0);
           output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
         }
@@ -656,19 +657,17 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("LEAVE", () => {
-      it.only("should leave", () => {
+      it("should leave", () => {
         run(`: FOO 4 0 DO 3 LEAVE 6 LOOP 4 ;`);
         run("FOO 5");
         expect(stackValues()).to.eql([3, 4, 5]);
       });
 
-      // it.only("should leave an if in a loop", () => {
-      //   run(`: FOO 5 0 DO I I 3 = IF LEAVE THEN I LOOP 123 ;`);
-      //   run("FOO 5");
-      //   expect(stack[0]).to.eql(3);
-      //   expect(stack[1]).to.eql(4);
-      //   expect(stack[2]).to.eql(5);
-      // });
+      it("should leave an if in a loop", () => {
+        run(`: FOO 5 0 DO I I 3 = IF 124 LEAVE THEN I LOOP 123 ;`);
+        run("FOO 5");
+        expect(stackValues()).to.eql([0, 0, 1, 1, 2, 2, 3, 124, 123, 5]);
+      });
     });
 
     describe("+LOOP", () => {
@@ -689,6 +688,12 @@ function loadTests(wasmModule, arrayToBase64) {
         expect(stack[0]).to.eql(3);
         expect(stack[1]).to.eql(3);
         expect(stack[2]).to.eql(5);
+      });
+
+      it.skip("should work with decrementing loops", () => {
+        run(": GD2 DO I -1 +LOOP ;");
+        run("1 4 GD2");
+        expect(stackValues()).to.eql([]);
       });
     });
 
