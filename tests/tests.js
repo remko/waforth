@@ -53,7 +53,7 @@ function loadTests(wasmModule, arrayToBase64) {
 
     function loadString(s) {
       run("HERE");
-      run(`${s.length} ,`);
+      run(`${s.length} C,`);
       for (let i = 0; i < s.length; ++i) {
         run(`${s.charCodeAt(i)} C,`);
       }

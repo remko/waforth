@@ -126,7 +126,7 @@
     (set! addressVar base)
     `((data 
         (i32.const ,(eval base))
-        ,(integer->integer-bytes (string-length s) 4 #f #f) 
+        ,(integer->integer-bytes (string-length s) 1 #f #f) 
         ,(eval s)))))
 
 
@@ -210,7 +210,7 @@
   ;; 6.1.0070
   (func $tick
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (call $find)
     (drop (call $pop)))
   (!def_word "'" "$tick")
@@ -731,9 +731,9 @@
   ;; 6.1.0895
   (func $CHAR
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
-               (i32.load8_u (i32.const (!+ !wordBase 4)))))
+               (i32.load8_u (i32.const (!+ !wordBase 1)))))
   (!def_word "CHAR" "$CHAR")
 
   ;; 6.1.0980
@@ -741,9 +741,9 @@
     (local $btos i32)
     (local $addr i32)
     (i32.store (get_global $tos)
-               (i32.load (tee_local $addr (i32.load (tee_local $btos (i32.sub (get_global $tos) 
-                                                                              (i32.const 4)))))))
-    (i32.store (get_local $btos) (i32.add (get_local $addr) (i32.const 4)))
+               (i32.load8_u (tee_local $addr (i32.load (tee_local $btos (i32.sub (get_global $tos) 
+                                                                               (i32.const 4)))))))
+    (i32.store (get_local $btos) (i32.add (get_local $addr) (i32.const 1)))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "COUNT" "$COUNT")
 
@@ -756,12 +756,12 @@
     (set_global $here (i32.add (get_global $here) (i32.const 4)))
 
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (drop (call $pop))
-    (i32.store8 (get_global $here) (tee_local $length (i32.load (i32.const !wordBase))))
+    (i32.store8 (get_global $here) (tee_local $length (i32.load8_u (i32.const !wordBase))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
 
-    (call $memmove (get_global $here) (i32.const (!+ !wordBase 4)) (get_local $length))
+    (call $memmove (get_global $here) (i32.const (!+ !wordBase 1)) (get_local $length))
 
     (set_global $here (i32.add (get_global $here) (get_local $length)))
 
@@ -892,9 +892,9 @@
     (local $wordEnd i32)
 
     (set_local $wordLength 
-               (i32.load (tee_local $wordStart (i32.load (i32.sub (get_global $tos) 
+               (i32.load8_u (tee_local $wordStart (i32.load (i32.sub (get_global $tos) 
                                                                   (i32.const 4))))))
-    (set_local $wordStart (i32.add (get_local $wordStart) (i32.const 4)))
+    (set_local $wordStart (i32.add (get_local $wordStart) (i32.const 1)))
     (set_local $wordEnd (i32.add (get_local $wordStart) (get_local $wordLength)))
 
     (set_local $entryP (get_global $latest))
@@ -920,7 +920,7 @@
                   (br $compareLoop)))
               (i32.store (i32.sub (get_global $tos) (i32.const 4))
                          (get_local $entryP))
-              (if (i32.eq (i32.and (get_local $entryLF) (i32.const !fImmediate)) (i32.const 0))
+              (if (i32.eqz (i32.and (get_local $entryLF) (i32.const !fImmediate)))
                 (then
                   (call $push (i32.const -1)))
                 (else
@@ -1100,7 +1100,7 @@
     (local $findToken i32)
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (call $find)
     (if (i32.eqz (call $pop)) (call $fail (i32.const !undefinedWordStr)))
     (set_local $findToken (call $pop))
@@ -1241,7 +1241,7 @@
   ;; 6.2.2295
   (func $TO
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (call $find)
     (if (i32.eqz (call $pop)) (call $fail (i32.const !undefinedWordStr)))
     (i32.store (i32.add (call $body (call $pop)) (i32.const 4)) (call $pop)))
@@ -1521,15 +1521,15 @@ EOF
     (local $end i32)
     (local $n i32)
 
-    (if (i32.eqz (tee_local $length (i32.load (i32.const !wordBase))))
+    (if (i32.eqz (tee_local $length (i32.load8_u (i32.const !wordBase))))
       (return (i32.const -1)))
 
-    (set_local $p (i32.const (!+ !wordBase 4)))
-    (set_local $end (i32.add (i32.const (!+ !wordBase 4)) (get_local $length)))
+    (set_local $p (i32.const (!+ !wordBase 1)))
+    (set_local $end (i32.add (i32.const (!+ !wordBase 1)) (get_local $length)))
     (set_local $base (i32.load (i32.const !baseBase)))
 
     ;; Read first character
-    (if (i32.eq (tee_local $char (i32.load8_u (i32.const (!+ !wordBase 4))))
+    (if (i32.eq (tee_local $char (i32.load8_u (i32.const (!+ !wordBase 1))))
                 (i32.const 0x2d #| '-' |#))
       (then 
         (set_local $sign (i32.const -1))
@@ -1587,7 +1587,7 @@ EOF
     (block $endLoop
       (loop $loop
         (call $readWord (i32.const 0x20))
-        (br_if $endLoop (i32.eqz (i32.load (i32.const !wordBase))))
+        (br_if $endLoop (i32.eqz (i32.load8_u (i32.const !wordBase))))
         (call $find)
         (set_local $findResult (call $pop))
         (set_local $findToken (call $pop))
@@ -1630,13 +1630,13 @@ EOF
         (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
         (br $endSkipBlanks)))
 
-    (set_local $stringPtr (i32.const (!+ !wordBase 4)))
+    (set_local $stringPtr (i32.const (!+ !wordBase 1)))
     (if (i32.ne (get_local $char) (i32.const -1)) 
       (if (i32.ne (get_local $char) (i32.const 0x0a))
         (then 
           ;; Search for delimiter
-          (i32.store8 (i32.const (!+ !wordBase 4)) (get_local $char))
-          (set_local $stringPtr (i32.const (!+ !wordBase 5)))
+          (i32.store8 (i32.const (!+ !wordBase 1)) (get_local $char))
+          (set_local $stringPtr (i32.const (!+ !wordBase 2)))
           (block $endReadChars
             (loop $readChars
               (set_local $char (call $readChar))
@@ -1648,8 +1648,8 @@ EOF
               (br $readChars))))))
 
      ;; Write word length
-     (i32.store (i32.const !wordBase) 
-       (i32.sub (get_local $stringPtr) (i32.const (!+ !wordBase 4))))
+     (i32.store8 (i32.const !wordBase) 
+       (i32.sub (get_local $stringPtr) (i32.const (!+ !wordBase 1))))
      
      (call $push (i32.const !wordBase)))
 
