@@ -43,7 +43,7 @@ class WAForth {
         },
 
         debug: d => {
-          console.log("DEBUG: ", d);
+          console.log("DEBUG: ", d, String.fromCharCode(d));
         },
 
         key: () => {

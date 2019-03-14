@@ -1299,6 +1299,14 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("EVALUATE", () => {
+      it("should  work", () => {
+        run(': FOO S" 1 2 3" EVALUATE 4 ;');
+        run("FOO");
+        expect(stackValues()).to.eql([1, 2, 3, 4]);
+      });
+    });
+
     describe("VALUE", () => {
       beforeEach(() => {
         core.loadPrelude();

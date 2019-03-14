@@ -181,6 +181,7 @@
   (global $tos (mut i32) (i32.const !stackBase))
   (global $tors (mut i32) (i32.const !returnStackBase))
   (global $inputBufferSize (mut i32) (i32.const 0))
+  (global $inputBufferBase (mut i32) (i32.const !inputBufferBase))
   (global $sourceID (mut i32) (i32.const 0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -839,15 +840,30 @@
   ;; 6.1.1360
   (func $EVALUATE
     (local $bbtos i32)
-    (local $inputSize i32)
+    (local $prevSourceID i32)
+    (local $prevIn i32)
+    (local $prevInputBufferBase i32)
+    (local $prevInputBufferSize i32)
+
+    ;; Save input state
+    (set_local $prevSourceID (get_global $sourceID))
+    (set_local $prevIn (i32.load (i32.const !inBase)))
+    (set_local $prevInputBufferSize (get_global $inputBufferSize))
+    (set_local $prevInputBufferBase (get_global $inputBufferBase))
+
     (set_global $sourceID (i32.const -1))
-    (call $memmove (i32.const !inputBufferBase)
-                   (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8))))
-                   (tee_local $inputSize (i32.load (i32.sub (get_global $tos) (i32.const 4)))))
-    (set_global $inputBufferSize (get_local $inputSize))
+    (set_global $inputBufferBase (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))))
+    (set_global $inputBufferSize (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (i32.store (i32.const !inBase) (i32.const 0))
+
     (set_global $tos (get_local $bbtos))
-    (drop (call $interpret)))
+    (drop (call $interpret))
+
+    ;; Restore input state
+    (set_global $sourceID (get_local $prevSourceID))
+    (i32.store (i32.const !inBase) (get_local $prevIn))
+    (set_global $inputBufferBase (get_local $prevInputBufferBase))
+    (set_global $inputBufferSize (get_local $prevInputBufferSize)))
   (!def_word "EVALUATE" "$EVALUATE")
 
   ;; 6.1.1380
@@ -1178,7 +1194,7 @@
 
   ;; 6.1.2216
   (func $SOURCE 
-    (call $push (i32.const !inputBufferBase))
+    (call $push (get_global $inputBufferBase))
     (call $push (get_global $inputBufferSize)))
   (!def_word "SOURCE" "$SOURCE")
 
@@ -2017,20 +2033,14 @@ EOF
       (if (i32.ge_u (tee_local $in (i32.load (i32.const !inBase)))
                     (get_global $inputBufferSize))
         (then
-          (if (i32.eqz (get_global $sourceID))
-            (then
-              (return (i32.const -1)))
-            (else
-              (set_global $sourceID (i32.const 0))
-              (br $loop))))
+          (return (i32.const -1)))
         (else
-          (set_local $n (i32.load8_s (i32.add (i32.const !inputBufferBase) (get_local $in))))
+          (set_local $n (i32.load8_s (i32.add (get_global $inputBufferBase) (get_local $in))))
           (i32.store (i32.const !inBase) (i32.add (get_local $in) (i32.const 1)))
           (return (get_local $n)))))
     (unreachable))
 
   (func $loadPrelude (export "loadPrelude")
-    (set_global $sourceID (i32.const -1))
     (call $push (i32.const !preludeDataBase))
     (call $push (i32.const (!+ (string-length !preludeData) 0)))
     (call $EVALUATE))
