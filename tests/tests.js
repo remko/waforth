@@ -88,7 +88,10 @@ function loadTests(wasmModule, arrayToBase64) {
           expect(r).to.be.undefined;
           output = output.substr(0, output.length);
         } else {
-          expect(r).to.not.be.an("undefined", "Error running: " + s);
+          expect(r).to.not.be.an(
+            "undefined",
+            "Error running: " + s + "; Output: " + output
+          );
           expect(r).to.not.be.below(0);
           output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
         }
@@ -656,6 +659,16 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("UNLOOP", () => {
+      it.skip("should work with nested loops", () => {
+        run(
+          ": GD6 0 3 0 DO I 1+ 0 DO I J + 3 = IF I UNLOOP I UNLOOP EXIT THEN 1+ LOOP LOOP ;"
+        );
+        run("GD6");
+        expect(stackValues()).to.eql([4, 2, 1]);
+      });
+    });
+
     describe("LEAVE", () => {
       it("should leave", () => {
         run(`: FOO 4 0 DO 3 LEAVE 6 LOOP 4 ;`);
@@ -690,10 +703,10 @@ function loadTests(wasmModule, arrayToBase64) {
         expect(stack[2]).to.eql(5);
       });
 
-      it.skip("should work with decrementing loops", () => {
+      it("should work with decrementing loops", () => {
         run(": GD2 DO I -1 +LOOP ;");
         run("1 4 GD2");
-        expect(stackValues()).to.eql([]);
+        expect(stackValues()).to.eql([4, 3, 2, 1]);
       });
     });
 

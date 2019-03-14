@@ -13,6 +13,7 @@
   (func $word (param $n i32)
     (local $index1 i32)
     (local $end1 i32)
+    (local $incr1 i32)
 
     ;; Push
     (call_indirect (type $push) (i32.const 43) (i32.const 1))
@@ -33,11 +34,14 @@
     ;; do loop
     (set_local $index1 (call_indirect (type $pop) (i32.const 2)))
     (set_local $end1 (call_indirect (type $pop) (i32.const 2)))
+    (set_local $incr1 (i32.ge_s (get_local $end1) (get_local $index1)))
     (block $endDoLoop
       (loop $doLoop
         (nop)
         (set_local $index1 (i32.add (get_local $index1) (i32.const 1)))
-        (br_if $endDoLoop (i32.ge_s (get_local $index1) (get_local $end1)))
+        (if (i32.eqz (get_local $incr1))
+          (then (br_if $endDoLoop (i32.le_s (get_local $index1) (get_local $end1))))
+          (else (br_if $endDoLoop (i32.ge_s (get_local $index1) (get_local $end1)))))
         (br $doLoop)))
 
     ;; repeat loop

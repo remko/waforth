@@ -696,8 +696,8 @@ T{ 2 -1 GD1 -> -1 0 1 }T
 T{ MID-UINT+1 MID-UINT GD1 -> MID-UINT }T
 
 T{ : GD2 DO I -1 +LOOP ; -> }T
-\\TODO T{ 1 4 GD2 -> 4 3 2 1 }T
-\\TODO T{ -1 2 GD2 -> 2 1 0 -1 }T
+T{ 1 4 GD2 -> 4 3 2 1 }T
+T{ -1 2 GD2 -> 2 1 0 -1 }T
 \\TODO T{ MID-UINT MID-UINT+1 GD2 -> MID-UINT+1 MID-UINT }T
 
 T{ : GD3 DO 1 0 DO J LOOP LOOP ; -> }T
@@ -706,8 +706,8 @@ T{ 2 -1 GD3 -> -1 0 1 }T
 T{ MID-UINT+1 MID-UINT GD3 -> MID-UINT }T
 
 T{ : GD4 DO 1 0 DO J LOOP -1 +LOOP ; -> }T
-\\TODO T{ 1 4 GD4 -> 4 3 2 1 }T
-\\TODO T{ -1 2 GD4 -> 2 1 0 -1 }T
+T{ 1 4 GD4 -> 4 3 2 1 }T
+T{ -1 2 GD4 -> 2 1 0 -1 }T
 \\TODO T{ MID-UINT MID-UINT+1 GD4 -> MID-UINT+1 MID-UINT }T
 
 T{ : GD5 123 SWAP 0 DO I 4 > IF DROP 234 LEAVE THEN LOOP ; -> }T
@@ -778,31 +778,31 @@ T{ W1 -> HERE 2 + }T
 \\TODO T{ GE7 -> 124 }T
 
 \\ ------------------------------------------------------------------------
-\\TODO TESTING SOURCE >IN WORD
+TESTING SOURCE >IN WORD
 
-\\TODO : GS1 S" SOURCE" 2DUP EVALUATE
-\\TODO        >R SWAP >R = R> R> = ;
+: GS1 S" SOURCE" 2DUP EVALUATE
+       >R SWAP >R = R> R> = ;
 \\TODO T{ GS1 -> <TRUE> <TRUE> }T
-\\TODO 
-\\TODO VARIABLE SCANS
-\\TODO : RESCAN?  -1 SCANS +! SCANS @ IF 0 >IN ! THEN ;
-\\TODO 
-\\TODO T{ 2 SCANS !
-\\TODO 345 RESCAN?
-\\TODO -> 345 345 }T
-\\TODO 
-\\TODO : GS2  5 SCANS ! S" 123 RESCAN?" EVALUATE ;
+
+VARIABLE SCANS
+: RESCAN?  -1 SCANS +! SCANS @ IF 0 >IN ! THEN ;
+
+T{ 2 SCANS !
+345 RESCAN?
+-> 345 345 }T
+
+: GS2  5 SCANS ! S" 123 RESCAN?" EVALUATE ;
 \\TODO T{ GS2 -> 123 123 123 123 123 }T
-\\TODO 
+
 \\TODO : GS3 WORD COUNT SWAP C@ ;
 \\TODO T{ BL GS3 HELLO -> 5 CHAR H }T
 \\TODO T{ CHAR " GS3 GOODBYE" -> 7 CHAR G }T
 \\TODO T{ BL GS3
 \\TODO DROP -> 0 }T            \\ BLANK LINE RETURN ZERO-LENGTH STRING
-\\TODO 
-\\TODO : GS4 SOURCE >IN ! DROP ;
-\\TODO T{ GS4 123 456
-\\TODO -> }T
+
+: GS4 SOURCE >IN ! DROP ;
+T{ GS4 123 456
+-> }T
 
 \\ ------------------------------------------------------------------------
 \\TODO TESTING <# # #S #> HOLD SIGN BASE >NUMBER HEX DECIMAL

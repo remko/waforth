@@ -288,9 +288,7 @@
 
   ;; 6.1.0140
   (func $plus-loop
-
     (call $ensureCompiling)
-
     (call $compilePlusLoop))
   (!def_word "+LOOP" "$plus-loop" !fImmediate)
 
@@ -816,7 +814,7 @@
   ;; 6.1.1310
   (func $else
     (call $ensureCompiling)
-    (call $compileElse))
+    (call $emitElse))
   (!def_word "ELSE" "$else" !fImmediate)
 
   ;; 6.1.1320
@@ -966,7 +964,7 @@
   ;; 6.1.1730
   (func $j
     (call $ensureCompiling)
-    (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 3))))
+    (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 4))))
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
@@ -1655,23 +1653,16 @@ EOF
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
 
     ;; if (empty block)
-    (i32.store8 (get_global $cp) (i32.const 0x04))
-    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
-    (i32.store8 (get_global $cp) (i32.const 0x40))
-    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (call $emitIf)
 
     (set_global $branchNesting (i32.add (get_global $branchNesting) (i32.const 1))))
-
-  (func $compileElse
-    (i32.store8 (get_global $cp) (i32.const 0x05))
-    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
   (func $compileThen 
     (set_global $branchNesting (i32.sub (get_global $branchNesting) (i32.const 1)))
     (call $emitEnd))
 
   (func $compileDo
-    (set_global $currentLocal (i32.add (get_global $currentLocal) (i32.const 2)))
+    (set_global $currentLocal (i32.add (get_global $currentLocal) (i32.const 3)))
     (if (i32.gt_s (get_global $currentLocal) (get_global $lastLocal))
       (then
         (set_global $lastLocal (get_global $currentLocal))))
@@ -1685,32 +1676,56 @@ EOF
     (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
     (call $compilePop)
     (call $emitSetLocal (get_global $currentLocal))
+
+    (call $emitGetLocal (get_global $currentLocal))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGreaterEqualSigned)
+    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 2)))
+
     (call $emitBlock)
     (call $emitLoop))
   
   (func $compileLoop 
     (call $emitConst (i32.const 1))
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitAdd)
+    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGetLocal (get_global $currentLocal))
+    (call $emitGreaterEqualSigned)
+    (call $emitBrIf (i32.const 1))
     (call $compileLoopEnd))
 
   (func $compilePlusLoop 
     (call $compilePop)
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitAdd)
+    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 2)))
+    (call $emitEqualsZero)
+    (call $emitIf)
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGetLocal (get_global $currentLocal))
+    (call $emitLesserSigned)
+    (call $emitBrIf (i32.const 2))
+    (call $emitElse)
+    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
+    (call $emitGetLocal (get_global $currentLocal))
+    (call $emitGreaterEqualSigned)
+    (call $emitBrIf (i32.const 2))
+    (call $emitEnd)
+
     (call $compileLoopEnd))
 
   ;; Assumes increment is on the operand stack
   (func $compileLoopEnd
     (local $btors i32)
-
-    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $emitAdd)
-    (call $emitSetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $emitGetLocal (i32.sub (get_global $currentLocal) (i32.const 1)))
-    (call $emitGetLocal (get_global $currentLocal))
-    (call $emitGreaterEqualSigned)
-    (call $emitBrIf (i32.const 1))
     (call $emitBr (i32.const 0))
     (call $emitEnd)
     (call $emitEnd)
-    (set_global $currentLocal (i32.sub (get_global $currentLocal) (i32.const 2)))
+    (set_global $currentLocal (i32.sub (get_global $currentLocal) (i32.const 3)))
 
     ;; Restore branch nesting
     (set_global $branchNesting (i32.load (tee_local $btors (i32.sub (get_global $tors) (i32.const 4)))))
@@ -1794,6 +1809,16 @@ EOF
     (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
     (set_global $cp (call $leb128 (get_global $cp) (get_local $n))))
 
+  (func $emitIf
+    (i32.store8 (get_global $cp) (i32.const 0x04))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1)))
+    (i32.store8 (get_global $cp) (i32.const 0x40))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitElse
+    (i32.store8 (get_global $cp) (i32.const 0x05))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
   (func $emitEnd
     (i32.store8 (get_global $cp) (i32.const 0x0b))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
@@ -1830,6 +1855,10 @@ EOF
 
   (func $emitGreaterEqualSigned
     (i32.store8 (get_global $cp) (i32.const 0x4e))
+    (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
+
+  (func $emitLesserSigned
+    (i32.store8 (get_global $cp) (i32.const 0x48))
     (set_global $cp (i32.add (get_global $cp) (i32.const 1))))
 
   (func $emitReturn
