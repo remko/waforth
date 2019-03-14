@@ -1265,6 +1265,16 @@ function loadTests(wasmModule, arrayToBase64) {
         expect(stack[0]).to.eql(5);
         expect(output).to.eql("Hello World!!");
       });
+
+      it("should postpone non-immediate words", () => {
+        run(': FOO ." A1" ;');
+        run(': BAR ." A2" POSTPONE FOO ." A3" ; IMMEDIATE');
+        run(": BAZ BAR ;");
+        expect(output).to.eql("A2A3");
+        run("BAZ");
+        expect(output).to.eql("A2A3A1");
+        expect(stackValues()).to.eql([]);
+      });
     });
 
     describe("VARIABLE", () => {

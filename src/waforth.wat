@@ -106,7 +106,8 @@
 (define !abortIndex 4)
 (define !pushDataAddressIndex 5)
 (define !setLatestBodyIndex 6)
-(define !tableStartIndex 7)
+(define !compileCallIndex 7)
+(define !tableStartIndex 8)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
@@ -1098,13 +1099,18 @@
   ;; 6.1.2033
   (func $POSTPONE
     (local $findToken i32)
+    (local $findResult i32)
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
     (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
     (call $find)
-    (if (i32.eqz (call $pop)) (call $fail (i32.const !undefinedWordStr)))
+    (if (i32.eqz (tee_local $findResult (call  $pop))) (call $fail (i32.const !undefinedWordStr)))
     (set_local $findToken (call $pop))
-    (call $compileCall (get_local $findToken)))
+    (if (i32.eq (get_local $findResult) (i32.const 1))
+      (then (call $compileCall (get_local $findToken)))
+      (else
+        (call $emitConst (get_local $findToken))
+        (call $emitICall (i32.const 1) (i32.const !compileCallIndex)))))
   (!def_word "POSTPONE" "$POSTPONE" !fImmediate)
 
   ;; 6.1.2050
@@ -1802,6 +1808,7 @@ EOF
         (call $emitICall (i32.const 1) (i32.load (get_local $body))))
       (else
         (call $emitICall (i32.const 0) (i32.load (get_local $body))))))
+  (elem (i32.const !compileCallIndex) $compileCall)
 
   (func $emitICall (param $type i32) (param $n i32)
     (call $emitConst (get_local $n))
