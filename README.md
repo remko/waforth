@@ -15,7 +15,11 @@ Parts of the implementation were influenced by
 [jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary), and I
 shamelessly stole the Forth code of some of its high-level words.
 
-WAForth is still in an experimental stage.
+WAForth is still in an experimental stage. It implements most of the [ANS Core
+Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
+[Forth 200x Test Suite](http://www.forth200x.org/documents/html/testsuite.html)
+core word tests.
+
 
 ## Install Dependencies
 

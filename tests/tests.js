@@ -1448,6 +1448,29 @@ function loadTests(wasmModule, arrayToBase64) {
         if (tosValue() !== 0) {
           assert.fail(output);
         }
+        expect(output).to.include(
+          "YOU SHOULD SEE 0-9 SEPARATED BY A SPACE:\n0 1 2 3 4 5 6 7 8 9 \n"
+        );
+        expect(output).to.include(
+          "YOU SHOULD SEE THE STANDARD GRAPHIC CHARACTERS:\n !\"#$%&'()*+,-./0123456789:;<=>?@\nABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`\nabcdefghijklmnopqrstuvwxyz{|}~\n"
+        );
+        expect(output).to.include(
+          "YOU SHOULD SEE 0-9 (WITH NO SPACES):\n0123456789\n"
+        );
+        expect(output).to.include(
+          "YOU SHOULD SEE A-G SEPARATED BY A SPACE:\nA B C D E F G \n"
+        );
+        expect(output).to.include(
+          "YOU SHOULD SEE 0-5 SEPARATED BY TWO SPACES:\n0  1  2  3  4  5  \n"
+        );
+        expect(output).to.include(
+          "YOU SHOULD SEE TWO SEPARATE LINES:\nLINE 1\nLINE 2\n"
+        );
+        // These 2 are wrong
+        expect(output).to.include(
+          "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -(0000000 7FFFFFFF \n"
+        );
+        expect(output).to.include("UNSIGNED: 0/\n");
       });
     });
   });
