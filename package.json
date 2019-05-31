@@ -4,7 +4,7 @@
   "dependencies": {
     "immutability-helper": "^3.0.0",
     "jq-console": "^2.13.2",
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.1",
     "preact": "^8.2.9",
     "promise-polyfill": "^7.1.2"
   },
@@ -31,7 +31,6 @@
     "test": "mocha tests/index-node.js",
     "test-watch": "mocha --watch tests/index-node.js",
     "lint": "eslint .",
-    "dev-server":
-      "webpack-dev-server --open --openPage waforth --content-base public"
+    "dev-server": "webpack-dev-server --open --openPage waforth --content-base public"
   }
 }
