@@ -3,7 +3,7 @@
 language: node_js
 node_js:
   - "node"
-dist: xenial
+dist: bionic
 install:
   - wget https://github.com/WebAssembly/wabt/releases/download/1.0.10/wabt-1.0.10-linux.tar.gz -O wabt-1.0.10-linux.tar.gz 
   - tar xzf wabt-1.0.10-linux.tar.gz 
