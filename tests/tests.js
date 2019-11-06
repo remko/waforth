@@ -902,21 +902,21 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(131956);
+        expect(stack[0]).to.eql(135920);
         expect(stack[1]).to.eql(-1);
       });
 
       it("should find a short word", () => {
         loadString("!");
         run("FIND");
-        expect(stack[0]).to.eql(131204);
+        expect(stack[0]).to.eql(135168);
         expect(stack[1]).to.eql(-1);
       });
 
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stack[0]).to.eql(131304);
+        expect(stack[0]).to.eql(135268);
         expect(stack[1]).to.eql(1);
       });
 

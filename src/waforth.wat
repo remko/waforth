@@ -34,7 +34,7 @@
 (define !preludeDataBase #x2000)
 (define !returnStackBase #x4000)
 (define !stackBase #x10000)
-(define !dictionaryBase #x20000)
+(define !dictionaryBase #x21000)
 (define !memorySize (* 100 1024 1024))
 
 (define !moduleHeader 
@@ -107,29 +107,10 @@
 (define !pushDataAddressIndex 5)
 (define !setLatestBodyIndex 6)
 (define !compileCallIndex 7)
-(define !tableStartIndex 8)
+(define !tableStartIndex 16)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
-
-;; Built-in strings
-(define !undefinedWordStr -1)
-(define !divisionBy0Str -1)
-(define !incompleteInputStr -1)
-(define !missingClosingParenStr -1)
-(define !missingClosingQuoteStr -1)
-(define !wordNotInterpretable -1)
-
-(define-syntax-rule (!def_string s addressVar)
-  (let ((base !dictionaryTop)
-        (size (* (ceiling (/ (+ (string-length s) 4) 4)) 4)))
-    (set! !dictionaryTop (+ !dictionaryTop size))
-    (set! addressVar base)
-    `((data 
-        (i32.const ,(eval base))
-        ,(integer->integer-bytes (string-length s) 1 #f #f) 
-        ,(eval s)))))
-
 
 (define (!def_word name f (flags 0) (idx !tableStartIndex))
   (let* ((base !dictionaryTop) 
@@ -189,13 +170,13 @@
   ;; Constant strings
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (!def_string "undefined word" !undefinedWordStr)
-  (!def_string "division by 0" !divisionBy0Str)
-  (!def_string "incomplete input" !incompleteInputStr)
-  (!def_string "missing ')'" !missingClosingParenStr)
-  (!def_string "missing \"" !missingClosingQuoteStr)
-  (!def_string "word not supported in interpret mode" !wordNotInterpretable)
-
+  (data (i32.const #x20000) "\u000eundefined word")
+  (data (i32.const #x20014) "\u000ddivision by 0")
+  (data (i32.const #x20028) "\u0010incomplete input")
+  (data (i32.const #x2003C) "\u000bmissing ')'")
+  (data (i32.const #x2004C) "\u0009missing \u0022")
+  (data (i32.const #x2005C) "\u0024word not supported in interpret mode")
+  
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -211,7 +192,7 @@
   ;; 6.1.0070
   (func $tick
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $find)
     (drop (call $pop)))
   (!def_word "'" "$tick")
@@ -222,7 +203,7 @@
     (block $endLoop
       (loop $loop
         (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0)) 
-          (call $fail (i32.const !missingClosingParenStr)))
+          (call $fail (i32.const 0x2003C))) ;; missing ')'
         (br_if $endLoop (i32.eq (get_local $c) (i32.const 41)))
         (br $loop))))
   (!def_word "(" "$paren" !fImmediate)
@@ -325,7 +306,7 @@
     (local $bbtos i32)
     (local $divisor i32)
     (if (i32.eqz (tee_local $divisor (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
-      (call $fail (i32.const !divisionBy0Str)))
+      (call $fail (i32.const 0x20014))) ;; division by 0
     (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
                (i32.div_s (i32.load (get_local $bbtos)) (get_local $divisor)))
     (set_global $tos (get_local $btos)))
@@ -732,7 +713,7 @@
   ;; 6.1.0895
   (func $CHAR
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
                (i32.load8_u (i32.const (!+ !wordBase 1)))))
   (!def_word "CHAR" "$CHAR")
@@ -757,7 +738,7 @@
     (set_global $here (i32.add (get_global $here) (i32.const 4)))
 
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (drop (call $pop))
     (i32.store8 (get_global $here) (tee_local $length (i32.load8_u (i32.const !wordBase))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
@@ -1102,9 +1083,9 @@
     (local $findResult i32)
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $find)
-    (if (i32.eqz (tee_local $findResult (call  $pop))) (call $fail (i32.const !undefinedWordStr)))
+    (if (i32.eqz (tee_local $findResult (call  $pop))) (call $fail (i32.const 0x20000))) ;; undefined word
     (set_local $findToken (call $pop))
     (if (i32.eq (get_local $findResult) (i32.const 1))
       (then (call $compileCall (get_local $findToken)))
@@ -1180,7 +1161,7 @@
     (block $endLoop
       (loop $loop
         (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0))
-          (call $fail (i32.const !missingClosingQuoteStr)))
+          (call $fail (i32.const 0x2003C))) ;; missing closing quote
         (br_if $endLoop (i32.eq (get_local $c) (i32.const 0x22)))
         (i32.store8 (get_global $here) (get_local $c))
         (set_global $here (i32.add (get_global $here) (i32.const 1)))
@@ -1247,9 +1228,9 @@
   ;; 6.2.2295
   (func $TO
     (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const !incompleteInputStr)))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $find)
-    (if (i32.eqz (call $pop)) (call $fail (i32.const !undefinedWordStr)))
+    (if (i32.eqz (call $pop)) (call $fail (i32.const 0x20000))) ;; undefined word
     (i32.store (i32.add (call $body (call $pop)) (i32.const 4)) (call $pop)))
   (!def_word "TO" "$TO")
 
@@ -1608,7 +1589,7 @@ EOF
                     (call $compilePushConst (call $pop)))))
                   ;; We're not compiling. Leave the number on the stack.
               (else ;; It's not a number.
-                (call $fail (i32.const !undefinedWordStr)))))
+                (call $fail (i32.const 0x20000))))) ;; undefined word
           (else ;; Found the word. 
             ;; Are we compiling or is it immediate?
             (if (i32.or (i32.eqz (i32.load (i32.const !stateBase)))
@@ -1928,7 +1909,7 @@ EOF
 
   (func $ensureCompiling
     (if (i32.eqz (i32.load (i32.const !stateBase)))
-      (call $fail (i32.const !wordNotInterpretable))))
+      (call $fail (i32.const 0x2005C)))) ;; word not interpretable
 
   ;; Toggle the hidden flag
   (func $hidden
