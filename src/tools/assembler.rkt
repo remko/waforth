@@ -47,10 +47,8 @@
 (define (priority x)
   (cond ((eq? x 'module) 0)
         ((and (list? x) (eq? (car x) 'import)) 1000000)
-        ((and (list? x) (eq? (car x) 'table))  2000000)
         ((and (list? x) (eq? (car x) 'memory)) 2000000)
         ((and (list? x) (eq? (car x) 'global)) 3000000)
-        ((and (list? x) (eq? (car x) 'elem))   (+ 4000000 (car (cdr (car (cdr x))))))
         ((and (list? x) (eq? (car x) 'data))   (+ 5000000 (car (cdr (car (cdr x))))))
         (else 100000000)))
 
