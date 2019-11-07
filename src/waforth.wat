@@ -109,26 +109,12 @@
 (define !typeIndex #x85)
 (define !abortIndex #x39)
 
-(define !dictionaryLatest 0)
-(define !dictionaryTop !dictionaryBase)
-
 (define (!def_word name f (flags 0))
-  (let* ((base !dictionaryTop) 
-         (previous !dictionaryLatest)
-         (name-entry-length (* (ceiling (/ (+ (string-length name) 1) 4)) 4))
+  (let* ((name-entry-length (* (ceiling (/ (+ (string-length name) 1) 4)) 4))
          (idx !tableStartIndex)
          (size (+ 8 name-entry-length)))
     (set! !tableStartIndex (+ !tableStartIndex 1))
-    (set! !dictionaryLatest !dictionaryTop)
-    (set! !dictionaryTop (+ !dictionaryTop size))
-    `((elem (i32.const ,(eval idx)) ,(string->symbol f))
-      (data 
-        (i32.const ,(eval base))
-        ,(integer->integer-bytes previous 4 #f #f) 
-        ,(integer->integer-bytes (bitwise-ior (string-length name) flags) 1 #f #f)
-        ,(eval name)
-        ,(make-bytes (- name-entry-length (string-length name) 1) 0)
-        ,(integer->integer-bytes idx 4 #f #f)))))
+    `((elem (i32.const ,(eval idx)) ,(string->symbol f)))))
 
 (define (!+ x y) (list (+ x y)))
 (define (!/ x y) (list (ceiling (/ x y))))
@@ -188,15 +174,19 @@
     (i32.store (i32.load (i32.sub (get_global $tos) (i32.const 4)))
                (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))))
     (set_global $tos (get_local $bbtos)))
+  (data (i32.const 135168) "\u0000\u0000\u0000\u0000\u0001!\u0000\u0000\u0010\u0000\u0000\u0000")
   (!def_word "!" "$!")
 
   (func $# (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135180) "\u0000\u0010\u0002\u0000\u0001#\u0000\u0000\u0011\u0000\u0000\u0000")
   (!def_word "#" "$#")
 
   (func $#> (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135192) "\u000c\u0010\u0002\u0000\u0002#>\u0000\u0012\u0000\u0000\u0000")
   (!def_word "#>" "$#>")
 
   (func $#S (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135204) "\u0018\u0010\u0002\u0000\u0002#S\u0000\u0013\u0000\u0000\u0000")
   (!def_word "#S" "$#S")
 
   ;; 6.1.0070
@@ -205,6 +195,7 @@
     (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $find)
     (drop (call $pop)))
+  (data (i32.const 135216) "$\u0010\u0002\u0000\u0001'\u0000\u0000\u0014\u0000\u0000\u0000")
   (!def_word "'" "$tick")
 
   ;; 6.1.0080
@@ -216,6 +207,7 @@
           (call $fail (i32.const 0x2003C))) ;; missing ')'
         (br_if $endLoop (i32.eq (get_local $c) (i32.const 41)))
         (br $loop))))
+  (data (i32.const 135228) "0\u0010\u0002\u0000\u0081(\u0000\u0000\u0015\u0000\u0000\u0000")
   (!def_word "(" "$paren" !fImmediate)
 
   ;; 6.1.0090
@@ -226,6 +218,7 @@
                (i32.mul (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
                         (i32.load (get_local $bbtos))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135240) "<\u0010\u0002\u0000\u0001*\u0000\u0000\u0016\u0000\u0000\u0000")
   (!def_word "*" "$star")
 
   ;; 6.1.0100
@@ -239,6 +232,7 @@
                                (i64.extend_s/i32 (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8))))))
                       (i64.extend_s/i32 (i32.load (i32.sub (get_global $tos) (i32.const 4)))))))
     (set_global $tos (get_local $bbtos)))
+  (data (i32.const 135252) "H\u0010\u0002\u0000\u0002*/\u0000\u0017\u0000\u0000\u0000")
   (!def_word "*/" "$*/")
 
   ;; 6.1.0110
@@ -256,6 +250,7 @@
                       (tee_local $x2 (i64.extend_s/i32 (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))))))))
     (i32.store (get_local $bbtos) (i32.wrap/i64 (i64.div_s (get_local $x1) (get_local $x2))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135264) "T\u0010\u0002\u0000\u0005*/MOD\u0000\u0000\u0018\u0000\u0000\u0000")
   (!def_word "*/MOD" "$*/MOD")
 
   ;; 6.1.0120
@@ -266,6 +261,7 @@
                (i32.add (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
                         (i32.load (get_local $bbtos))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135280) "`\u0010\u0002\u0000\u0001+\u0000\u0000\u0019\u0000\u0000\u0000")
   (!def_word "+" "$plus")
 
   ;; 6.1.0130
@@ -276,12 +272,14 @@
                (i32.add (i32.load (get_local $addr))
                         (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8))))))
     (set_global $tos (get_local $bbtos)))
+  (data (i32.const 135292) "p\u0010\u0002\u0000\u0002+!\u0000\u001a\u0000\u0000\u0000")
   (!def_word "+!" "$+!")
 
   ;; 6.1.0140
   (func $plus-loop
     (call $ensureCompiling)
     (call $compilePlusLoop))
+  (data (i32.const 135304) "|\u0010\u0002\u0000\u0085+LOOP\u0000\u0000\u001b\u0000\u0000\u0000")
   (!def_word "+LOOP" "$plus-loop" !fImmediate)
 
   ;; 6.1.0150
@@ -291,6 +289,7 @@
       (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $here (i32.add (get_global $here) (i32.const 4)))
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
+  (data (i32.const 135320) "\u0088\u0010\u0002\u0000\u0001,\u0000\u0000\u001c\u0000\u0000\u0000")
   (!def_word "," "$comma")
 
   ;; 6.1.0160
@@ -301,6 +300,7 @@
                (i32.sub (i32.load (get_local $bbtos))
                         (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135332) "\u0098\u0010\u0002\u0000\u0001-\u0000\u0000\u001d\u0000\u0000\u0000")
   (!def_word "-" "$minus")
 
   ;; 6.1.0180
@@ -308,6 +308,7 @@
     (call $ensureCompiling)
     (call $Sq)
     (call $emitICall (i32.const 0) (i32.const !typeIndex))) ;; TYPE
+  (data (i32.const 135344) "\u00a4\u0010\u0002\u0000\u0082.\u0022\u0000\u001e\u0000\u0000\u0000")
   (!def_word ".\"" "$.q" !fImmediate)
 
   ;; 6.1.0230
@@ -320,6 +321,7 @@
     (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
                (i32.div_s (i32.load (get_local $bbtos)) (get_local $divisor)))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135356) "\u00b0\u0010\u0002\u0000\u0001/\u0000\u0000\u001f\u0000\u0000\u0000")
   (!def_word "/" "$/")
 
   ;; 6.1.0240
@@ -333,6 +335,7 @@
                           (tee_local $n2 (i32.load (tee_local $btos (i32.sub (get_global $tos) 
                                                                              (i32.const 4)))))))
     (i32.store (get_local $btos) (i32.div_s (get_local $n1) (get_local $n2))))
+  (data (i32.const 135368) "\u00bc\u0010\u0002\u0000\u0004/MOD\u0000\u0000\u0000 \u0000\u0000\u0000")
   (!def_word "/MOD" "$/MOD")
 
   ;; 6.1.0250
@@ -343,6 +346,7 @@
                   (i32.const 0))
       (then (i32.store (get_local $btos) (i32.const -1)))
       (else (i32.store (get_local $btos) (i32.const 0)))))
+  (data (i32.const 135384) "\u00c8\u0010\u0002\u0000\u00020<\u0000!\u0000\u0000\u0000")
   (!def_word "0<" "$0<")
 
 
@@ -353,6 +357,7 @@
                                                      (i32.const 4)))))
       (then (i32.store (get_local $btos) (i32.const -1)))
       (else (i32.store (get_local $btos) (i32.const 0)))))
+  (data (i32.const 135396) "\u00d8\u0010\u0002\u0000\u00020=\u0000\u0022\u0000\u0000\u0000")
   (!def_word "0=" "$zero-equals")
 
   ;; 6.1.0290
@@ -360,6 +365,7 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.add (i32.load (get_local $btos)) (i32.const 1))))
+  (data (i32.const 135408) "\u00e4\u0010\u0002\u0000\u00021+\u0000#\u0000\u0000\u0000")
   (!def_word "1+" "$one-plus")
 
   ;; 6.1.0300
@@ -367,10 +373,12 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.sub (i32.load (get_local $btos)) (i32.const 1))))
+  (data (i32.const 135420) "\u00f0\u0010\u0002\u0000\u00021-\u0000$\u0000\u0000\u0000")
   (!def_word "1-" "$one-minus")
 
   ;; 6.1.0310
   (func $2! (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135432) "\u00fc\u0010\u0002\u0000\u0002_!\u0000%\u0000\u0000\u0000")
   (!def_word "_!" "$2!") ;; TODO: Rename
 
   ;; 6.1.0320
@@ -378,6 +386,7 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.shl (i32.load (get_local $btos)) (i32.const 1))))
+  (data (i32.const 135444) "\u0008\u0011\u0002\u0000\u00022*\u0000&\u0000\u0000\u0000")
   (!def_word "2*" "$2*")
 
   ;; 6.1.0330
@@ -385,16 +394,19 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.shr_s (i32.load (get_local $btos)) (i32.const 1))))
+  (data (i32.const 135456) "\u0014\u0011\u0002\u0000\u00022/\u0000'\u0000\u0000\u0000")
   (!def_word "2/" "$2/")
 
   ;; 6.1.0350
   (func $2@ (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135468) " \u0011\u0002\u0000\u0002_@\u0000(\u0000\u0000\u0000")
   (!def_word "_@" "$2@") ;; TODO: Rename
 
 
   ;; 6.1.0370 
   (func $two-drop
     (set_global $tos (i32.sub (get_global $tos) (i32.const 8))))
+  (data (i32.const 135480) ",\u0011\u0002\u0000\u00052DROP\u0000\u0000)\u0000\u0000\u0000")
   (!def_word "2DROP" "$two-drop")
 
   ;; 6.1.0380
@@ -404,6 +416,7 @@
     (i32.store (i32.add (get_global $tos) (i32.const 4))
                (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 8))))
+  (data (i32.const 135496) "8\u0011\u0002\u0000\u00042DUP\u0000\u0000\u0000*\u0000\u0000\u0000")
   (!def_word "2DUP" "$two-dupe")
 
   ;; 6.1.0400
@@ -413,6 +426,7 @@
     (i32.store (i32.add (get_global $tos) (i32.const 4))
                (i32.load (i32.sub (get_global $tos) (i32.const 12))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 8))))
+  (data (i32.const 135512) "H\u0011\u0002\u0000\u00052OVER\u0000\u0000+\u0000\u0000\u0000")
   (!def_word "2OVER" "$2OVER")
 
   ;; 6.1.0430
@@ -429,6 +443,7 @@
                (get_local $x1))
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
                (get_local $x2)))
+  (data (i32.const 135528) "X\u0011\u0002\u0000\u00052SWAP\u0000\u0000,\u0000\u0000\u0000")
   (!def_word "2SWAP" "$2SWAP")
 
   ;; 6.1.0450
@@ -451,6 +466,7 @@
 
     (call $startColon (i32.const 0))
     (call $right-bracket))
+  (data (i32.const 135544) "h\u0011\u0002\u0000\u0001:\u0000\u0000-\u0000\u0000\u0000")
   (!def_word ":" "$colon")
 
   ;; 6.1.0460
@@ -459,6 +475,7 @@
     (call $endColon)
     (call $hidden)
     (call $left-bracket))
+  (data (i32.const 135556) "x\u0011\u0002\u0000\u0081;\u0000\u0000.\u0000\u0000\u0000")
   (!def_word ";" "$semicolon" !fImmediate)
 
   ;; 6.1.0480
@@ -470,9 +487,11 @@
       (then (i32.store (get_local $bbtos) (i32.const -1)))
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135568) "\u0084\u0011\u0002\u0000\u0001<\u0000\u0000/\u0000\u0000\u0000")
   (!def_word "<" "$less-than")
 
   (func $<# (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135580) "\u0090\u0011\u0002\u0000\u0002<#\u00000\u0000\u0000\u0000")
   (!def_word "<#" "$<#")
 
   ;; 6.1.0530
@@ -484,6 +503,7 @@
       (then (i32.store (get_local $bbtos) (i32.const -1)))
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135592) "\u009c\u0011\u0002\u0000\u0001=\u0000\u00001\u0000\u0000\u0000")
   (!def_word "=" "$=")
 
   ;; 6.1.0540
@@ -495,6 +515,7 @@
       (then (i32.store (get_local $bbtos) (i32.const -1)))
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135604) "\u00a8\u0011\u0002\u0000\u0001>\u0000\u00002\u0000\u0000\u0000")
   (!def_word ">" "$greater-than")
 
   ;; 6.1.0550
@@ -503,15 +524,18 @@
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.add (call $body (i32.load (get_local $btos)))
                         (i32.const 4))))
+  (data (i32.const 135616) "\u00b4\u0011\u0002\u0000\u0005>BODY\u0000\u00003\u0000\u0000\u0000")
   (!def_word ">BODY" "$>BODY")
 
   ;; 6.1.0560
   (func $>IN
     (i32.store (get_global $tos) (i32.const !inBase))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 135632) "\u00c0\u0011\u0002\u0000\u0003>IN4\u0000\u0000\u0000")
   (!def_word ">IN" "$>IN")
 
   (func $>NUMBER (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135644) "\u00d0\u0011\u0002\u0000\u0007>NUMBER5\u0000\u0000\u0000")
   (!def_word ">NUMBER" "$>NUMBER")
 
   ;; 6.1.0580
@@ -519,6 +543,7 @@
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
     (i32.store (get_global $tors) (i32.load (get_global $tos)))
     (set_global $tors (i32.add (get_global $tors) (i32.const 4))))
+  (data (i32.const 135660) "\u00dc\u0011\u0002\u0000\u0002>R\u00006\u0000\u0000\u0000")
   (!def_word ">R" "$>R")
 
   ;; 6.1.0630 
@@ -530,6 +555,7 @@
         (i32.store (get_global $tos)
                    (i32.load (get_local $btos)))
         (set_global $tos (i32.add (get_global $tos) (i32.const 4))))))
+  (data (i32.const 135672) "\u00ec\u0011\u0002\u0000\u0004?DUP\u0000\u0000\u00007\u0000\u0000\u0000")
   (!def_word "?DUP" "$?DUP")
 
   ;; 6.1.0650
@@ -537,6 +563,7 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.load (i32.load (get_local $btos)))))
+  (data (i32.const 135688) "\u00f8\u0011\u0002\u0000\u0001@\u0000\u00008\u0000\u0000\u0000")
   (!def_word "@" "$@")
 
   ;; 6.1.0670 ABORT 
@@ -544,6 +571,7 @@
     (set_global $tos (i32.const !stackBase))
     (call $QUIT))
   ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
+  (data (i32.const 135700) "\u0008\u0012\u0002\u0000\u0005ABORT\u0000\u00009\u0000\u0000\u0000")
   (!def_word "ABORT" "$ABORT" !fNone)
 
   ;; 6.1.0680 ABORT"
@@ -553,6 +581,7 @@
     (call $emitICall (i32.const 0) (i32.const !typeIndex)) ;; TYPE
     (call $emitICall (i32.const 0) (i32.const !abortIndex)) ;; ABORT
     (call $compileThen))
+  (data (i32.const 135716) "\u0014\u0012\u0002\u0000\u0086ABORT\u0022\u0000:\u0000\u0000\u0000")
   (!def_word "ABORT\"" "$ABORT-quote" !fImmediate)
 
   ;; 6.1.0690
@@ -564,6 +593,7 @@
                (i32.sub (i32.xor (tee_local $v (i32.load (get_local $btos)))
                                  (tee_local $y (i32.shr_s (get_local $v) (i32.const 31))))
                         (get_local $y))))
+  (data (i32.const 135732) "$\u0012\u0002\u0000\u0003ABS;\u0000\u0000\u0000")
   (!def_word "ABS" "$ABS")
 
   ;; 6.1.0695
@@ -574,6 +604,7 @@
                (call $shell_accept (i32.load (get_local $bbtos))
                                    (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135744) "4\u0012\u0002\u0000\u0006ACCEPT\u0000<\u0000\u0000\u0000")
   (!def_word "ACCEPT" "$ACCEPT")
 
   ;; 6.1.0705
@@ -581,6 +612,7 @@
     (set_global $here (i32.and
                         (i32.add (get_global $here) (i32.const 3))
                         (i32.const -4 #| ~3 |#))))
+  (data (i32.const 135760) "@\u0012\u0002\u0000\u0005ALIGN\u0000\u0000=\u0000\u0000\u0000")
   (!def_word "ALIGN" "$ALIGN")
 
   ;; 6.1.0706
@@ -589,11 +621,13 @@
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.and (i32.add (i32.load (get_local $btos)) (i32.const 3))
                         (i32.const -4 #| ~3 |#))))
+  (data (i32.const 135776) "P\u0012\u0002\u0000\u0007ALIGNED>\u0000\u0000\u0000")
   (!def_word "ALIGNED" "$ALIGNED")
 
   ;; 6.1.0710
   (func $ALLOT
     (set_global $here (i32.add (get_global $here) (call $pop))))
+  (data (i32.const 135792) "`\u0012\u0002\u0000\u0005ALLOT\u0000\u0000?\u0000\u0000\u0000")
   (!def_word "ALLOT" "$ALLOT")
 
   ;; 6.1.0720
@@ -604,22 +638,26 @@
                (i32.and (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
                         (i32.load (get_local $bbtos))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 135808) "p\u0012\u0002\u0000\u0003AND@\u0000\u0000\u0000")
   (!def_word "AND" "$AND")
 
   ;; 6.1.0750 
   (func $BASE
    (i32.store (get_global $tos) (i32.const !baseBase))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 135820) "\u0080\u0012\u0002\u0000\u0004BASE\u0000\u0000\u0000A\u0000\u0000\u0000")
   (!def_word "BASE" "$BASE")
   
   ;; 6.1.0760 
   (func $begin
     (call $ensureCompiling)
     (call $compileBegin))
+  (data (i32.const 135836) "\u008c\u0012\u0002\u0000\u0085BEGIN\u0000\u0000B\u0000\u0000\u0000")
   (!def_word "BEGIN" "$begin" !fImmediate)
 
   ;; 6.1.0770
   (func $bl (call $push (i32.const 32)))
+  (data (i32.const 135852) "\u009c\u0012\u0002\u0000\u0002BL\u0000C\u0000\u0000\u0000")
   (!def_word "BL" "$bl")
 
   ;; 6.1.0850
@@ -628,6 +666,7 @@
     (i32.store8 (i32.load (i32.sub (get_global $tos) (i32.const 4)))
                 (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))))
     (set_global $tos (get_local $bbtos)))
+  (data (i32.const 135864) "\u00ac\u0012\u0002\u0000\u0002C!\u0000D\u0000\u0000\u0000")
   (!def_word "C!" "$c-store")
 
   ;; 6.1.0860
@@ -636,6 +675,7 @@
                 (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
+  (data (i32.const 135876) "\u00b8\u0012\u0002\u0000\u0002C,\u0000E\u0000\u0000\u0000")
   (!def_word "C," "$c-comma")
 
   ;; 6.1.0870
@@ -643,12 +683,15 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.load8_u (i32.load (get_local $btos)))))
+  (data (i32.const 135888) "\u00c4\u0012\u0002\u0000\u0002C@\u0000F\u0000\u0000\u0000")
   (!def_word "C@" "$c-fetch")
 
   (func $CELL+ (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135900) "\u00d0\u0012\u0002\u0000\u0005_ELL+\u0000\u0000G\u0000\u0000\u0000")
   (!def_word "_ELL+" "$CELL+") ;; TODO: Rename
 
   (func $CELLS (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135916) "\u00dc\u0012\u0002\u0000\u0005_ELLS\u0000\u0000H\u0000\u0000\u0000")
   (!def_word "_ELLS" "$CELLS") ;; TODO: Rename
 
   ;; 6.1.0895
@@ -657,15 +700,19 @@
     (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
                (i32.load8_u (i32.const (!+ !wordBase 1)))))
+  (data (i32.const 135932) "\u00ec\u0012\u0002\u0000\u0004CHAR\u0000\u0000\u0000I\u0000\u0000\u0000")
   (!def_word "CHAR" "$CHAR")
 
   (func $CHAR+ (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135948) "\u00fc\u0012\u0002\u0000\u0005_HAR+\u0000\u0000J\u0000\u0000\u0000")
   (!def_word "_HAR+" "$CHAR+") ;; TODO: Rename
 
   (func $CHARS (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135964) "\u000c\u0013\u0002\u0000\u0005_HARS\u0000\u0000K\u0000\u0000\u0000")
   (!def_word "_HARS" "$CHARS") ;; TODO: Rename
 
   (func $CONSTANT (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 135980) "\u001c\u0013\u0002\u0000\u0008_ONSTANT\u0000\u0000\u0000L\u0000\u0000\u0000")
   (!def_word "_ONSTANT" "$CONSTANT") ;; TODO: Rename
 
   ;; 6.1.0980
@@ -677,9 +724,11 @@
                                                                                (i32.const 4)))))))
     (i32.store (get_local $btos) (i32.add (get_local $addr) (i32.const 1)))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136000) ",\u0013\u0002\u0000\u0005COUNT\u0000\u0000M\u0000\u0000\u0000")
   (!def_word "COUNT" "$COUNT")
 
   (func $CR (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136016) "@\u0013\u0002\u0000\u0002_R\u0000N\u0000\u0000\u0000")
   (!def_word "_R" "$CR") ;; TODO: Rename
 
   ;; 6.1.1000
@@ -707,9 +756,11 @@
     (i32.store (get_global $here) (i32.const 0))
 
     (call $setFlag (i32.const !fData)))
+  (data (i32.const 136028) "P\u0013\u0002\u0000\u0006CREATE\u0000O\u0000\u0000\u0000")
   (!def_word "CREATE" "$create")
 
   (func $DECIMAL (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136044) "\u005c\u0013\u0002\u0000\u0007_ECIMALP\u0000\u0000\u0000")
   (!def_word "_ECIMAL" "$DECIMAL") ;; TODO: Rename
 
   ;; 6.1.1200
@@ -717,6 +768,7 @@
    (i32.store (get_global $tos)
               (i32.shr_u (i32.sub (get_global $tos) (i32.const !stackBase)) (i32.const 2)))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136060) "l\u0013\u0002\u0000\u0005DEPTH\u0000\u0000Q\u0000\u0000\u0000")
   (!def_word "DEPTH" "$DEPTH")
 
 
@@ -724,6 +776,7 @@
   (func $do
     (call $ensureCompiling)
     (call $compileDo))
+  (data (i32.const 136076) "|\u0013\u0002\u0000\u0082DO\u0000R\u0000\u0000\u0000")
   (!def_word "DO" "$do" !fImmediate)
 
   ;; 6.1.1250
@@ -734,11 +787,13 @@
     (call $endColon)
     (call $startColon (i32.const 1))
     (call $compilePushLocal (i32.const 0)))
+  (data (i32.const 136088) "\u008c\u0013\u0002\u0000\u0085DOES>\u0000\u0000S\u0000\u0000\u0000")
   (!def_word "DOES>" "$DOES>" !fImmediate)
 
   ;; 6.1.1260
   (func $drop
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
+  (data (i32.const 136104) "\u0098\u0013\u0002\u0000\u0004DROP\u0000\u0000\u0000T\u0000\u0000\u0000")
   (!def_word "DROP" "$drop")
 
   ;; 6.1.1290
@@ -747,21 +802,25 @@
     (get_global $tos)
     (i32.load (i32.sub (get_global $tos) (i32.const 4))))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136120) "\u00a8\u0013\u0002\u0000\u0003DUPU\u0000\u0000\u0000")
   (!def_word "DUP" "$dupe")
 
   ;; 6.1.1310
   (func $else
     (call $ensureCompiling)
     (call $emitElse))
+  (data (i32.const 136132) "\u00b8\u0013\u0002\u0000\u0084ELSE\u0000\u0000\u0000V\u0000\u0000\u0000")
   (!def_word "ELSE" "$else" !fImmediate)
 
   ;; 6.1.1320
   (func $emit
     (call $shell_emit (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
+  (data (i32.const 136148) "\u00c4\u0013\u0002\u0000\u0004EMIT\u0000\u0000\u0000W\u0000\u0000\u0000")
   (!def_word "EMIT" "$emit")
 
   (func $ENVIRONMENT (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136164) "\u00d4\u0013\u0002\u0000\u000bENVIRONMENTX\u0000\u0000\u0000")
   (!def_word "ENVIRONMENT" "$ENVIRONMENT")
 
   ;; 6.1.1360
@@ -791,6 +850,7 @@
     (i32.store (i32.const !inBase) (get_local $prevIn))
     (set_global $inputBufferBase (get_local $prevInputBufferBase))
     (set_global $inputBufferSize (get_local $prevInputBufferSize)))
+  (data (i32.const 136184) "\u00e4\u0013\u0002\u0000\u0008EVALUATE\u0000\u0000\u0000Y\u0000\u0000\u0000")
   (!def_word "EVALUATE" "$EVALUATE")
 
   ;; 6.1.1370
@@ -805,12 +865,14 @@
                                         (i32.load (get_local $body))))
       (else
         (call_indirect (type $word) (i32.load (get_local $body))))))
+  (data (i32.const 136204) "\u00f8\u0013\u0002\u0000\u0007EXECUTEZ\u0000\u0000\u0000")
   (!def_word "EXECUTE" "$EXECUTE")
 
   ;; 6.1.1380
   (func $EXIT
     (call $ensureCompiling)
     (call $emitReturn))
+  (data (i32.const 136220) "\u000c\u0014\u0002\u0000\u0084EXIT\u0000\u0000\u0000[\u0000\u0000\u0000")
   (!def_word "EXIT" "$EXIT" !fImmediate)
 
   ;; 6.1.1540
@@ -820,6 +882,7 @@
                   (i32.load (i32.sub (get_global $tos) (i32.const 4)))
                   (i32.load (i32.sub (get_global $tos) (i32.const 8))))
     (set_global $tos (get_local $bbbtos)))
+  (data (i32.const 136236) "\u001c\u0014\u0002\u0000\u0004FILL\u0000\u0000\u0000\u005c\u0000\u0000\u0000")
   (!def_word "FILL" "$FILL")
 
   ;; 6.1.1550
@@ -871,6 +934,7 @@
         (br_if $endLoop (i32.eqz (get_local $entryP)))
         (br $loop)))
     (call $push (i32.const 0)))
+  (data (i32.const 136252) ",\u0014\u0002\u0000\u0004FIND\u0000\u0000\u0000]\u0000\u0000\u0000")
   (!def_word "FIND" "$find")
 
   ;; 6.1.1561
@@ -885,32 +949,38 @@
     (i32.store (i32.sub (get_global $tos) (i32.const 8))
                (i32.wrap/i64 (i64.div_s (get_local $n1) (i64.extend_s/i32 (get_local $n2)))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136268) "<\u0014\u0002\u0000\u0006FM/MOD\u0000^\u0000\u0000\u0000")
   (!def_word "FM/MOD" "$f-m-slash-mod")
 
   ;; 6.1.1650
   (func $here
     (i32.store (get_global $tos) (get_global $here))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136284) "L\u0014\u0002\u0000\u0004HERE\u0000\u0000\u0000_\u0000\u0000\u0000")
   (!def_word "HERE" "$here")
 
   (func $HOLD (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136300) "\u005c\u0014\u0002\u0000\u0004HOLD\u0000\u0000\u0000`\u0000\u0000\u0000")
   (!def_word "HOLD" "$HOLD")
 
   ;; 6.1.1680
   (func $i
     (call $ensureCompiling)
     (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 1))))
+  (data (i32.const 136316) "l\u0014\u0002\u0000\u0081I\u0000\u0000a\u0000\u0000\u0000")
   (!def_word "I" "$i" !fImmediate)
 
   ;; 6.1.1700
   (func $if
     (call $ensureCompiling)
     (call $compileIf))
+  (data (i32.const 136328) "|\u0014\u0002\u0000\u0082IF\u0000b\u0000\u0000\u0000")
   (!def_word "IF" "$if" !fImmediate)
 
   ;; 6.1.1710
   (func $immediate
     (call $setFlag (i32.const !fImmediate)))
+  (data (i32.const 136340) "\u0088\u0014\u0002\u0000\u0009IMMEDIATE\u0000\u0000c\u0000\u0000\u0000")
   (!def_word "IMMEDIATE" "$immediate")
 
   ;; 6.1.1720
@@ -918,24 +988,28 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.xor (i32.load (get_local $btos)) (i32.const -1))))
+  (data (i32.const 136360) "\u0094\u0014\u0002\u0000\u0006INVERT\u0000d\u0000\u0000\u0000")
   (!def_word "INVERT" "$INVERT")
 
   ;; 6.1.1730
   (func $j
     (call $ensureCompiling)
     (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 4))))
+  (data (i32.const 136376) "\u00a8\u0014\u0002\u0000\u0081J\u0000\u0000e\u0000\u0000\u0000")
   (!def_word "J" "$j" !fImmediate)
 
   ;; 6.1.1750
   (func $key
     (i32.store (get_global $tos) (call $shell_key))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136388) "\u00b8\u0014\u0002\u0000\u0003KEYf\u0000\u0000\u0000")
   (!def_word "KEY" "$key")
 
   ;; 6.1.1760
   (func $LEAVE
     (call $ensureCompiling)
     (call $compileLeave))
+  (data (i32.const 136400) "\u00c4\u0014\u0002\u0000\u0085LEAVE\u0000\u0000g\u0000\u0000\u0000")
   (!def_word "LEAVE" "$LEAVE" !fImmediate)
 
 
@@ -943,12 +1017,14 @@
   (func $literal
     (call $ensureCompiling)
     (call $compilePushConst (call $pop)))
+  (data (i32.const 136416) "\u00d0\u0014\u0002\u0000\u0087LITERALh\u0000\u0000\u0000")
   (!def_word "LITERAL" "$literal" !fImmediate)
 
   ;; 6.1.1800
   (func $loop
     (call $ensureCompiling)
     (call $compileLoop))
+  (data (i32.const 136432) "\u00e0\u0014\u0002\u0000\u0084LOOP\u0000\u0000\u0000i\u0000\u0000\u0000")
   (!def_word "LOOP" "$loop" !fImmediate)
 
   ;; 6.1.1805
@@ -959,6 +1035,7 @@
                (i32.shl (i32.load (get_local $bbtos))
                         (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136448) "\u00f0\u0014\u0002\u0000\u0006LSHIFT\u0000j\u0000\u0000\u0000")
   (!def_word "LSHIFT" "$LSHIFT")
 
   ;; 6.1.1810
@@ -968,6 +1045,7 @@
                (i64.mul (i64.extend_s/i32 (i32.load (get_local $bbtos)))
                         (i64.extend_s/i32 (i32.load (i32.sub (get_global $tos) 
                                                              (i32.const 4)))))))
+  (data (i32.const 136464) "\u0000\u0015\u0002\u0000\u0002M*\u0000k\u0000\u0000\u0000")
   (!def_word "M*" "$m-star")
 
   ;; 6.1.1870
@@ -981,6 +1059,7 @@
       (then
         (i32.store (get_local $bbtos) (get_local $v))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136476) "\u0010\u0015\u0002\u0000\u0003MAXl\u0000\u0000\u0000")
   (!def_word "MAX" "$MAX")
 
   ;; 6.1.1880
@@ -994,6 +1073,7 @@
       (then
         (i32.store (get_local $bbtos) (get_local $v))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136488) "\u001c\u0015\u0002\u0000\u0003MINm\u0000\u0000\u0000")
   (!def_word "MIN" "$MIN")
 
   ;; 6.1.1890
@@ -1004,6 +1084,7 @@
                (i32.rem_s (i32.load (get_local $bbtos))
                           (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136500) "(\u0015\u0002\u0000\u0003MODn\u0000\u0000\u0000")
   (!def_word "MOD" "$MOD")
 
   ;; 6.1.1900
@@ -1013,6 +1094,7 @@
                    (i32.load (tee_local $bbbtos (i32.sub (get_global $tos) (i32.const 12))))
                    (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $tos (get_local $bbbtos)))
+  (data (i32.const 136512) "4\u0015\u0002\u0000\u0004MOVE\u0000\u0000\u0000o\u0000\u0000\u0000")
   (!def_word "MOVE" "$MOVE")
 
   ;; 6.1.1910
@@ -1020,6 +1102,7 @@
     (local $btos i32)
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.sub (i32.const 0) (i32.load (get_local $btos)))))
+  (data (i32.const 136528) "@\u0015\u0002\u0000\u0006NEGATE\u0000p\u0000\u0000\u0000")
   (!def_word "NEGATE" "$negate")
 
   ;; 6.1.1980
@@ -1030,6 +1113,7 @@
                (i32.or (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
                         (i32.load (get_local $bbtos))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136544) "P\u0015\u0002\u0000\u0002OR\u0000q\u0000\u0000\u0000")
   (!def_word "OR" "$OR")
 
   ;; 6.1.1990
@@ -1037,6 +1121,7 @@
     (i32.store (get_global $tos)
                (i32.load (i32.sub (get_global $tos) (i32.const 8))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136556) "`\u0015\u0002\u0000\u0004OVER\u0000\u0000\u0000r\u0000\u0000\u0000")
   (!def_word "OVER" "$over")
 
   ;; 6.1.2033
@@ -1054,6 +1139,7 @@
       (else
         (call $emitConst (get_local $findToken))
         (call $emitICall (i32.const 1) (i32.const !compileCallIndex)))))
+  (data (i32.const 136572) "l\u0015\u0002\u0000\u0088POSTPONE\u0000\u0000\u0000s\u0000\u0000\u0000")
   (!def_word "POSTPONE" "$POSTPONE" !fImmediate)
 
   ;; 6.1.2050
@@ -1061,6 +1147,7 @@
     (set_global $tors (i32.const !returnStackBase))
     (set_global $sourceID (i32.const 0))
     (unreachable))
+  (data (i32.const 136592) "|\u0015\u0002\u0000\u0004QUIT\u0000\u0000\u0000t\u0000\u0000\u0000")
   (!def_word "QUIT" "$QUIT")
 
   ;; 6.1.2060
@@ -1068,18 +1155,21 @@
     (set_global $tors (i32.sub (get_global $tors) (i32.const 4)))
     (i32.store (get_global $tos) (i32.load (get_global $tors)))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136608) "\u0090\u0015\u0002\u0000\u0002R>\u0000u\u0000\u0000\u0000")
   (!def_word "R>" "$R>")
 
   ;; 6.1.2070
   (func $R@
     (i32.store (get_global $tos) (i32.load (i32.sub (get_global $tors) (i32.const 4))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136620) "\u00a0\u0015\u0002\u0000\u0002R@\u0000v\u0000\u0000\u0000")
   (!def_word "R@" "$R@")
 
   ;; 6.1.2120 
   (func $RECURSE 
     (call $ensureCompiling)
     (call $compileRecurse))
+  (data (i32.const 136632) "\u00ac\u0015\u0002\u0000\u0087RECURSEw\u0000\u0000\u0000")
   (!def_word "RECURSE" "$RECURSE" !fImmediate)
 
 
@@ -1087,6 +1177,7 @@
   (func $repeat
     (call $ensureCompiling)
     (call $compileRepeat))
+  (data (i32.const 136648) "\u00b8\u0015\u0002\u0000\u0086REPEAT\u0000x\u0000\u0000\u0000")
   (!def_word "REPEAT" "$repeat" !fImmediate)
 
   ;; 6.1.2160 ROT 
@@ -1102,6 +1193,7 @@
                (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))))
     (i32.store (get_local $bbtos) 
                (get_local $tmp)))
+  (data (i32.const 136664) "\u00c8\u0015\u0002\u0000\u0003ROTy\u0000\u0000\u0000")
   (!def_word "ROT" "$ROT")
 
   ;; 6.1.2162
@@ -1112,6 +1204,7 @@
                (i32.shr_u (i32.load (get_local $bbtos))
                           (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136676) "\u00d8\u0015\u0002\u0000\u0006RSHIFT\u0000z\u0000\u0000\u0000")
   (!def_word "RSHIFT" "$RSHIFT")
 
   ;; 6.1.2165
@@ -1131,6 +1224,7 @@
     (call $compilePushConst (get_local $start))
     (call $compilePushConst (i32.sub (get_global $here) (get_local $start)))
     (call $ALIGN))
+  (data (i32.const 136692) "\u00e4\u0015\u0002\u0000\u0082S\u0022\u0000{\u0000\u0000\u0000")
   (!def_word "S\"" "$Sq" !fImmediate)
 
   ;; 6.1.2170
@@ -1139,31 +1233,38 @@
     (i64.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i64.extend_s/i32 (i32.load (get_local $btos))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136704) "\u00f4\u0015\u0002\u0000\u0003S>D|\u0000\u0000\u0000")
   (!def_word "S>D" "$s-to-d")
 
   (func $SIGN (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136716) "\u0000\u0016\u0002\u0000\u0004SIGN\u0000\u0000\u0000}\u0000\u0000\u0000")
   (!def_word "SIGN" "$SIGN")
 
   (func $SM/REM (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136732) "\u000c\u0016\u0002\u0000\u0006SM/REM\u0000~\u0000\u0000\u0000")
   (!def_word "SM/REM" "$SM/REM")
 
   ;; 6.1.2216
   (func $SOURCE 
     (call $push (get_global $inputBufferBase))
     (call $push (get_global $inputBufferSize)))
+  (data (i32.const 136748) "\u001c\u0016\u0002\u0000\u0006SOURCE\u0000\u007f\u0000\u0000\u0000")
   (!def_word "SOURCE" "$SOURCE")
 
   ;; 6.1.2220
   (func $space (call $bl) (call $emit))
+  (data (i32.const 136764) ",\u0016\u0002\u0000\u0005SPACE\u0000\u0000\u0080\u0000\u0000\u0000")
   (!def_word "SPACE" "$space")
 
   (func $SPACES (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136780) "<\u0016\u0002\u0000\u0006_PACES\u0000\u0081\u0000\u0000\u0000")
   (!def_word "_PACES" "$SPACES") ;; TODO: rename
 
   ;; 6.1.2250
   (func $STATE
     (i32.store (get_global $tos) (i32.const !stateBase))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 136796) "L\u0016\u0002\u0000\u0005STATE\u0000\u0000\u0082\u0000\u0000\u0000")
   (!def_word "STATE" "$STATE")
 
   ;; 6.1.2260
@@ -1175,12 +1276,14 @@
     (i32.store (get_local $bbtos) 
                (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))))
     (i32.store (get_local $btos) (get_local $tmp)))
+  (data (i32.const 136812) "\u005c\u0016\u0002\u0000\u0004SWAP\u0000\u0000\u0000\u0083\u0000\u0000\u0000")
   (!def_word "SWAP" "$swap")
 
   ;; 6.1.2270
   (func $then
     (call $ensureCompiling)
     (call $compileThen))
+  (data (i32.const 136828) "l\u0016\u0002\u0000\u0084THEN\u0000\u0000\u0000\u0084\u0000\u0000\u0000")
   (!def_word "THEN" "$then" !fImmediate)
 
   ;; 6.1.2310 TYPE 
@@ -1195,9 +1298,11 @@
        (set_local $p (i32.add (get_local $p) (i32.const 1)))
        (br $loop))))
   ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
+  (data (i32.const 136844) "|\u0016\u0002\u0000\u0004TYPE\u0000\u0000\u0000\u0085\u0000\u0000\u0000")
   (!def_word "TYPE" "$TYPE" !fNone)
 
   (func $U. (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136860) "\u008c\u0016\u0002\u0000\u0002_.\u0000\u0086\u0000\u0000\u0000")
   (!def_word "_." "$U.") ;; TODO: Rename
 
   ;; 6.1.2340
@@ -1209,6 +1314,7 @@
       (then (i32.store (get_local $bbtos) (i32.const -1)))
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136872) "\u009c\u0016\u0002\u0000\u0002U<\u0000\u0087\u0000\u0000\u0000")
   (!def_word "U<" "$U<")
 
   ;; 6.1.2360
@@ -1218,37 +1324,44 @@
                (i64.mul (i64.extend_u/i32 (i32.load (get_local $bbtos)))
                         (i64.extend_u/i32 (i32.load (i32.sub (get_global $tos) 
                                                              (i32.const 4)))))))
+  (data (i32.const 136884) "\u00a8\u0016\u0002\u0000\u0003UM*\u0088\u0000\u0000\u0000")
   (!def_word "UM*" "$um-star")
 
   (func $UM/MOD (call $fail (i32.const 0x20084))) ;; not implemented
+  (data (i32.const 136896) "\u00b4\u0016\u0002\u0000\u0006UM/MOD\u0000\u0089\u0000\u0000\u0000")
   (!def_word "UM/MOD" "$UM/MOD") ;; TODO: Rename
 
   ;; 6.1.2380
   (func $UNLOOP
     (call $ensureCompiling))
+  (data (i32.const 136912) "\u00c0\u0016\u0002\u0000\u0086UNLOOP\u0000\u008a\u0000\u0000\u0000")
   (!def_word "UNLOOP" "$UNLOOP" !fImmediate)
 
   ;; 6.1.2390
   (func $UNTIL
     (call $ensureCompiling)
     (call $compileUntil))
+  (data (i32.const 136928) "\u00d0\u0016\u0002\u0000\u0085UNTIL\u0000\u0000\u008b\u0000\u0000\u0000")
   (!def_word "UNTIL" "$UNTIL" !fImmediate)
 
   ;; 6.1.2410
   (func $VARIABLE
     (call $create)
     (set_global $here (i32.add (get_global $here) (i32.const 4))))
+  (data (i32.const 136944) "\u00e0\u0016\u0002\u0000\u0008VARIABLE\u0000\u0000\u0000\u008c\u0000\u0000\u0000")
   (!def_word "VARIABLE" "$VARIABLE")
 
   ;; 6.1.2430
   (func $while
     (call $ensureCompiling)
     (call $compileWhile))
+  (data (i32.const 136964) "\u00f0\u0016\u0002\u0000\u0085WHILE\u0000\u0000\u008d\u0000\u0000\u0000")
   (!def_word "WHILE" "$while" !fImmediate)
 
   ;; 6.1.2450
   (func $word
     (call $readWord (call $pop)))
+  (data (i32.const 136980) "\u0004\u0017\u0002\u0000\u0004WORD\u0000\u0000\u0000\u008e\u0000\u0000\u0000")
   (!def_word "WORD" "$word")
 
   ;; 6.1.2490
@@ -1259,12 +1372,14 @@
                (i32.xor (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
                         (i32.load (get_local $bbtos))))
     (set_global $tos (get_local $btos)))
+  (data (i32.const 136996) "\u0014\u0017\u0002\u0000\u0003XOR\u008f\u0000\u0000\u0000")
   (!def_word "XOR" "$XOR")
 
   ;; 6.1.2500
   (func $left-bracket
     (call $ensureCompiling)
     (i32.store (i32.const !stateBase) (i32.const 0)))
+  (data (i32.const 137008) "$\u0017\u0002\u0000\u0081[\u0000\u0000\u0090\u0000\u0000\u0000")
   (!def_word "[" "$left-bracket" !fImmediate)
 
   ;; 6.1.2510
@@ -1272,6 +1387,7 @@
     (call $ensureCompiling)
     (call $tick)
     (call $compilePushConst (call $pop)))
+  (data (i32.const 137020) "0\u0017\u0002\u0000\u0083[']\u0091\u0000\u0000\u0000")
   (!def_word "[']" "$bracket-tick" !fImmediate)
 
   ;; 6.1.2520
@@ -1279,11 +1395,13 @@
     (call $ensureCompiling)
     (call $CHAR)
     (call $compilePushConst (call $pop)))
+  (data (i32.const 137032) "<\u0017\u0002\u0000\u0086[CHAR]\u0000\u0092\u0000\u0000\u0000")
   (!def_word "[CHAR]" "$bracket-char" !fImmediate)
 
   ;; 6.1.2540
   (func $right-bracket
     (i32.store (i32.const !stateBase) (i32.const 1)))
+  (data (i32.const 137048) "H\u0017\u0002\u0000\u0001]\u0000\u0000\u0093\u0000\u0000\u0000")
   (!def_word "]" "$right-bracket")
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1296,6 +1414,7 @@
                   (i32.const 0))
       (then (i32.store (get_local $btos) (i32.const -1)))
       (else (i32.store (get_local $btos) (i32.const 0)))))
+  (data (i32.const 137060) "X\u0017\u0002\u0000\u00020>\u0000\u0094\u0000\u0000\u0000")
   (!def_word "0>" "$zero-greater")
 
   ;; 6.2.1350
@@ -1305,6 +1424,7 @@
                   (i32.const 0)
                   (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $tos (get_local $bbtos)))
+  (data (i32.const 137072) "d\u0017\u0002\u0000\u0005ERASE\u0000\u0000\u0095\u0000\u0000\u0000")
   (!def_word "ERASE" "$erase")
 
   ;; 6.2.2030
@@ -1315,6 +1435,7 @@
                                   (i32.shl (i32.add (i32.load (get_local $btos))
                                                     (i32.const 2))
                                            (i32.const 2))))))
+  (data (i32.const 137088) "p\u0017\u0002\u0000\u0004PICK\u0000\u0000\u0000\u0096\u0000\u0000\u0000")
   (!def_word "PICK" "$PICK")
 
   ;; 6.2.2125
@@ -1337,6 +1458,7 @@
       (else 
         (i32.store (i32.const !inBase) (i32.const 0))
         (call $push (i32.const -1)))))
+  (data (i32.const 137104) "\u0080\u0017\u0002\u0000\u0006REFILL\u0000\u0097\u0000\u0000\u0000")
   (!def_word "REFILL" "$refill")
 
   ;; 6.2.2295
@@ -1346,11 +1468,13 @@
     (call $find)
     (if (i32.eqz (call $pop)) (call $fail (i32.const 0x20000))) ;; undefined word
     (i32.store (i32.add (call $body (call $pop)) (i32.const 4)) (call $pop)))
+  (data (i32.const 137120) "\u0090\u0017\u0002\u0000\u0002TO\u0000\u0098\u0000\u0000\u0000")
   (!def_word "TO" "$TO")
 
   ;; 6.1.2395
   (func $UNUSED
     (call $push (i32.shr_s (i32.sub (i32.const !memorySize) (get_global $here)) (i32.const 2))))
+  (data (i32.const 137132) "\u00a0\u0017\u0002\u0000\u0006UNUSED\u0000\u0099\u0000\u0000\u0000")
   (!def_word "UNUSED" "$UNUSED")
 
   ;; 6.2.2535
@@ -1363,11 +1487,13 @@
                                         (i32.const 0x0a #| '\n' |#)))
         (br_if $endSkipComments (i32.eq (get_local $char) (i32.const -1)))
         (br $skipComments))))
+  (data (i32.const 137148) "\u00ac\u0017\u0002\u0000\u0081\u005c\u0000\u0000\u009a\u0000\u0000\u0000")
   (!def_word "\\" "$backslash" !fImmediate)
 
   ;; 6.1.2250
   (func $SOURCE-ID
     (call $push (get_global $sourceID)))
+  (data (i32.const 137160) "\u00bc\u0017\u0002\u0000\u0009SOURCE-ID\u0000\u0000\u009b\u0000\u0000\u0000")
   (!def_word "SOURCE-ID" "$SOURCE-ID")
 
   (func $dspFetch
@@ -1375,15 +1501,18 @@
      (get_global $tos)
      (get_global $tos))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 137180) "\u00c8\u0017\u0002\u0000\u0004DSP@\u0000\u0000\u0000\u009c\u0000\u0000\u0000")
   (!def_word "DSP@" "$dspFetch")
 
   (func $S0
     (call $push (i32.const !stackBase)))
+  (data (i32.const 137196) "\u00dc\u0017\u0002\u0000\u0002S0\u0000\u009d\u0000\u0000\u0000")
   (!def_word "S0" "$S0")
 
   (func $latest
     (i32.store (get_global $tos) (get_global $latest))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
+  (data (i32.const 137208) "\u00ec\u0017\u0002\u0000\u0006LATEST\u0000\u009e\u0000\u0000\u0000")
   (!def_word "LATEST" "$latest")
 
   ;; High-level words
@@ -2170,6 +2299,7 @@ EOF
         (set_local $i (i32.add (i32.const 1) (get_local $i)))
         (br_if $endLoop3 (i32.ge_s (get_local $i) (get_local $end)))
         (br $loop3))))
+  (data (i32.const 137224) "\u00f8\u0017\u0002\u0000\u000csieve_direct\u0000\u0000\u0000\u009f\u0000\u0000\u0000")
   (!def_word "sieve_direct" "$sieve")
     
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2225,8 +2355,8 @@ EOF
   ;; words start.
   (table (export "table") !tableStartIndex anyfunc)
 
-  (global $latest (mut i32) (i32.const !dictionaryLatest))
-  (global $here (mut i32) (i32.const !dictionaryTop))
+  (global $latest (mut i32) (i32.const 137224))
+  (global $here (mut i32) (i32.const 137248))
   (global $nextTableIndex (mut i32) (i32.const !tableStartIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
