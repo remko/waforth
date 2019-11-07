@@ -102,23 +102,23 @@
 ;; Predefined table indices
 (define !pushIndex 1)
 (define !popIndex 2)
-(define !typeIndex 3)
-(define !abortIndex 4)
-(define !pushDataAddressIndex 5)
-(define !setLatestBodyIndex 6)
-(define !compileCallIndex 7)
+(define !pushDataAddressIndex 3)
+(define !setLatestBodyIndex 4)
+(define !compileCallIndex 5)
 (define !tableStartIndex 16)
+(define !typeIndex #x85)
+(define !abortIndex #x39)
 
 (define !dictionaryLatest 0)
 (define !dictionaryTop !dictionaryBase)
 
-(define (!def_word name f (flags 0) (idx !tableStartIndex))
+(define (!def_word name f (flags 0))
   (let* ((base !dictionaryTop) 
          (previous !dictionaryLatest)
          (name-entry-length (* (ceiling (/ (+ (string-length name) 1) 4)) 4))
+         (idx !tableStartIndex)
          (size (+ 8 name-entry-length)))
-    (cond ((= idx !tableStartIndex)
-           (set! !tableStartIndex (+ !tableStartIndex 1))))
+    (set! !tableStartIndex (+ !tableStartIndex 1))
     (set! !dictionaryLatest !dictionaryTop)
     (set! !dictionaryTop (+ !dictionaryTop size))
     `((elem (i32.const ,(eval idx)) ,(string->symbol f))
@@ -176,6 +176,7 @@
   (data (i32.const #x2003C) "\u000bmissing ')'")
   (data (i32.const #x2004C) "\u0009missing \u0022")
   (data (i32.const #x2005C) "\u0024word not supported in interpret mode")
+  (data (i32.const #x20084) "\u000Fnot implemented")
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -188,6 +189,15 @@
                (i32.load (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))))
     (set_global $tos (get_local $bbtos)))
   (!def_word "!" "$!")
+
+  (func $# (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "#" "$#")
+
+  (func $#> (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "#>" "$#>")
+
+  (func $#S (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "#S" "$#S")
 
   ;; 6.1.0070
   (func $tick
@@ -297,7 +307,7 @@
   (func $.q
     (call $ensureCompiling)
     (call $Sq)
-    (call $emitICall (i32.const 0) (i32.const !typeIndex)))
+    (call $emitICall (i32.const 0) (i32.const !typeIndex))) ;; TYPE
   (!def_word ".\"" "$.q" !fImmediate)
 
   ;; 6.1.0230
@@ -359,6 +369,10 @@
                (i32.sub (i32.load (get_local $btos)) (i32.const 1))))
   (!def_word "1-" "$one-minus")
 
+  ;; 6.1.0310
+  (func $2! (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_!" "$2!") ;; TODO: Rename
+
   ;; 6.1.0320
   (func $2*
     (local $btos i32)
@@ -372,6 +386,10 @@
     (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
                (i32.shr_s (i32.load (get_local $btos)) (i32.const 1))))
   (!def_word "2/" "$2/")
+
+  ;; 6.1.0350
+  (func $2@ (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_@" "$2@") ;; TODO: Rename
 
 
   ;; 6.1.0370 
@@ -443,96 +461,6 @@
     (call $left-bracket))
   (!def_word ";" "$semicolon" !fImmediate)
 
-  ;; Initializes compilation.
-  ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
-  ;; or type 1 (1 param)
-  (func $startColon (param $params i32)
-    (i32.store8 (i32.const !moduleHeaderFunctionTypeBase) (get_local $params))
-    (set_global $cp (i32.const !moduleBodyBase))
-    (set_global $currentLocal (i32.add (i32.const -1) (get_local $params)))
-    (set_global $lastLocal (i32.add (i32.const -1) (get_local $params)))
-    (set_global $branchNesting (i32.const -1)))
-
-  (func $endColon
-    (local $bodySize i32)
-    (local $nameLength i32)
-
-    (call $emitEnd)
-
-    ;; Update code size
-    (set_local $bodySize (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))) 
-    (i32.store 
-      (i32.const !moduleHeaderCodeSizeBase)
-      (call $leb128-4p
-         (i32.sub (get_local $bodySize) 
-                  (i32.const (!+ !moduleHeaderCodeSizeOffset 4)))))
-
-    ;; Update body size
-    (i32.store 
-      (i32.const !moduleHeaderBodySizeBase)
-      (call $leb128-4p
-         (i32.sub (get_local $bodySize) 
-                  (i32.const (!+ !moduleHeaderBodySizeOffset 4)))))
-
-    ;; Update #locals
-    (i32.store 
-      (i32.const !moduleHeaderLocalCountBase)
-      (call $leb128-4p (i32.add (get_global $lastLocal) (i32.const 1))))
-
-    ;; Update table offset
-    (i32.store 
-      (i32.const !moduleHeaderTableIndexBase)
-      (call $leb128-4p (get_global $nextTableIndex)))
-    ;; Also store the initial table size to satisfy other tools (e.g. wasm-as)
-    (i32.store 
-      (i32.const !moduleHeaderTableInitialSizeBase)
-      (call $leb128-4p (i32.add (get_global $nextTableIndex) (i32.const 1))))
-
-    ;; Write a name section (if we're ending the code for the current dictionary entry)
-    (if (i32.eq (i32.load (call $body (get_global $latest)))
-                (get_global $nextTableIndex))
-      (then
-        (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
-                                        (i32.const !lengthMask)))
-        (i32.store8 (get_global $cp) (i32.const 0))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
-                    (i32.add (i32.const 13) (i32.mul (i32.const 2) (get_local $nameLength))))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x04))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x6e))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (i32.const 0x61))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 5)) (i32.const 0x6d))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 6)) (i32.const 0x65))
-        (set_global $cp (i32.add (get_global $cp) (i32.const 7)))
-
-        (i32.store8 (get_global $cp) (i32.const 0x00))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
-                    (i32.add (i32.const 1) (get_local $nameLength)))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (get_local $nameLength)) 
-        (set_global $cp (i32.add (get_global $cp) (i32.const 3)))
-        (call $memmove (get_global $cp)
-                      (i32.add (get_global $latest) (i32.const 5))
-                      (get_local $nameLength))
-        (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
-
-        (i32.store8 (get_global $cp) (i32.const 0x01))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
-                    (i32.add (i32.const 3) (get_local $nameLength)))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x01))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x00))
-        (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (get_local $nameLength))
-        (set_global $cp (i32.add (get_global $cp) (i32.const 5)))
-        (call $memmove (get_global $cp)
-                      (i32.add (get_global $latest) (i32.const 5))
-                      (get_local $nameLength))
-        (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))))
-
-    ;; Load the code
-    (call $shell_load (i32.const !moduleHeaderBase) 
-                      (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))
-                      (get_global $nextTableIndex))
-
-    (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1))))
-
   ;; 6.1.0480
   (func $less-than
     (local $btos i32)
@@ -543,6 +471,9 @@
       (else (i32.store (get_local $bbtos) (i32.const 0))))
     (set_global $tos (get_local $btos)))
   (!def_word "<" "$less-than")
+
+  (func $<# (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "<#" "$<#")
 
   ;; 6.1.0530
   (func $=
@@ -580,6 +511,9 @@
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word ">IN" "$>IN")
 
+  (func $>NUMBER (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word ">NUMBER" "$>NUMBER")
+
   ;; 6.1.0580
   (func $>R
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4)))
@@ -609,14 +543,15 @@
   (func $ABORT
     (set_global $tos (i32.const !stackBase))
     (call $QUIT))
-  (!def_word "ABORT" "$ABORT" !fNone !abortIndex)
+  ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
+  (!def_word "ABORT" "$ABORT" !fNone)
 
   ;; 6.1.0680 ABORT"
   (func $ABORT-quote
     (call $compileIf)
     (call $Sq)
-    (call $emitICall (i32.const 0) (i32.const !typeIndex))
-    (call $emitICall (i32.const 0) (i32.const !abortIndex))
+    (call $emitICall (i32.const 0) (i32.const !typeIndex)) ;; TYPE
+    (call $emitICall (i32.const 0) (i32.const !abortIndex)) ;; ABORT
     (call $compileThen))
   (!def_word "ABORT\"" "$ABORT-quote" !fImmediate)
 
@@ -641,21 +576,6 @@
     (set_global $tos (get_local $btos)))
   (!def_word "ACCEPT" "$ACCEPT")
 
-  ;; 6.1.0710
-  (func $ALLOT
-    (set_global $here (i32.add (get_global $here) (call $pop))))
-  (!def_word "ALLOT" "$ALLOT")
-
-  ;; 6.1.0720
-  (func $AND
-    (local $btos i32)
-    (local $bbtos i32)
-    (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
-               (i32.and (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
-                        (i32.load (get_local $bbtos))))
-    (set_global $tos (get_local $btos)))
-  (!def_word "AND" "$AND")
-
   ;; 6.1.0705
   (func $ALIGN
     (set_global $here (i32.and
@@ -670,6 +590,21 @@
                (i32.and (i32.add (i32.load (get_local $btos)) (i32.const 3))
                         (i32.const -4 #| ~3 |#))))
   (!def_word "ALIGNED" "$ALIGNED")
+
+  ;; 6.1.0710
+  (func $ALLOT
+    (set_global $here (i32.add (get_global $here) (call $pop))))
+  (!def_word "ALLOT" "$ALLOT")
+
+  ;; 6.1.0720
+  (func $AND
+    (local $btos i32)
+    (local $bbtos i32)
+    (i32.store (tee_local $bbtos (i32.sub (get_global $tos) (i32.const 8)))
+               (i32.and (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4))))
+                        (i32.load (get_local $bbtos))))
+    (set_global $tos (get_local $btos)))
+  (!def_word "AND" "$AND")
 
   ;; 6.1.0750 
   (func $BASE
@@ -710,6 +645,12 @@
                (i32.load8_u (i32.load (get_local $btos)))))
   (!def_word "C@" "$c-fetch")
 
+  (func $CELL+ (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_ELL+" "$CELL+") ;; TODO: Rename
+
+  (func $CELLS (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_ELLS" "$CELLS") ;; TODO: Rename
+
   ;; 6.1.0895
   (func $CHAR
     (call $readWord (i32.const 0x20))
@@ -717,6 +658,15 @@
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
                (i32.load8_u (i32.const (!+ !wordBase 1)))))
   (!def_word "CHAR" "$CHAR")
+
+  (func $CHAR+ (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_HAR+" "$CHAR+") ;; TODO: Rename
+
+  (func $CHARS (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_HARS" "$CHARS") ;; TODO: Rename
+
+  (func $CONSTANT (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_ONSTANT" "$CONSTANT") ;; TODO: Rename
 
   ;; 6.1.0980
   (func $COUNT
@@ -728,6 +678,9 @@
     (i32.store (get_local $btos) (i32.add (get_local $addr) (i32.const 1)))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "COUNT" "$COUNT")
+
+  (func $CR (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_R" "$CR") ;; TODO: Rename
 
   ;; 6.1.1000
   (func $create
@@ -755,6 +708,9 @@
 
     (call $setFlag (i32.const !fData)))
   (!def_word "CREATE" "$create")
+
+  (func $DECIMAL (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_ECIMAL" "$DECIMAL") ;; TODO: Rename
 
   ;; 6.1.1200
   (func $DEPTH
@@ -805,19 +761,8 @@
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
   (!def_word "EMIT" "$emit")
 
-  ;; 6.1.1370
-  (func $EXECUTE
-    (local $xt i32)
-    (local $body i32)
-    (set_local $body (call $body (tee_local $xt (call $pop))))
-    (if (i32.and (i32.load (i32.add (get_local $xt) (i32.const 4)))
-                 (i32.const !fData))
-      (then
-        (call_indirect (type $dataWord) (i32.add (get_local $body) (i32.const 4))
-                                        (i32.load (get_local $body))))
-      (else
-        (call_indirect (type $word) (i32.load (get_local $body))))))
-  (!def_word "EXECUTE" "$EXECUTE")
+  (func $ENVIRONMENT (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "ENVIRONMENT" "$ENVIRONMENT")
 
   ;; 6.1.1360
   (func $EVALUATE
@@ -847,6 +792,20 @@
     (set_global $inputBufferBase (get_local $prevInputBufferBase))
     (set_global $inputBufferSize (get_local $prevInputBufferSize)))
   (!def_word "EVALUATE" "$EVALUATE")
+
+  ;; 6.1.1370
+  (func $EXECUTE
+    (local $xt i32)
+    (local $body i32)
+    (set_local $body (call $body (tee_local $xt (call $pop))))
+    (if (i32.and (i32.load (i32.add (get_local $xt) (i32.const 4)))
+                 (i32.const !fData))
+      (then
+        (call_indirect (type $dataWord) (i32.add (get_local $body) (i32.const 4))
+                                        (i32.load (get_local $body))))
+      (else
+        (call_indirect (type $word) (i32.load (get_local $body))))))
+  (!def_word "EXECUTE" "$EXECUTE")
 
   ;; 6.1.1380
   (func $EXIT
@@ -933,6 +892,9 @@
     (i32.store (get_global $tos) (get_global $here))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "HERE" "$here")
+
+  (func $HOLD (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "HOLD" "$HOLD")
 
   ;; 6.1.1680
   (func $i
@@ -1034,7 +996,7 @@
     (set_global $tos (get_local $btos)))
   (!def_word "MIN" "$MIN")
 
-  ;; 6.1.1880
+  ;; 6.1.1890
   (func $MOD
     (local $btos i32)
     (local $bbtos i32)
@@ -1179,6 +1141,12 @@
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (!def_word "S>D" "$s-to-d")
 
+  (func $SIGN (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "SIGN" "$SIGN")
+
+  (func $SM/REM (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "SM/REM" "$SM/REM")
+
   ;; 6.1.2216
   (func $SOURCE 
     (call $push (get_global $inputBufferBase))
@@ -1188,6 +1156,9 @@
   ;; 6.1.2220
   (func $space (call $bl) (call $emit))
   (!def_word "SPACE" "$space")
+
+  (func $SPACES (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_PACES" "$SPACES") ;; TODO: rename
 
   ;; 6.1.2250
   (func $STATE
@@ -1223,16 +1194,11 @@
        (call $shell_emit (i32.load8_u (get_local $p)))
        (set_local $p (i32.add (get_local $p) (i32.const 1)))
        (br $loop))))
-  (!def_word "TYPE" "$TYPE" !fNone !typeIndex)
+  ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
+  (!def_word "TYPE" "$TYPE" !fNone)
 
-  ;; 6.2.2295
-  (func $TO
-    (call $readWord (i32.const 0x20))
-    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
-    (call $find)
-    (if (i32.eqz (call $pop)) (call $fail (i32.const 0x20000))) ;; undefined word
-    (i32.store (i32.add (call $body (call $pop)) (i32.const 4)) (call $pop)))
-  (!def_word "TO" "$TO")
+  (func $U. (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "_." "$U.") ;; TODO: Rename
 
   ;; 6.1.2340
   (func $U<
@@ -1253,6 +1219,9 @@
                         (i64.extend_u/i32 (i32.load (i32.sub (get_global $tos) 
                                                              (i32.const 4)))))))
   (!def_word "UM*" "$um-star")
+
+  (func $UM/MOD (call $fail (i32.const 0x20084))) ;; not implemented
+  (!def_word "UM/MOD" "$UM/MOD") ;; TODO: Rename
 
   ;; 6.1.2380
   (func $UNLOOP
@@ -1317,6 +1286,8 @@
     (i32.store (i32.const !stateBase) (i32.const 1)))
   (!def_word "]" "$right-bracket")
 
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
   ;; 6.2.0280
   (func $zero-greater
     (local $btos i32)
@@ -1368,6 +1339,20 @@
         (call $push (i32.const -1)))))
   (!def_word "REFILL" "$refill")
 
+  ;; 6.2.2295
+  (func $TO
+    (call $readWord (i32.const 0x20))
+    (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
+    (call $find)
+    (if (i32.eqz (call $pop)) (call $fail (i32.const 0x20000))) ;; undefined word
+    (i32.store (i32.add (call $body (call $pop)) (i32.const 4)) (call $pop)))
+  (!def_word "TO" "$TO")
+
+  ;; 6.1.2395
+  (func $UNUSED
+    (call $push (i32.shr_s (i32.sub (i32.const !memorySize) (get_global $here)) (i32.const 2))))
+  (!def_word "UNUSED" "$UNUSED")
+
   ;; 6.2.2535
   (func $backslash
     (local $char i32)
@@ -1379,11 +1364,6 @@
         (br_if $endSkipComments (i32.eq (get_local $char) (i32.const -1)))
         (br $skipComments))))
   (!def_word "\\" "$backslash" !fImmediate)
-
-  ;; 6.1.2395
-  (func $UNUSED
-    (call $push (i32.shr_s (i32.sub (i32.const !memorySize) (get_global $here)) (i32.const 2))))
-  (!def_word "UNUSED" "$UNUSED")
 
   ;; 6.1.2250
   (func $SOURCE-ID
@@ -1494,6 +1474,97 @@
     : VALUE CONSTANT ;
 EOF
 )
+
+  ;; Initializes compilation.
+  ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
+  ;; or type 1 (1 param)
+  (func $startColon (param $params i32)
+    (i32.store8 (i32.const !moduleHeaderFunctionTypeBase) (get_local $params))
+    (set_global $cp (i32.const !moduleBodyBase))
+    (set_global $currentLocal (i32.add (i32.const -1) (get_local $params)))
+    (set_global $lastLocal (i32.add (i32.const -1) (get_local $params)))
+    (set_global $branchNesting (i32.const -1)))
+
+  (func $endColon
+    (local $bodySize i32)
+    (local $nameLength i32)
+
+    (call $emitEnd)
+
+    ;; Update code size
+    (set_local $bodySize (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))) 
+    (i32.store 
+      (i32.const !moduleHeaderCodeSizeBase)
+      (call $leb128-4p
+         (i32.sub (get_local $bodySize) 
+                  (i32.const (!+ !moduleHeaderCodeSizeOffset 4)))))
+
+    ;; Update body size
+    (i32.store 
+      (i32.const !moduleHeaderBodySizeBase)
+      (call $leb128-4p
+         (i32.sub (get_local $bodySize) 
+                  (i32.const (!+ !moduleHeaderBodySizeOffset 4)))))
+
+    ;; Update #locals
+    (i32.store 
+      (i32.const !moduleHeaderLocalCountBase)
+      (call $leb128-4p (i32.add (get_global $lastLocal) (i32.const 1))))
+
+    ;; Update table offset
+    (i32.store 
+      (i32.const !moduleHeaderTableIndexBase)
+      (call $leb128-4p (get_global $nextTableIndex)))
+    ;; Also store the initial table size to satisfy other tools (e.g. wasm-as)
+    (i32.store 
+      (i32.const !moduleHeaderTableInitialSizeBase)
+      (call $leb128-4p (i32.add (get_global $nextTableIndex) (i32.const 1))))
+
+    ;; Write a name section (if we're ending the code for the current dictionary entry)
+    (if (i32.eq (i32.load (call $body (get_global $latest)))
+                (get_global $nextTableIndex))
+      (then
+        (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
+                                        (i32.const !lengthMask)))
+        (i32.store8 (get_global $cp) (i32.const 0))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                    (i32.add (i32.const 13) (i32.mul (i32.const 2) (get_local $nameLength))))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x04))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x6e))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (i32.const 0x61))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 5)) (i32.const 0x6d))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 6)) (i32.const 0x65))
+        (set_global $cp (i32.add (get_global $cp) (i32.const 7)))
+
+        (i32.store8 (get_global $cp) (i32.const 0x00))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                    (i32.add (i32.const 1) (get_local $nameLength)))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (get_local $nameLength)) 
+        (set_global $cp (i32.add (get_global $cp) (i32.const 3)))
+        (call $memmove (get_global $cp)
+                      (i32.add (get_global $latest) (i32.const 5))
+                      (get_local $nameLength))
+        (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))
+
+        (i32.store8 (get_global $cp) (i32.const 0x01))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
+                    (i32.add (i32.const 3) (get_local $nameLength)))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 2)) (i32.const 0x01))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 3)) (i32.const 0x00))
+        (i32.store8 (i32.add (get_global $cp) (i32.const 4)) (get_local $nameLength))
+        (set_global $cp (i32.add (get_global $cp) (i32.const 5)))
+        (call $memmove (get_global $cp)
+                      (i32.add (get_global $latest) (i32.const 5))
+                      (get_local $nameLength))
+        (set_global $cp (i32.add (get_global $cp) (get_local $nameLength)))))
+
+    ;; Load the code
+    (call $shell_load (i32.const !moduleHeaderBase) 
+                      (i32.sub (get_global $cp) (i32.const !moduleHeaderBase))
+                      (get_global $nextTableIndex))
+
+    (set_global $nextTableIndex (i32.add (get_global $nextTableIndex) (i32.const 1))))
+
 
   ;; Reads a number from the word buffer, and puts it on the stack. 
   ;; Returns -1 if an error occurred.
@@ -2149,7 +2220,11 @@ EOF
     (set_global $latest (get_local $latest))
     (set_global $here (get_local $here)))
 
+  ;; Table starts with 16 reserved addresses for utility, non-words 
+  ;; functions (used in compiled words). From then on, the built-in
+  ;; words start.
   (table (export "table") !tableStartIndex anyfunc)
+
   (global $latest (mut i32) (i32.const !dictionaryLatest))
   (global $here (mut i32) (i32.const !dictionaryTop))
   (global $nextTableIndex (mut i32) (i32.const !tableStartIndex))
@@ -2164,3 +2239,12 @@ EOF
 
   ;; Compilation pointer
   (global $cp (mut i32) (i32.const !moduleBodyBase)))
+
+;; 
+;; Adding a word:
+;; - Create the function
+;; - Add the dictionary entry to memory as data
+;; - Update the $latest and $here globals
+;; - Add the table entry as elem
+;; - Update the table size
+;; - Update the nextTableIndex

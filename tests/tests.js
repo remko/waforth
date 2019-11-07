@@ -902,7 +902,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(135920);
+        expect(stack[0]).to.eql(136120);
         expect(stack[1]).to.eql(-1);
       });
 
@@ -916,7 +916,7 @@ function loadTests(wasmModule, arrayToBase64) {
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stack[0]).to.eql(135268);
+        expect(stack[0]).to.eql(135304);
         expect(stack[1]).to.eql(1);
       });
 
