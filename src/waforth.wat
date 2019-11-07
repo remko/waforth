@@ -361,10 +361,12 @@
   (data (i32.const 135420) "\u00f0\u0010\u0002\u0000\u00021-\u0000$\u0000\u0000\u0000")
   (elem (i32.const 0x24) $one-minus)
 
+
   ;; 6.1.0310
-  (func $2! (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135432) "\u00fc\u0010\u0002\u0000\u0002_!\u0000%\u0000\u0000\u0000")
-  (elem (i32.const 0x25) $2!) ;; TODO: Rename
+  (func $2! 
+    (call $SWAP) (call $OVER) (call $!) (call $CELL+) (call $!))
+  (data (i32.const 135432) "\u00fc\u0010\u0002\u0000\u00022!\u0000%\u0000\u0000\u0000")
+  (elem (i32.const 0x25) $2!)
 
   ;; 6.1.0320
   (func $2*
@@ -383,9 +385,14 @@
   (elem (i32.const 0x27) $2/)
 
   ;; 6.1.0350
-  (func $2@ (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135468) " \u0011\u0002\u0000\u0002_@\u0000(\u0000\u0000\u0000")
-  (elem (i32.const 0x28) $2@) ;; TODO: Rename
+  (func $2@ 
+    (call $DUP)
+    (call $CELL+)
+    (call $@)
+    (call $SWAP)
+    (call $@))
+  (data (i32.const 135468) " \u0011\u0002\u0000\u00022@\u0000(\u0000\u0000\u0000")
+  (elem (i32.const 0x28) $2@)
 
 
   ;; 6.1.0370 
@@ -671,13 +678,19 @@
   (data (i32.const 135888) "\u00c4\u0012\u0002\u0000\u0002C@\u0000F\u0000\u0000\u0000")
   (elem (i32.const 0x46) $c-fetch)
 
-  (func $CELL+ (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135900) "\u00d0\u0012\u0002\u0000\u0005_ELL+\u0000\u0000G\u0000\u0000\u0000")
-  (elem (i32.const 0x47) $CELL+) ;; TODO: Rename
+  (func $CELL+ 
+    (local $btos i32)
+    (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
+               (i32.add (i32.load (get_local $btos)) (i32.const 4))))
+  (data (i32.const 135900) "\u00d0\u0012\u0002\u0000\u0005CELL+\u0000\u0000G\u0000\u0000\u0000")
+  (elem (i32.const 0x47) $CELL+)
 
-  (func $CELLS (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135916) "\u00dc\u0012\u0002\u0000\u0005_ELLS\u0000\u0000H\u0000\u0000\u0000")
-  (elem (i32.const 0x48) $CELLS) ;; TODO: Rename
+  (func $CELLS 
+    (local $btos i32)
+    (i32.store (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))
+               (i32.shl (i32.load (get_local $btos)) (i32.const 2))))
+  (data (i32.const 135916) "\u00dc\u0012\u0002\u0000\u0005CELLS\u0000\u0000H\u0000\u0000\u0000")
+  (elem (i32.const 0x48) $CELLS)
 
   ;; 6.1.0895
   (func $CHAR
@@ -688,13 +701,13 @@
   (data (i32.const 135932) "\u00ec\u0012\u0002\u0000\u0004CHAR\u0000\u0000\u0000I\u0000\u0000\u0000")
   (elem (i32.const 0x49) $CHAR)
 
-  (func $CHAR+ (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135948) "\u00fc\u0012\u0002\u0000\u0005_HAR+\u0000\u0000J\u0000\u0000\u0000")
-  (elem (i32.const 0x4a) $CHAR+) ;; TODO: Rename
+  (func $CHAR+ (call $one-plus))
+  (data (i32.const 135948) "\u00fc\u0012\u0002\u0000\u0005CHAR+\u0000\u0000J\u0000\u0000\u0000")
+  (elem (i32.const 0x4a) $CHAR+)
 
-  (func $CHARS (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135964) "\u000c\u0013\u0002\u0000\u0005_HARS\u0000\u0000K\u0000\u0000\u0000")
-  (elem (i32.const 0x4b) $CHARS) ;; TODO: Rename
+  (func $CHARS)
+  (data (i32.const 135964) "\u000c\u0013\u0002\u0000\u0005CHARS\u0000\u0000K\u0000\u0000\u0000")
+  (elem (i32.const 0x4b) $CHARS)
 
   (func $CONSTANT (call $fail (i32.const 0x20084))) ;; not implemented
   (data (i32.const 135980) "\u001c\u0013\u0002\u0000\u0008_ONSTANT\u0000\u0000\u0000L\u0000\u0000\u0000")
@@ -712,9 +725,10 @@
   (data (i32.const 136000) ",\u0013\u0002\u0000\u0005COUNT\u0000\u0000M\u0000\u0000\u0000")
   (elem (i32.const 0x4d) $COUNT)
 
-  (func $CR (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 136016) "@\u0013\u0002\u0000\u0002_R\u0000N\u0000\u0000\u0000")
-  (elem (i32.const 0x4e) $CR) ;; TODO: Rename
+  (func $CR 
+    (call $push (i32.const 10)) (call $EMIT))
+  (data (i32.const 136016) "@\u0013\u0002\u0000\u0002CR\u0000N\u0000\u0000\u0000")
+  (elem (i32.const 0x4e) $CR)
 
   ;; 6.1.1000
   (func $create
@@ -744,9 +758,10 @@
   (data (i32.const 136028) "P\u0013\u0002\u0000\u0006CREATE\u0000O\u0000\u0000\u0000")
   (elem (i32.const 0x4f) $create)
 
-  (func $DECIMAL (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 136044) "\u005c\u0013\u0002\u0000\u0007_ECIMALP\u0000\u0000\u0000")
-  (elem (i32.const 0x50) $DECIMAL) ;; TODO: Rename
+  (func $DECIMAL 
+    (i32.store (i32.const !baseBase) (i32.const 10)))
+  (data (i32.const 136044) "\u005c\u0013\u0002\u0000\u0007DECIMALP\u0000\u0000\u0000")
+  (elem (i32.const 0x50) $DECIMAL)
 
   ;; 6.1.1200
   (func $DEPTH
@@ -782,13 +797,13 @@
   (elem (i32.const 0x54) $drop)
 
   ;; 6.1.1290
-  (func $dupe
+  (func $DUP
    (i32.store
     (get_global $tos)
     (i32.load (i32.sub (get_global $tos) (i32.const 4))))
    (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (data (i32.const 136120) "\u00a8\u0013\u0002\u0000\u0003DUPU\u0000\u0000\u0000")
-  (elem (i32.const 0x55) $dupe)
+  (elem (i32.const 0x55) $DUP)
 
   ;; 6.1.1310
   (func $else
@@ -798,11 +813,11 @@
   (elem (i32.const 0x56) $else) ;; immediate
 
   ;; 6.1.1320
-  (func $emit
+  (func $EMIT
     (call $shell_emit (i32.load (i32.sub (get_global $tos) (i32.const 4))))
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
   (data (i32.const 136148) "\u00c4\u0013\u0002\u0000\u0004EMIT\u0000\u0000\u0000W\u0000\u0000\u0000")
-  (elem (i32.const 0x57) $emit)
+  (elem (i32.const 0x57) $EMIT)
 
   (func $ENVIRONMENT (call $fail (i32.const 0x20084))) ;; not implemented
   (data (i32.const 136164) "\u00d4\u0013\u0002\u0000\u000bENVIRONMENTX\u0000\u0000\u0000")
@@ -1102,12 +1117,12 @@
   (elem (i32.const 0x71) $OR)
 
   ;; 6.1.1990
-  (func $over
+  (func $OVER
     (i32.store (get_global $tos)
                (i32.load (i32.sub (get_global $tos) (i32.const 8))))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4))))
   (data (i32.const 136556) "`\u0015\u0002\u0000\u0004OVER\u0000\u0000\u0000r\u0000\u0000\u0000")
-  (elem (i32.const 0x72) $over)
+  (elem (i32.const 0x72) $OVER)
 
   ;; 6.1.2033
   (func $POSTPONE
@@ -1237,13 +1252,21 @@
   (elem (i32.const 0x7f) $SOURCE)
 
   ;; 6.1.2220
-  (func $space (call $bl) (call $emit))
+  (func $space (call $bl) (call $EMIT))
   (data (i32.const 136764) ",\u0016\u0002\u0000\u0005SPACE\u0000\u0000\u0080\u0000\u0000\u0000")
   (elem (i32.const 0x80) $space)
 
-  (func $SPACES (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 136780) "<\u0016\u0002\u0000\u0006_PACES\u0000\u0081\u0000\u0000\u0000")
-  (elem (i32.const 0x81) $SPACES) ;; TODO: rename
+  (func $SPACES 
+    (local $i i32)
+    (set_local $i (call $pop))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.le_s (get_local $i) (i32.const 0)))
+        (call $space)
+        (set_local $i (i32.sub (get_local $i) (i32.const 1)))
+        (br $loop))))
+  (data (i32.const 136780) "<\u0016\u0002\u0000\u0006SPACES\u0000\u0081\u0000\u0000\u0000")
+  (elem (i32.const 0x81) $SPACES)
 
   ;; 6.1.2250
   (func $STATE
@@ -1253,7 +1276,7 @@
   (elem (i32.const 0x82) $STATE)
 
   ;; 6.1.2260
-  (func $swap
+  (func $SWAP
     (local $btos i32)
     (local $bbtos i32)
     (local $tmp i32)
@@ -1262,7 +1285,7 @@
                (i32.load (tee_local $btos (i32.sub (get_global $tos) (i32.const 4)))))
     (i32.store (get_local $btos) (get_local $tmp)))
   (data (i32.const 136812) "\u005c\u0016\u0002\u0000\u0004SWAP\u0000\u0000\u0000\u0083\u0000\u0000\u0000")
-  (elem (i32.const 0x83) $swap)
+  (elem (i32.const 0x83) $SWAP)
 
   ;; 6.1.2270
   (func $then
@@ -1500,16 +1523,15 @@
   (data (i32.const 137208) "\u00ec\u0017\u0002\u0000\u0006LATEST\u0000\u009e\u0000\u0000\u0000")
   (elem (i32.const 0x9e) $latest)
 
+  (func $HEX
+    (i32.store (i32.const !baseBase) (i32.const 16)))
+  (data (i32.const #x21820) "\u0008\u0018\u0002\u0000\u0003HEX\u00a0\u0000\u0000\u0000")
+  (elem (i32.const #xa0) $HEX)
+
   ;; High-level words
   (!prelude #<<EOF
     \ 6.1.0950
     : CONSTANT CREATE , DOES> @ ;
-
-    \ 6.1.1170 
-    : DECIMAL 10 BASE ! ;
-
-    \ 6.2.1660
-    : HEX ( -- ) 16 BASE ! ;
 
     \ 6.2.2298
     : TRUE -1 ;
@@ -1523,31 +1545,7 @@
     \ 6.2.2300
     : TUCK ( x y -- y x y ) SWAP OVER ;
 
-    \ 6.1.0897
-    : CHAR+ 1+ ;
-
-    \ 6.1.0898
-    : CHARS ;
-
-    \ 6.1.0880
-    : CELL+ 4 + ;
-    
-    \ 6.1.0890
-    : CELLS 4 * ;
-
-    \ 6.1.0350
-    : 2@ DUP CELL+ @ SWAP @ ;
-
-    \ 6.1.0310
-    : 2! SWAP OVER ! CELL+ ! ;
-
     : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
-
-    \ 6.1.0990
-    : CR 10 EMIT ;
-
-    \ 6.1.2230
-    : SPACES BEGIN DUP 0> WHILE SPACE 1- REPEAT DROP ;
 
     \ 6.1.2320
     : U.
@@ -2231,29 +2229,29 @@ EOF
     (call $plus)
     (i32.store (get_global $tos) (i32.const 1))
     (set_global $tos (i32.add (get_global $tos) (i32.const 4)))
-    (call $swap)
+    (call $SWAP)
     (call $c-store))
 
   (func $sieve
     (local $i i32)
     (local $end i32)
     (call $here) 
-    (call $over) 
+    (call $OVER) 
     (call $erase)
     (call $push (i32.const 2))
     (block $endLoop1
       (loop $loop1
         (call $two-dupe) 
-        (call $dupe) 
+        (call $DUP) 
         (call $star) 
         (call $greater-than)
         (br_if $endLoop1 (i32.eqz (call $pop)))
-        (call $dupe) 
+        (call $DUP) 
         (call $sieve_prime)
         (if (i32.ne (call $pop) (i32.const 0))
           (block
             (call $two-dupe) 
-            (call $dupe) 
+            (call $DUP) 
             (call $star)
             (set_local $i (call $pop))
             (set_local $end (call $pop))
@@ -2261,7 +2259,7 @@ EOF
               (loop $loop2
                 (call $push (get_local $i))
                 (call $sieve_composite) 
-                (call $dupe)
+                (call $DUP)
                 (set_local $i (i32.add (call $pop) (get_local $i)))
                 (br_if $endLoop2 (i32.ge_s (get_local $i) (get_local $end)))
                 (br $loop2)))))
@@ -2269,7 +2267,7 @@ EOF
         (br $loop1)))
     (call $drop) 
     (call $push (i32.const 1))
-    (call $swap) 
+    (call $SWAP) 
     (call $push (i32.const 2))
     (set_local $i (call $pop))
     (set_local $end (call $pop))
@@ -2342,11 +2340,11 @@ EOF
   ;; Table starts with 16 reserved addresses for utility, non-words 
   ;; functions (used in compiled words). From then on, the built-in
   ;; words start.
-  (table (export "table") 0xa0 anyfunc)
+  (table (export "table") 0xa1 anyfunc)
 
-  (global $latest (mut i32) (i32.const 137224))
-  (global $here (mut i32) (i32.const 137248))
-  (global $nextTableIndex (mut i32) (i32.const 0xa0))
+  (global $latest (mut i32) (i32.const #x21820))
+  (global $here (mut i32) (i32.const #x2182C))
+  (global $nextTableIndex (mut i32) (i32.const #xa1))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compilation state
