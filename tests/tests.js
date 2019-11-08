@@ -1468,7 +1468,7 @@ function loadTests(wasmModule, arrayToBase64) {
         );
         // These 2 are wrong
         expect(output).to.include(
-          "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -(0000000 7FFFFFFF \n"
+          "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -80000000 7FFFFFFF \n"
         );
         expect(output).to.include("UNSIGNED: 0/\n");
       });

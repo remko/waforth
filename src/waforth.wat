@@ -77,7 +77,7 @@
 (define !abortIndex #x39)
 (define !constantIndex #x4c)
 
-(define !nextTableIndex #xa6)
+(define !nextTableIndex #xa7)
 
 (define (!+ x y) (list (+ x y)))
 
@@ -1552,6 +1552,33 @@
 
   ;; 6.2.2405
   (data (i32.const #x21874) "\u0064\u0018\u0002\u0000" "\u0005" "VALUE00" "\u004c\u0000\u0000\u0000") ;; !constantIndex
+
+  ;; 6.1.0180
+  (func $.
+    (local $v i32)
+    (set_local $v (call $pop))
+    (if (i32.lt_s (get_local $v) (i32.const 0))
+      (then
+        (call $shell_emit (i32.const 0x2d))
+        (set_local $v (i32.sub (i32.const 0) (get_local $v)))))
+    (call $U._ (get_local $v) (i32.load (i32.const !baseBase)))
+    (call $shell_emit (i32.const 0x20)))
+  (data (i32.const #x21884) "\u0074\u0018\u0002\u0000" "\u0001" ".00" "\u00a6\u0000\u0000\u0000")
+  (elem (i32.const #xa6) $.)
+
+  (func $U._ (param $v i32) (param $base i32)
+    (local $m i32)
+    (set_local $m (i32.rem_u (get_local $v) (get_local $base)))
+    (set_local $v (i32.div_u (get_local $v) (get_local $base)))
+    (if (i32.eqz (get_local $v))
+      (then)
+      (else (call $U._ (get_local $v) (get_local $base))))
+    (if (i32.ge_u (get_local $m) (i32.const 10))
+      (then
+        (call $shell_emit (i32.add (get_local $m) (i32.const 0x37))))
+      (else
+        (call $shell_emit (i32.add (get_local $m) (i32.const 0x30))))))
+
   
   ;; 15.6.1.0220
   ;; : .S DSP@ S0 BEGIN 2DUP > WHILE DUP @ U.  SPACE 4 + REPEAT 2DROP ;
@@ -1576,9 +1603,6 @@
       IF 45 EMIT THEN
       U.
     ;
-
-    \ 6.1.0180
-    : . 0 .R SPACE ;
 EOF
 )
 
@@ -2377,8 +2401,8 @@ EOF
   ;; words start.
   (table (export "table") !nextTableIndex anyfunc)
 
-  (global $latest (mut i32) (i32.const #x21874))
-  (global $here (mut i32) (i32.const #x21884))
+  (global $latest (mut i32) (i32.const #x21884))
+  (global $here (mut i32) (i32.const #x21890))
   (global $nextTableIndex (mut i32) (i32.const !nextTableIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
