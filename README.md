@@ -4,12 +4,11 @@ WAForth is a bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
 [here](https://el-tramo.be/waforth/).
 
-It is (almost) entirely written in WebAssembly and Forth, and the compiler
+It is entirely written in (raw) WebAssembly, and the compiler
 generates WebAssembly code on the fly. The only parts for which it relies on
-external (JavaScript) code is the dynamic loader (since WebAssembly [doesn't
-support JIT
-yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
-and the I/O primitives to read and write a character.
+external (JavaScript) code is to dynamically load modules (since WebAssembly [doesn't
+support JIT yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
+and the I/O primitives to read and write a character to a screen.
 
 Parts of the implementation were influenced by
 [jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary).
@@ -22,12 +21,12 @@ core word tests.
 
 ## Install Dependencies
 
-The build uses [Racket](https://racket-lang.org) for processing the WebAssembly
-code, the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt) for
-converting it in binary format,and [Yarn](https://yarnpkg.com) for managing the
-dependencies of the shell.
+The build uses the [WebAssembly Binary
+Toolkit](https://github.com/WebAssembly/wabt) for converting raw WebAssembly
+text format into the binary format, and [Yarn](https://yarnpkg.com) for
+managing the dependencies of the shell.
 
-    brew install wabt yarn minimal-racket
+    brew install wabt yarn
     yarn
 
 
@@ -60,7 +59,7 @@ format](https://webassembly.github.io/spec/core/text/index.html). The text
 format isn't really meant for writing code in, so it has no facilities like a
 real assembler (e.g. constant definitions, macro expansion, ...).
 To help with maintenance, the WebAssembly file is piped through a simple string
-preprocessor that replaces constants with defined values.
+preprocessing script that replaces constants with defined values.
 
 ### The Interpreter
 
@@ -88,7 +87,7 @@ the next offset, which in turn is recorded in the word dictionary.
 
 Because words reside in different modules, all calls to and from the words need
 to happen as indirect `call_indirect` calls through the shared function table.
-This of course introduces some overhead, although it seems limited.
+This of course introduces some overhead, although it appears limited.
 
 As WebAssembly doesn't support unstructured jumps, control flow words
 (`IF/ELSE/THEN`, `LOOP`, `REPEAT`, ...) can't be implemented in terms of more
