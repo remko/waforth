@@ -1470,7 +1470,7 @@ function loadTests(wasmModule, arrayToBase64) {
         expect(output).to.include(
           "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -80000000 7FFFFFFF \n"
         );
-        expect(output).to.include("UNSIGNED: 0/\n");
+        expect(output).to.include("UNSIGNED: 0 FFFFFFFF \n");
       });
     });
   });

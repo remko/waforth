@@ -1291,9 +1291,11 @@
   (data (i32.const 136844) "|\u0016\u0002\u0000\u0004TYPE\u0000\u0000\u0000\u0085\u0000\u0000\u0000")
   (elem (i32.const 0x85) $TYPE) ;; none
 
-  (func $U. (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 136860) "\u008c\u0016\u0002\u0000\u0002_.\u0000\u0086\u0000\u0000\u0000")
-  (elem (i32.const 0x86) $U.) ;; TODO: Rename
+  (func $U.
+    (call $U._ (call $pop) (i32.load (i32.const !baseBase)))
+    (call $shell_emit (i32.const 0x20)))
+  (data (i32.const 136860) "\u008c\u0016\u0002\u0000\u0002U.\u0000\u0086\u0000\u0000\u0000")
+  (elem (i32.const 0x86) $U.)
 
   ;; 6.1.2340
   (func $U<
@@ -1585,15 +1587,6 @@
 
   ;; High-level words
   (!prelude #<<EOF
-    \ 6.1.2320
-    : U.
-      BASE @ /MOD
-      ?DUP IF RECURSE THEN
-      DUP 10 < IF 48 ELSE 10 - 65 THEN
-      +
-      EMIT
-    ;
-
     \ 6.2.0210
     : .R
       SWAP
