@@ -72,6 +72,7 @@
 (define !pushDataAddressIndex 3)
 (define !setLatestBodyIndex 4)
 (define !compileCallIndex 5)
+(define !pushIndirectIndex 6)
 (define !typeIndex #x85)
 (define !abortIndex #x39)
 
@@ -415,7 +416,7 @@
 
   ;; 6.1.0450
   (func $colon
-    (call $create)
+    (call $CREATE)
     (call $hidden)
 
     ;; Turn off (default) data flag
@@ -684,9 +685,14 @@
   (data (i32.const 135964) "\u000c\u0013\u0002\u0000\u0005CHARS\u0000\u0000K\u0000\u0000\u0000")
   (elem (i32.const 0x4b) $CHARS)
 
-  (func $CONSTANT (call $fail (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 135980) "\u001c\u0013\u0002\u0000\u0008_ONSTANT\u0000\u0000\u0000L\u0000\u0000\u0000")
-  (elem (i32.const 0x4c) $CONSTANT) ;; TODO: Rename
+  ;; 6.1.0950
+  (func $CONSTANT 
+    (call $CREATE)
+    (i32.store (i32.sub (get_global $here) (i32.const 4)) (i32.const !pushIndirectIndex))
+    (i32.store (get_global $here) (call $pop))
+    (set_global $here (i32.add (get_global $here) (i32.const 4))))
+  (data (i32.const 135980) "\u001c\u0013\u0002\u0000" "\u0008" "CONSTANT\u0000\u0000\u0000" "L\u0000\u0000\u0000")
+  (elem (i32.const 0x4c) $CONSTANT)
 
   ;; 6.1.0980
   (func $COUNT
@@ -706,7 +712,7 @@
   (elem (i32.const 0x4e) $CR)
 
   ;; 6.1.1000
-  (func $create
+  (func $CREATE
     (local $length i32)
 
     (i32.store (get_global $here) (get_global $latest))
@@ -731,7 +737,7 @@
 
     (call $setFlag (i32.const !fData)))
   (data (i32.const 136028) "P\u0013\u0002\u0000\u0006CREATE\u0000O\u0000\u0000\u0000")
-  (elem (i32.const 0x4f) $create)
+  (elem (i32.const 0x4f) $CREATE)
 
   (func $DECIMAL 
     (i32.store (i32.const !baseBase) (i32.const 10)))
@@ -1329,7 +1335,7 @@
 
   ;; 6.1.2410
   (func $VARIABLE
-    (call $create)
+    (call $CREATE)
     (set_global $here (i32.add (get_global $here) (i32.const 4))))
   (data (i32.const 136944) "\u00e0\u0016\u0002\u0000\u0008VARIABLE\u0000\u0000\u0000\u008c\u0000\u0000\u0000")
   (elem (i32.const 0x8c) $VARIABLE)
@@ -1529,9 +1535,6 @@
 
   ;; High-level words
   (!prelude #<<EOF
-    \ 6.1.0950
-    : CONSTANT CREATE , DOES> @ ;
-
     : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
 
     \ 6.1.2320
@@ -2065,6 +2068,10 @@ EOF
   (func $setLatestBody (param $v i32)
     (i32.store (call $body (get_global $latest)) (get_local $v)))
   (elem (i32.const !setLatestBodyIndex) $setLatestBody)
+
+  (func $pushIndirect (param $v i32)
+    (call $push (i32.load (get_local $v))))
+  (elem (i32.const !pushIndirectIndex) $pushIndirect)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Helper functions
