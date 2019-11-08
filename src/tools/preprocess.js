@@ -17,8 +17,8 @@ const definitions = {};
 lines.forEach(line => {
   Object.keys(definitions).forEach(k => {
     line = line.replace(
-      new RegExp(escapeRegExp(k) + "(\\s|\\))", "g"),
-      definitions[k] + " (; = " + k + " ;)$1"
+      new RegExp("(\\s)" + escapeRegExp(k) + "(\\s|\\))", "g"),
+      "$1" + definitions[k] + " (; = " + k + " ;)$2"
     );
   });
   const m = line.match(/^;;\s+([!a-zA-Z0-9_]+)\s*:=\s*([^\s]+)/);

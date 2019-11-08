@@ -209,8 +209,8 @@
   (func $plus-loop
     (call $ensureCompiling)
     (call $compilePlusLoop))
-  (data (i32.const 135304) "|\10\02\00\85+LOOP\00\00\1b\00\00\00")
-  (elem (i32.const 0x1b) $plus-loop) ;; immediate
+  (data (i32.const 135304) "|\10\02\00" "\85" (; immediate ;) "+LOOP\00\00" "\1b\00\00\00")
+  (elem (i32.const 0x1b) $plus-loop)
 
   ;; 6.1.0150
   (func $comma
@@ -238,8 +238,8 @@
     (call $ensureCompiling)
     (call $Sq)
     (call $emitICall (i32.const 0) (i32.const TYPE_INDEX)))
-  (data (i32.const 135344) "\a4\10\02\00\82.\22\00\1e\00\00\00")
-  (elem (i32.const 0x1e) $.q) ;; immediate
+  (data (i32.const 135344) "\a4\10\02\00" "\82" (; immediate ;) ".\22\00" "\1e\00\00\00")
+  (elem (i32.const 0x1e) $.q)
 
   ;; 6.1.0230
   (func $/
@@ -412,8 +412,8 @@
     (call $endColon)
     (call $hidden)
     (call $left-bracket))
-  (data (i32.const 135556) "x\11\02\00\81;\00\00.\00\00\00")
-  (elem (i32.const 0x2e) $semicolon) ;; immediate
+  (data (i32.const 135556) "x\11\02\00" "\81" (; immediate ;) ";\00\00" ".\00\00\00")
+  (elem (i32.const 0x2e) $semicolon)
 
   ;; 6.1.0480
   (func $less-than
@@ -518,8 +518,8 @@
     (call $emitICall (i32.const 0) (i32.const TYPE_INDEX))
     (call $emitICall (i32.const 0) (i32.const ABORT_INDEX))
     (call $compileThen))
-  (data (i32.const 135716) "\14\12\02\00\86ABORT\22\00:\00\00\00")
-  (elem (i32.const 0x3a) $ABORT-quote) ;; immediate
+  (data (i32.const 135716) "\14\12\02\00" "\86" (; immediate ;) "ABORT\22\00" ":\00\00\00")
+  (elem (i32.const 0x3a) $ABORT-quote)
 
   ;; 6.1.0690
   (func $ABS
@@ -589,8 +589,8 @@
   (func $begin
     (call $ensureCompiling)
     (call $compileBegin))
-  (data (i32.const 135836) "\8c\12\02\00\85BEGIN\00\00B\00\00\00")
-  (elem (i32.const 0x42) $begin) ;; immediate
+  (data (i32.const 135836) "\8c\12\02\00" "\85" (; immediate ;) "BEGIN\00\00" "B\00\00\00")
+  (elem (i32.const 0x42) $begin)
 
   ;; 6.1.0770
   (func $bl (call $push (i32.const 32)))
@@ -726,8 +726,8 @@
   (func $do
     (call $ensureCompiling)
     (call $compileDo))
-  (data (i32.const 136076) "|\13\02\00\82DO\00R\00\00\00")
-  (elem (i32.const 0x52) $do) ;; immediate
+  (data (i32.const 136076) "|\13\02\00" "\82" (; immediate ;) "DO\00" "R\00\00\00")
+  (elem (i32.const 0x52) $do)
 
   ;; 6.1.1250
   (func $DOES>
@@ -737,8 +737,8 @@
     (call $endColon)
     (call $startColon (i32.const 1))
     (call $compilePushLocal (i32.const 0)))
-  (data (i32.const 136088) "\8c\13\02\00\85DOES>\00\00S\00\00\00")
-  (elem (i32.const 0x53) $DOES>) ;; immediate
+  (data (i32.const 136088) "\8c\13\02\00" "\85" (; immediate ;) "DOES>\00\00" "S\00\00\00")
+  (elem (i32.const 0x53) $DOES>)
 
   ;; 6.1.1260
   (func $DROP
@@ -759,8 +759,8 @@
   (func $else
     (call $ensureCompiling)
     (call $emitElse))
-  (data (i32.const 136132) "\b8\13\02\00\84ELSE\00\00\00V\00\00\00")
-  (elem (i32.const 0x56) $else) ;; immediate
+  (data (i32.const 136132) "\b8\13\02\00" "\84" (; immediate ;) "ELSE\00\00\00" "V\00\00\00")
+  (elem (i32.const 0x56) $else)
 
   ;; 6.1.1320
   (func $EMIT
@@ -822,8 +822,8 @@
   (func $EXIT
     (call $ensureCompiling)
     (call $emitReturn))
-  (data (i32.const 136220) "\0c\14\02\00\84EXIT\00\00\00[\00\00\00")
-  (elem (i32.const 0x5b) $EXIT) ;; immediate
+  (data (i32.const 136220) "\0c\14\02\00" "\84" (; immediate ;) "EXIT\00\00\00" "[\00\00\00")
+  (elem (i32.const 0x5b) $EXIT)
 
   ;; 6.1.1540
   (func $FILL
@@ -917,15 +917,15 @@
   (func $i
     (call $ensureCompiling)
     (call $compilePushLocal (i32.sub (get_global $currentLocal) (i32.const 1))))
-  (data (i32.const 136316) "l\14\02\00\81I\00\00a\00\00\00")
-  (elem (i32.const 0x61) $i) ;; immediate
+  (data (i32.const 136316) "l\14\02\00" "\81" (; immediate ;) "I\00\00" "a\00\00\00")
+  (elem (i32.const 0x61) $i)
 
   ;; 6.1.1700
   (func $if
     (call $ensureCompiling)
     (call $compileIf))
-  (data (i32.const 136328) "|\14\02\00\82IF\00b\00\00\00")
-  (elem (i32.const 0x62) $if) ;; immediate
+  (data (i32.const 136328) "|\14\02\00" "\82" (; immediate ;) "IF\00" "b\00\00\00")
+  (elem (i32.const 0x62) $if)
 
   ;; 6.1.1710
   (func $immediate
