@@ -92,6 +92,12 @@
 (define !moduleHeaderTableInitialSizeBase (+ !moduleHeaderBase !moduleHeaderTableInitialSizeOffset))
 (define !moduleHeaderFunctionTypeBase (+ !moduleHeaderBase !moduleHeaderFunctionTypeOffset))
 
+(define !fNone #x0)
+(define !fImmediate #x80)
+(define !fData #x40)
+(define !fHidden #x20)
+(define !lengthMask #x1F)
+
 ;; Predefined table indices
 (define !pushIndex 1)
 (define !popIndex 2)
@@ -448,7 +454,7 @@
       (i32.add (get_global $latest) (i32.const 4))
       (i32.xor 
         (i32.load (i32.add (get_global $latest) (i32.const 4)))
-        (i32.const 0x40))) ;; data
+        (i32.const !fData)))
 
     ;; Store the code pointer already
     ;; The code hasn't been loaded yet, but since nothing can affect the next table
@@ -754,7 +760,7 @@
     (set_global $here (i32.add (get_global $here) (i32.const 4)))
     (i32.store (get_global $here) (i32.const 0))
 
-    (call $setFlag (i32.const 0x40))) ;; data
+    (call $setFlag (i32.const !fData)))
   (data (i32.const 136028) "P\u0013\u0002\u0000\u0006CREATE\u0000O\u0000\u0000\u0000")
   (elem (i32.const 0x4f) $create)
 
@@ -859,7 +865,7 @@
     (local $body i32)
     (set_local $body (call $body (tee_local $xt (call $pop))))
     (if (i32.and (i32.load (i32.add (get_local $xt) (i32.const 4)))
-                 (i32.const 0x40)) ;; data
+                 (i32.const !fData))
       (then
         (call_indirect (type $dataWord) (i32.add (get_local $body) (i32.const 4))
                                         (i32.load (get_local $body))))
@@ -907,8 +913,8 @@
         (set_local $entryLF (i32.load (i32.add (get_local $entryP) (i32.const 4))))
         (block $endCompare
           (if (i32.and 
-                (i32.eq (i32.and (get_local $entryLF) (i32.const 0x20)) (i32.const 0)) ;; hidden
-                (i32.eq (i32.and (get_local $entryLF) (i32.const 0x1f)) ;; length mask
+                (i32.eq (i32.and (get_local $entryLF) (i32.const !fHidden)) (i32.const 0))
+                (i32.eq (i32.and (get_local $entryLF) (i32.const !lengthMask))
                         (get_local $wordLength)))
             (then
               (set_local $wordP (get_local $wordStart))
@@ -924,7 +930,7 @@
                   (br $compareLoop)))
               (i32.store (i32.sub (get_global $tos) (i32.const 4))
                          (get_local $entryP))
-              (if (i32.eqz (i32.and (get_local $entryLF) (i32.const 0x80))) ;; immediate
+              (if (i32.eqz (i32.and (get_local $entryLF) (i32.const !fImmediate)))
                 (then
                   (call $push (i32.const -1)))
                 (else
@@ -979,7 +985,7 @@
 
   ;; 6.1.1710
   (func $immediate
-    (call $setFlag (i32.const 0x80))) ;; immediate
+    (call $setFlag (i32.const !fImmediate)))
   (data (i32.const 136340) "\u0088\u0014\u0002\u0000\u0009IMMEDIATE\u0000\u0000c\u0000\u0000\u0000")
   (elem (i32.const 0x63) $immediate)
 
@@ -1637,7 +1643,7 @@ EOF
                 (get_global $nextTableIndex))
       (then
         (set_local $nameLength (i32.and (i32.load8_u (i32.add (get_global $latest) (i32.const 4)))
-                                        (i32.const 0x1f))) ;; length mask
+                                        (i32.const !lengthMask)))
         (i32.store8 (get_global $cp) (i32.const 0))
         (i32.store8 (i32.add (get_global $cp) (i32.const 1)) 
                     (i32.add (i32.const 13) (i32.mul (i32.const 2) (get_local $nameLength))))
@@ -1966,7 +1972,7 @@ EOF
     (local $body i32)
     (set_local $body (call $body (get_local $findToken)))
     (if (i32.and (i32.load (i32.add (get_local $findToken) (i32.const 4)))
-                 (i32.const 0x40)) ;; data
+                 (i32.const !fData))
       (then
         (call $emitConst (i32.add (get_local $body) (i32.const 4)))
         (call $emitICall (i32.const 1) (i32.load (get_local $body))))
@@ -2100,7 +2106,7 @@ EOF
       (i32.add (get_global $latest) (i32.const 4))
       (i32.xor 
         (i32.load (i32.add (get_global $latest) (i32.const 4)))
-        (i32.const 0x20)))) ;; hidden
+        (i32.const !fHidden))))
 
   (func $memmove (param $dst i32) (param $src i32) (param $n i32)
     (local $end i32)
@@ -2193,7 +2199,7 @@ EOF
           (get_local $xt)
           (i32.and
             (i32.load8_u (i32.add (get_local $xt) (i32.const 4)))
-            (i32.const 0x1f))) ;; length mask
+            (i32.const !lengthMask)))
         (i32.const 8 #| 4 + 1 + 3 |#))
       (i32.const -4)))
 
