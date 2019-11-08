@@ -76,7 +76,7 @@
 (define !typeIndex #x85)
 (define !abortIndex #x39)
 
-(define !nextTableIndex #xa5)
+(define !nextTableIndex #xa6)
 
 (define (!+ x y) (list (+ x y)))
 
@@ -1533,10 +1533,25 @@
   (data (i32.const #x21858) "\u004c\u0018\u0002\u0000" "\u0003" "NIP" "\u00a4\u0000\u0000\u0000")
   (elem (i32.const #xa4) $TUCK)
 
+  (func $UWIDTH
+    (local $v i32)
+    (local $r i32)
+    (local $base i32)
+    (set_local $v (call $pop))
+    (set_local $base (i32.load (i32.const !baseBase)))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.eqz (get_local $v)))
+        (set_local $r (i32.add (get_local $r) (i32.const 1)))
+        (set_local $v (i32.div_s (get_local $v) (get_local $base)))
+        (br $loop)))
+    (call $push (get_local $r)))
+  (data (i32.const #x21864) "\u0058\u0018\u0002\u0000" "\u0006" "UWIDTH0" "\u00a5\u0000\u0000\u0000")
+  (elem (i32.const #xa5) $UWIDTH)
+  
+
   ;; High-level words
   (!prelude #<<EOF
-    : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
-
     \ 6.1.2320
     : U.
       BASE @ /MOD
@@ -2372,8 +2387,8 @@ EOF
   ;; words start.
   (table (export "table") !nextTableIndex anyfunc)
 
-  (global $latest (mut i32) (i32.const #x21858))
-  (global $here (mut i32) (i32.const #x21864))
+  (global $latest (mut i32) (i32.const #x21864))
+  (global $here (mut i32) (i32.const #x21874))
   (global $nextTableIndex (mut i32) (i32.const !nextTableIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
