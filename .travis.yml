@@ -17,5 +17,4 @@ addons:
   apt:
     packages:
       - make
-      - racket
       # - wabt

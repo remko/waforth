@@ -51,23 +51,16 @@ You can also run the tests in Node.JS by running
 
 ## Design
 
-### The Macro Assembler
+### The Preprocessor
 
 The WAForth core is written as [a single
 module](https://github.com/remko/waforth/blob/master/src/waforth.wat) in
 WebAssembly's [text
 format](https://webassembly.github.io/spec/core/text/index.html). The text
 format isn't really meant for writing code in, so it has no facilities like a
-real assembler (e.g. constant definitions, macro expansion, ...) However, since
-the text format uses S-expressions, you can do some small modifications to make
-it extensible with Lisp-style macros. 
-
-I added some Racket macros to the module definition, and implemented [a mini
-assembler](https://github.com/remko/waforth/blob/master/src/tools/assembler.rkt)
-to print out the resulting s-expressions in the right format.
-
-The result is something that looks like a standard WebAssembly module, but
-sprinkled with some macros for convenience.
+real assembler (e.g. constant definitions, macro expansion, ...).
+To help with maintenance, the WebAssembly file is piped through a simple string
+preprocessor that replaces constants with defined values.
 
 ### The Interpreter
 

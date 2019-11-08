@@ -16,7 +16,7 @@ dev-server: $(WASM_FILES)
 wasm: $(WASM_FILES) src/waforth.assembled.wat src/tools/quadruple.wasm.hex
 
 src/waforth.wasm: src/waforth.wat dist
-	racket -f $< > src/waforth.wat.tmp
+	./src/tools/preprocess.js $< > src/waforth.wat.tmp
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.wat.tmp
 
 src/waforth.assembled.wat: src/waforth.wasm
