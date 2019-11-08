@@ -1553,7 +1553,8 @@
   ;; 6.2.2405
   (data (i32.const #x21874) "\u0064\u0018\u0002\u0000" "\u0005" "VALUE00" "\u004c\u0000\u0000\u0000") ;; !constantIndex
   
-  
+  ;; 15.6.1.0220
+  ;; : .S DSP@ S0 BEGIN 2DUP > WHILE DUP @ U.  SPACE 4 + REPEAT 2DROP ;
 
   ;; High-level words
   (!prelude #<<EOF
@@ -1564,19 +1565,6 @@
       DUP 10 < IF 48 ELSE 10 - 65 THEN
       +
       EMIT
-    ;
-
-    \ 15.6.1.0220
-    : .S
-      DSP@ S0 
-      BEGIN
-        2DUP >
-      WHILE
-        DUP @ U.
-        SPACE
-        4 +
-      REPEAT
-      2DROP
     ;
 
     \ 6.2.0210
