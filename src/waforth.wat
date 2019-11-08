@@ -75,7 +75,7 @@
 (define !typeIndex #x85)
 (define !abortIndex #x39)
 
-(define !nextTableIndex #xa1)
+(define !nextTableIndex #xa5)
 
 (define (!+ x y) (list (+ x y)))
 
@@ -766,10 +766,10 @@
   (elem (i32.const 0x53) $DOES>) ;; immediate
 
   ;; 6.1.1260
-  (func $drop
+  (func $DROP
     (set_global $tos (i32.sub (get_global $tos) (i32.const 4))))
   (data (i32.const 136104) "\u0098\u0013\u0002\u0000\u0004DROP\u0000\u0000\u0000T\u0000\u0000\u0000")
-  (elem (i32.const 0x54) $drop)
+  (elem (i32.const 0x54) $DROP)
 
   ;; 6.1.1290
   (func $DUP
@@ -1503,22 +1503,34 @@
   (data (i32.const #x21820) "\u0008\u0018\u0002\u0000\u0003HEX\u00a0\u0000\u0000\u0000")
   (elem (i32.const #xa0) $HEX)
 
+  ;; 6.2.2298
+  (func $TRUE
+    (call $push (i32.const 0xffffffff)))
+  (data (i32.const #x2182c) "\u0020\u0018\u0002\u0000" "\u0004" "TRUE000" "\u00a1\u0000\u0000\u0000")
+  (elem (i32.const #xa1) $TRUE)
+
+  ;; 6.2.1485
+  (func $FALSE
+    (call $push (i32.const 0x0)))
+  (data (i32.const #x2183c) "\u002c\u0018\u0002\u0000" "\u0005" "FALSE00" "\u00a2\u0000\u0000\u0000")
+  (elem (i32.const #xa2) $FALSE)
+
+  ;; 6.2.1930
+  (func $NIP
+    (call $SWAP) (call $DROP))
+  (data (i32.const #x2184c) "\u003c\u0018\u0002\u0000" "\u0003" "NIP" "\u00a3\u0000\u0000\u0000")
+  (elem (i32.const #xa3) $NIP)
+
+  ;; 6.2.2300
+  (func $TUCK
+    (call $SWAP) (call $OVER))
+  (data (i32.const #x21858) "\u004c\u0018\u0002\u0000" "\u0003" "NIP" "\u00a4\u0000\u0000\u0000")
+  (elem (i32.const #xa4) $TUCK)
+
   ;; High-level words
   (!prelude #<<EOF
     \ 6.1.0950
     : CONSTANT CREATE , DOES> @ ;
-
-    \ 6.2.2298
-    : TRUE -1 ;
-
-    \ 6.2.1485
-    : FALSE 0 ;
-
-    \ 6.2.1930
-    : NIP ( x y -- y ) SWAP DROP ;
-
-    \ 6.2.2300
-    : TUCK ( x y -- y x y ) SWAP OVER ;
 
     : UWIDTH BASE @ / ?DUP IF RECURSE 1+ ELSE 1 THEN ;
 
@@ -2240,7 +2252,7 @@ EOF
                 (br $loop2)))))
         (call $one-plus)
         (br $loop1)))
-    (call $drop) 
+    (call $DROP) 
     (call $push (i32.const 1))
     (call $SWAP) 
     (call $push (i32.const 2))
@@ -2252,12 +2264,12 @@ EOF
         (call $sieve_prime) 
         (if (i32.ne (call $pop) (i32.const 0))
         (block
-          (call $drop)
+          (call $DROP)
           (call $push (get_local $i))))
         (set_local $i (i32.add (i32.const 1) (get_local $i)))
         (br_if $endLoop3 (i32.ge_s (get_local $i) (get_local $end)))
         (br $loop3))))
-  (data (i32.const 137224) "\u00f8\u0017\u0002\u0000\u000csieve_direct\u0000\u0000\u0000\u009f\u0000\u0000\u0000")
+  (data (i32.const 137224) "\u00f8\u0017\u0002\u0000" "\u000c" "sieve_direct\u0000\u0000\u0000" "\u009f\u0000\u0000\u0000")
   (elem (i32.const 0x9f) $sieve)
     
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2353,8 +2365,8 @@ EOF
   ;; words start.
   (table (export "table") !nextTableIndex anyfunc)
 
-  (global $latest (mut i32) (i32.const #x21820))
-  (global $here (mut i32) (i32.const #x2182C))
+  (global $latest (mut i32) (i32.const #x21858))
+  (global $here (mut i32) (i32.const #x21864))
   (global $nextTableIndex (mut i32) (i32.const !nextTableIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
