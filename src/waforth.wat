@@ -75,6 +75,7 @@
 (define !pushIndirectIndex 6)
 (define !typeIndex #x85)
 (define !abortIndex #x39)
+(define !constantIndex #x4c)
 
 (define !nextTableIndex #xa6)
 
@@ -692,7 +693,7 @@
     (i32.store (get_global $here) (call $pop))
     (set_global $here (i32.add (get_global $here) (i32.const 4))))
   (data (i32.const 135980) "\u001c\u0013\u0002\u0000" "\u0008" "CONSTANT\u0000\u0000\u0000" "L\u0000\u0000\u0000")
-  (elem (i32.const 0x4c) $CONSTANT)
+  (elem (i32.const !constantIndex) $CONSTANT)
 
   ;; 6.1.0980
   (func $COUNT
@@ -1548,6 +1549,10 @@
     (call $push (get_local $r)))
   (data (i32.const #x21864) "\u0058\u0018\u0002\u0000" "\u0006" "UWIDTH0" "\u00a5\u0000\u0000\u0000")
   (elem (i32.const #xa5) $UWIDTH)
+
+  ;; 6.2.2405
+  (data (i32.const #x21874) "\u0064\u0018\u0002\u0000" "\u0005" "VALUE00" "\u004c\u0000\u0000\u0000") ;; !constantIndex
+  
   
 
   ;; High-level words
@@ -1586,9 +1591,6 @@
 
     \ 6.1.0180
     : . 0 .R SPACE ;
-
-    \ 6.2.2405
-    : VALUE CONSTANT ;
 EOF
 )
 
@@ -2387,8 +2389,8 @@ EOF
   ;; words start.
   (table (export "table") !nextTableIndex anyfunc)
 
-  (global $latest (mut i32) (i32.const #x21864))
-  (global $here (mut i32) (i32.const #x21874))
+  (global $latest (mut i32) (i32.const #x21874))
+  (global $here (mut i32) (i32.const #x21884))
   (global $nextTableIndex (mut i32) (i32.const !nextTableIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
