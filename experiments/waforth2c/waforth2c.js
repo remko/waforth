@@ -77,9 +77,6 @@ WebAssembly.instantiate(coreWasm, {
 
   const dictionaryStart = latest();
 
-  // Load prelude
-  core.exports.loadPrelude();
-
   // Load code
   run(input);
 

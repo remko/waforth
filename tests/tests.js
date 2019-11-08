@@ -14,7 +14,7 @@ function loadTests(wasmModule, arrayToBase64) {
         output = output + String.fromCharCode(c);
         // console.log(output);
       };
-      const x = forth.start({ skipPrelude: true }).then(
+      const x = forth.start().then(
         () => {
           core = forth.core.exports;
 
@@ -1297,10 +1297,6 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("CONSTANT", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should work", () => {
         run("12 CONSTANT FOO");
         run("FOO 5");
@@ -1318,10 +1314,6 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("VALUE", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should store a value", () => {
         run("12 VALUE FOO");
         run("FOO 5");
@@ -1350,10 +1342,6 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("UWIDTH", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should work with 3 digits", () => {
         run("123 UWIDTH");
         expect(stack[0]).to.eql(3);
@@ -1366,10 +1354,6 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("[']", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should work", () => {
         run(': HELLO ." Hello " ;');
         run(': GOODBYE ." Goodbye " ;');
@@ -1418,10 +1402,6 @@ function loadTests(wasmModule, arrayToBase64) {
     });
 
     describe("system", () => {
-      beforeEach(() => {
-        core.loadPrelude();
-      });
-
       it("should run sieve", () => {
         run(sieve);
         run("100 sieve");
@@ -1437,7 +1417,6 @@ function loadTests(wasmModule, arrayToBase64) {
 
     describe("standard test suite", () => {
       beforeEach(() => {
-        core.loadPrelude();
         run(standardTestSuiteTester);
         run("TRUE VERBOSE !");
       });

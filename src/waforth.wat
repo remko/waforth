@@ -28,8 +28,7 @@
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
 ;; them synchronously
 (define !moduleHeaderBase #x1000) 
-(define !preludeDataBase #x2000)
-(define !returnStackBase #x4000)
+(define !returnStackBase #x2000)
 (define !stackBase #x10000)
 (define !dictionaryBase #x21000)
 (define !memorySize 104857600) ;; 100*1024*1024
@@ -78,18 +77,6 @@
 (define !constantIndex #x4c)
 
 (define !nextTableIndex #xa7)
-
-(define (!+ x y) (list (+ x y)))
-
-(define !preludeData "")
-(define (!prelude c) 
-  (set! !preludeData 
-    (regexp-replace* #px"[ ]?\n[ ]?" 
-      (regexp-replace* #px"[ ]+" 
-        (regexp-replace* #px"[\n]+" (string-append !preludeData "\n" c) "\n")
-        " ")
-      "\n"))
-  (list))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; WebAssembly module definition
@@ -1582,23 +1569,6 @@
         (call $shell_emit (i32.add (get_local $m) (i32.const 0x30))))))
 
   
-  ;; 15.6.1.0220
-  ;; : .S DSP@ S0 BEGIN 2DUP > WHILE DUP @ U.  SPACE 4 + REPEAT 2DROP ;
-
-  ;; High-level words
-  (!prelude #<<EOF
-    \ 6.2.0210
-    : .R
-      SWAP
-      DUP 0< IF NEGATE 1 SWAP ROT 1- ELSE 0 SWAP ROT THEN
-      SWAP DUP UWIDTH ROT SWAP -
-      SPACES SWAP
-      IF 45 EMIT THEN
-      U.
-    ;
-EOF
-)
-
   ;; Initializes compilation.
   ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
   ;; or type 1 (1 param)
@@ -2227,11 +2197,6 @@ EOF
           (return (get_local $n)))))
     (unreachable))
 
-  (func $loadPrelude (export "loadPrelude")
-    (call $push (i32.const !preludeDataBase))
-    (call $push (i32.const (!+ (string-length !preludeData) 0)))
-    (call $EVALUATE))
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; A sieve with direct calls. Only here for benchmarking
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2360,7 +2325,6 @@ EOF
       "\u00FE\u0000\u0000\u0000" ;; Body size (padded)
       "\u0001" ;; #locals
         "\u00FD\u0000\u0000\u0000\u007F") ;; # #i32 locals (padded)
-  (data (i32.const !preludeDataBase)  !preludeData)
 
   (func (export "tos") (result i32)
     (get_global $tos))

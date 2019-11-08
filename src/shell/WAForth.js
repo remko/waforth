@@ -21,8 +21,7 @@ class WAForth {
       };
   }
 
-  start(options = {}) {
-    const { skipPrelude } = options;
+  start() {
     let table;
     let memory;
     const buffer = (this.buffer = []);
@@ -97,9 +96,6 @@ class WAForth {
       this.core = instance.instance;
       table = this.core.exports.table;
       memory = this.core.exports.memory;
-      if (!skipPrelude) {
-        this.core.exports.loadPrelude();
-      }
     });
   }
 
