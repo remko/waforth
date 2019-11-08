@@ -18,15 +18,12 @@
 
 (require "tools/assembler.rkt")
 
-(define (char-index cs char pos)
-  (cond ((null? cs) #f)
-        ((char=? char (car cs)) pos)
-        (else (char-index (cdr cs) char (add1 pos)))))
-
 (define !baseBase #x100)
 (define !stateBase #x104)
 (define !inBase #x108)
 (define !wordBase #x200)
+(define !wordBasePlus1 #x201)
+(define !wordBasePlus2 #x202)
 (define !inputBufferBase #x300)
 ;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
 ;; them synchronously
@@ -35,62 +32,33 @@
 (define !returnStackBase #x4000)
 (define !stackBase #x10000)
 (define !dictionaryBase #x21000)
-(define !memorySize (* 100 1024 1024))
+(define !memorySize 104857600) ;; 100*1024*1024
+(define !memorySizePages 1600) ;; memorySize / 65536
 
-(define !moduleHeader 
-  (string-append
-    "\u0000\u0061\u0073\u006D" ;; Header
-    "\u0001\u0000\u0000\u0000" ;; Version
+; (define !moduleHeaderSize (string-length !moduleHeader))
+(define !moduleHeaderSize #x68) 
+; (define !moduleHeaderCodeSizeOffset (char-index (string->list !moduleHeader) #\u00FF 0))
+(define !moduleHeaderCodeSizeOffset #x59) 
+(define !moduleHeaderCodeSizeOffsetPlus4 #x5d) 
+; (define !moduleHeaderBodySizeOffset (char-index (string->list !moduleHeader) #\u00FE 0))
+(define !moduleHeaderBodySizeOffset #x5e) 
+(define !moduleHeaderBodySizeOffsetPlus4 #x62) 
+; (define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
+(define !moduleHeaderLocalCountOffset #x63) 
+; (define !moduleHeaderTableIndexOffset (char-index (string->list !moduleHeader) #\u00FC 0))
+(define !moduleHeaderTableIndexOffset #x51) 
+; (define !moduleHeaderTableInitialSizeOffset (char-index (string->list !moduleHeader) #\u00FB 0))
+(define !moduleHeaderTableInitialSizeOffset #x2b) 
+; (define !moduleHeaderFunctionTypeOffset (char-index (string->list !moduleHeader) #\u00FA 0))
+(define !moduleHeaderFunctionTypeOffset #x4b) 
 
-    "\u0001" "\u0011" ;; Type section
-      "\u0004" ;; #Entries
-        "\u0060\u0000\u0000" ;; (func)
-        "\u0060\u0001\u007F\u0000" ;; (func (param i32))
-        "\u0060\u0000\u0001\u007F" ;; (func (result i32))
-        "\u0060\u0001\u007f\u0001\u007F" ;; (func (param i32) (result i32))
-
-    "\u0002" "\u002B" ;; Import section
-      "\u0003" ;; #Entries
-      "\u0003\u0065\u006E\u0076" "\u0005\u0074\u0061\u0062\u006C\u0065" ;; 'env' . 'table'
-        "\u0001" "\u0070" "\u0000" "\u00FB\u0000\u0000\u0000" ;; table, anyfunc, flags, initial size
-      "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
-        "\u0002" "\u0000" "\u0001" ;; memory
-      "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
-        "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
-
-    
-    "\u0003" "\u0002" ;; Function section
-      "\u0001" ;; #Entries
-      "\u00FA" ;; Type 0
-      
-    "\u0009" "\u000a" ;; Element section
-      "\u0001" ;; #Entries
-      "\u0000" ;; Table 0
-      "\u0041\u00FC\u0000\u0000\u0000\u000B" ;; i32.const ..., end
-      "\u0001" ;; #elements
-        "\u0000" ;; function 0
-
-    "\u000A" "\u00FF\u0000\u0000\u0000" ;; Code section (padded length)
-    "\u0001" ;; #Bodies
-      "\u00FE\u0000\u0000\u0000" ;; Body size (padded)
-      "\u0001" ;; #locals
-        "\u00FD\u0000\u0000\u0000\u007F")) ;; # #i32 locals (padded)
-
-(define !moduleHeaderSize (string-length !moduleHeader))
-(define !moduleHeaderCodeSizeOffset (char-index (string->list !moduleHeader) #\u00FF 0))
-(define !moduleHeaderBodySizeOffset (char-index (string->list !moduleHeader) #\u00FE 0))
-(define !moduleHeaderLocalCountOffset (char-index (string->list !moduleHeader) #\u00FD 0))
-(define !moduleHeaderTableIndexOffset (char-index (string->list !moduleHeader) #\u00FC 0))
-(define !moduleHeaderTableInitialSizeOffset (char-index (string->list !moduleHeader) #\u00FB 0))
-(define !moduleHeaderFunctionTypeOffset (char-index (string->list !moduleHeader) #\u00FA 0))
-
-(define !moduleBodyBase (+ !moduleHeaderBase !moduleHeaderSize))
-(define !moduleHeaderCodeSizeBase (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
-(define !moduleHeaderBodySizeBase (+ !moduleHeaderBase !moduleHeaderBodySizeOffset))
-(define !moduleHeaderLocalCountBase (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
-(define !moduleHeaderTableIndexBase (+ !moduleHeaderBase !moduleHeaderTableIndexOffset))
-(define !moduleHeaderTableInitialSizeBase (+ !moduleHeaderBase !moduleHeaderTableInitialSizeOffset))
-(define !moduleHeaderFunctionTypeBase (+ !moduleHeaderBase !moduleHeaderFunctionTypeOffset))
+(define !moduleBodyBase #x1068) ;; (+ !moduleHeaderBase !moduleHeaderSize))
+(define !moduleHeaderCodeSizeBase #x1059) ;; (+ !moduleHeaderBase !moduleHeaderCodeSizeOffset))
+(define !moduleHeaderBodySizeBase #x105e) ;; (+ !moduleHeaderBase !moduleHeaderBodySizeOffset))
+(define !moduleHeaderLocalCountBase #x1063) ;; (+ !moduleHeaderBase !moduleHeaderLocalCountOffset))
+(define !moduleHeaderTableIndexBase #x1051) ;; (+ !moduleHeaderBase !moduleHeaderTableIndexOffset))
+(define !moduleHeaderTableInitialSizeBase #x102b) ;; (+ !moduleHeaderBase !moduleHeaderTableInitialSizeOffset))
+(define !moduleHeaderFunctionTypeBase #x104b) ;; (+ !moduleHeaderBase !moduleHeaderFunctionTypeOffset))
 
 (define !fNone #x0)
 (define !fImmediate #x80)
@@ -107,8 +75,9 @@
 (define !typeIndex #x85)
 (define !abortIndex #x39)
 
+(define !nextTableIndex #xa1)
+
 (define (!+ x y) (list (+ x y)))
-(define (!/ x y) (list (ceiling (/ x y))))
 
 (define !preludeData "")
 (define (!prelude c) 
@@ -132,7 +101,7 @@
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
-  (memory (export "memory") (!/ !memorySize 65536))
+  (memory (export "memory") !memorySizePages)
 
   (type $word (func))
   (type $dataWord (func (param i32)))
@@ -703,7 +672,7 @@
     (call $readWord (i32.const 0x20))
     (if (i32.eqz (i32.load8_u (i32.const !wordBase))) (call $fail (i32.const 0x20028))) ;; incomplete input
     (i32.store (i32.sub (get_global $tos) (i32.const 4))
-               (i32.load8_u (i32.const (!+ !wordBase 1)))))
+               (i32.load8_u (i32.const !wordBasePlus1))))
   (data (i32.const 135932) "\u00ec\u0012\u0002\u0000\u0004CHAR\u0000\u0000\u0000I\u0000\u0000\u0000")
   (elem (i32.const 0x49) $CHAR)
 
@@ -750,7 +719,7 @@
     (i32.store8 (get_global $here) (tee_local $length (i32.load8_u (i32.const !wordBase))))
     (set_global $here (i32.add (get_global $here) (i32.const 1)))
 
-    (call $memmove (get_global $here) (i32.const (!+ !wordBase 1)) (get_local $length))
+    (call $memmove (get_global $here) (i32.const !wordBasePlus1) (get_local $length))
 
     (set_global $here (i32.add (get_global $here) (get_local $length)))
 
@@ -1615,14 +1584,14 @@ EOF
       (i32.const !moduleHeaderCodeSizeBase)
       (call $leb128-4p
          (i32.sub (get_local $bodySize) 
-                  (i32.const (!+ !moduleHeaderCodeSizeOffset 4)))))
+                  (i32.const !moduleHeaderCodeSizeOffsetPlus4))))
 
     ;; Update body size
     (i32.store 
       (i32.const !moduleHeaderBodySizeBase)
       (call $leb128-4p
          (i32.sub (get_local $bodySize) 
-                  (i32.const (!+ !moduleHeaderBodySizeOffset 4)))))
+                  (i32.const !moduleHeaderBodySizeOffsetPlus4))))
 
     ;; Update #locals
     (i32.store 
@@ -1700,12 +1669,12 @@ EOF
     (if (i32.eqz (tee_local $length (i32.load8_u (i32.const !wordBase))))
       (return (i32.const -1)))
 
-    (set_local $p (i32.const (!+ !wordBase 1)))
-    (set_local $end (i32.add (i32.const (!+ !wordBase 1)) (get_local $length)))
+    (set_local $p (i32.const !wordBasePlus1))
+    (set_local $end (i32.add (i32.const !wordBasePlus1) (get_local $length)))
     (set_local $base (i32.load (i32.const !baseBase)))
 
     ;; Read first character
-    (if (i32.eq (tee_local $char (i32.load8_u (i32.const (!+ !wordBase 1))))
+    (if (i32.eq (tee_local $char (i32.load8_u (i32.const !wordBasePlus1)))
                 (i32.const 0x2d #| '-' |#))
       (then 
         (set_local $sign (i32.const -1))
@@ -1806,13 +1775,13 @@ EOF
         (br_if $skipBlanks (i32.eq (get_local $char) (i32.const 0x0a #| ' ' |#)))
         (br $endSkipBlanks)))
 
-    (set_local $stringPtr (i32.const (!+ !wordBase 1)))
+    (set_local $stringPtr (i32.const !wordBasePlus1))
     (if (i32.ne (get_local $char) (i32.const -1)) 
       (if (i32.ne (get_local $char) (i32.const 0x0a))
         (then 
           ;; Search for delimiter
-          (i32.store8 (i32.const (!+ !wordBase 1)) (get_local $char))
-          (set_local $stringPtr (i32.const (!+ !wordBase 2)))
+          (i32.store8 (i32.const !wordBasePlus1) (get_local $char))
+          (set_local $stringPtr (i32.const !wordBasePlus2))
           (block $endReadChars
             (loop $readChars
               (set_local $char (call $readChar))
@@ -1825,7 +1794,7 @@ EOF
 
      ;; Write word length
      (i32.store8 (i32.const !wordBase) 
-       (i32.sub (get_local $stringPtr) (i32.const (!+ !wordBase 1))))
+       (i32.sub (get_local $stringPtr) (i32.const !wordBasePlus1)))
      
      (call $push (i32.const !wordBase)))
 
@@ -2313,7 +2282,43 @@ EOF
   (data (i32.const !baseBase) "\u000A\u0000\u0000\u0000")
   (data (i32.const !stateBase) "\u0000\u0000\u0000\u0000")
   (data (i32.const !inBase) "\u0000\u0000\u0000\u0000")
-  (data (i32.const !moduleHeaderBase) !moduleHeader)
+  (data (i32.const !moduleHeaderBase)
+    "\u0000\u0061\u0073\u006D" ;; Header
+    "\u0001\u0000\u0000\u0000" ;; Version
+
+    "\u0001" "\u0011" ;; Type section
+      "\u0004" ;; #Entries
+        "\u0060\u0000\u0000" ;; (func)
+        "\u0060\u0001\u007F\u0000" ;; (func (param i32))
+        "\u0060\u0000\u0001\u007F" ;; (func (result i32))
+        "\u0060\u0001\u007f\u0001\u007F" ;; (func (param i32) (result i32))
+
+    "\u0002" "\u002B" ;; Import section
+      "\u0003" ;; #Entries
+      "\u0003\u0065\u006E\u0076" "\u0005\u0074\u0061\u0062\u006C\u0065" ;; 'env' . 'table'
+        "\u0001" "\u0070" "\u0000" "\u00FB\u0000\u0000\u0000" ;; table, anyfunc, flags, initial size
+      "\u0003\u0065\u006E\u0076" "\u0006\u006d\u0065\u006d\u006f\u0072\u0079" ;; 'env' . 'memory'
+        "\u0002" "\u0000" "\u0001" ;; memory
+      "\u0003\u0065\u006E\u0076" "\u0003\u0074\u006f\u0073" ;; 'env' . 'tos'
+        "\u0003" "\u007F" "\u0000" ;; global, i32, immutable
+
+    
+    "\u0003" "\u0002" ;; Function section
+      "\u0001" ;; #Entries
+      "\u00FA" ;; Type 0
+      
+    "\u0009" "\u000a" ;; Element section
+      "\u0001" ;; #Entries
+      "\u0000" ;; Table 0
+      "\u0041\u00FC\u0000\u0000\u0000\u000B" ;; i32.const ..., end
+      "\u0001" ;; #elements
+        "\u0000" ;; function 0
+
+    "\u000A" "\u00FF\u0000\u0000\u0000" ;; Code section (padded length)
+    "\u0001" ;; #Bodies
+      "\u00FE\u0000\u0000\u0000" ;; Body size (padded)
+      "\u0001" ;; #locals
+        "\u00FD\u0000\u0000\u0000\u007F") ;; # #i32 locals (padded)
   (data (i32.const !preludeDataBase)  !preludeData)
 
   (func (export "tos") (result i32)
@@ -2346,11 +2351,11 @@ EOF
   ;; Table starts with 16 reserved addresses for utility, non-words 
   ;; functions (used in compiled words). From then on, the built-in
   ;; words start.
-  (table (export "table") 0xa1 anyfunc)
+  (table (export "table") !nextTableIndex anyfunc)
 
   (global $latest (mut i32) (i32.const #x21820))
   (global $here (mut i32) (i32.const #x2182C))
-  (global $nextTableIndex (mut i32) (i32.const #xa1))
+  (global $nextTableIndex (mut i32) (i32.const !nextTableIndex))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compilation state
@@ -2369,5 +2374,4 @@ EOF
 ;; - Add the dictionary entry to memory as data
 ;; - Update the $latest and $here globals
 ;; - Add the table entry as elem
-;; - Update the table size
-;; - Update the nextTableIndex
+;; - Update !nextTableIndex
