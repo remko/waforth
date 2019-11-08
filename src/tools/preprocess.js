@@ -21,10 +21,9 @@ lines.forEach(line => {
       definitions[k] + " (; = " + k + " ;)$1"
     );
   });
-  const m = line.match(/^;; \(define\s+([^\s]+)\s+([^\s]+)\)/);
+  const m = line.match(/^;;\s+([!a-zA-Z0-9_]+)\s*:=\s*([^\s]+)/);
   if (m) {
     definitions[m[1]] = m[2];
-  } else {
-    console.log(line);
   }
+  console.log(line);
 });

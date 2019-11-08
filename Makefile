@@ -16,8 +16,8 @@ dev-server: $(WASM_FILES)
 wasm: $(WASM_FILES) src/waforth.assembled.wat src/tools/quadruple.wasm.hex
 
 src/waforth.wasm: src/waforth.wat dist
-	./src/tools/preprocess.js $< > src/waforth.wat.tmp
-	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.wat.tmp
+	./src/tools/preprocess.js $< > src/waforth.out.wat
+	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.out.wat
 
 src/waforth.assembled.wat: src/waforth.wasm
 	$(WASM2WAT) --fold-exprs --inline-imports --inline-exports -o $@ $<
