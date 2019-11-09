@@ -1,8 +1,8 @@
 WASM2WAT=wasm2wat
 WAT2WASM=wat2wasm
-WAT2WASM_FLAGS=
+WAT2WASM_FLAGS=--enable-bulk-memory  
 ifeq ($(DEBUG),1)
-WAT2WASM_FLAGS=--debug-names
+WAT2WASM_FLAGS:=$(WAT2WASM_FLAGS) --debug-names
 endif
 
 WASM_FILES=src/waforth.wasm tests/benchmarks/sieve-vanilla.wasm
