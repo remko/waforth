@@ -11,9 +11,9 @@
   "devDependencies": {
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
-    "@babel/preset-react": "^7.0.0",
     "@babel/register": "^7.0.0",
     "babel-loader": "^8.0.5",
+    "babel-preset-preact": "^2.0.0",
     "bin-loader": "^0.1.0",
     "chai": "^4.2.0",
     "commander": "^4.0.0",

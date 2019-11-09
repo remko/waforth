@@ -22,10 +22,7 @@ function config({ entry, outputDir, title, template, mode }) {
           use: {
             loader: "babel-loader",
             options: {
-              presets: [
-                ["@babel/preset-env", { modules: false }],
-                "@babel/preset-react"
-              ]
+              presets: [["@babel/preset-env", { modules: false }], "preact"]
             }
           }
         },
