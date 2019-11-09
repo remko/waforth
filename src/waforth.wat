@@ -98,6 +98,26 @@
   ;; Built-in words
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+  ;; These follow the following pattern:
+  ;; - WebAssembly function definition (func ...)
+  ;; - Dictionary entry in memory (data ...)
+  ;; - Function table entry (elem ...)
+  ;;
+  ;; The dictionary entry has the following form:
+  ;; - prev (4 bytes): Pointer to start of previous entry
+  ;; - flags|name-length (1 byte): Length of the entry name, OR-ed with
+  ;;   flags in the top 3 bits.
+  ;;   Flags is an OR-ed value of:
+  ;;        Immediate: 0x80
+  ;;        Data: 0x40
+  ;;        Hidden: 0x20
+  ;; - name (n bytes): Name characters. End is 4-byte aligned.
+  ;; - code pointer (4 bytes): Index into the function 
+  ;;   table of code to execute
+  ;; - data (optional m bytes, only if 'data' flag is set)
+  ;;
+  ;; Execution tokens are addresses of dictionary entries
+
   ;; 6.1.0010 ! 
   (func $!
     (local $bbtos i32)
@@ -2251,21 +2271,6 @@
   ;; Data
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; The dictionary has entries of the following form:
-  ;; - prev (4 bytes): Pointer to start of previous entry
-  ;; - flags|name-length (1 byte): Length of the entry name, ORed with
-  ;;   flags in the top 3 bits.
-  ;;   Flags is an ORed value of:
-  ;;        Immediate: 0x80
-  ;;        Data: 0x40
-  ;;        Hidden: 0x20
-  ;; - name (n bytes): Name characters. End is 4-byte aligned.
-  ;; - code pointer (4 bytes): Index into the function 
-  ;;   table of code to execute
-  ;; - data (m bytes)
-  ;;
-  ;; Execution tokens are addresses of dictionary entries
-
   (data (i32.const BASE_BASE) "\0A\00\00\00")
   (data (i32.const STATE_BASE) "\00\00\00\00")
   (data (i32.const IN_BASE) "\00\00\00\00")
@@ -2353,11 +2358,3 @@
 
   ;; Compilation pointer
   (global $cp (mut i32) (i32.const MODULE_BODY_BASE)))
-
-;; 
-;; Adding a word:
-;; - Create the function
-;; - Add the dictionary entry to memory as data
-;; - Update the $latest and $here globals
-;; - Add the table entry as elem
-;; - Update NEXT_TABLE_INDEX
