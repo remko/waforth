@@ -16,6 +16,7 @@
     "babel-loader": "^8.0.5",
     "bin-loader": "^0.1.0",
     "chai": "^4.2.0",
+    "commander": "^4.0.0",
     "css-loader": "^2.1.1",
     "eslint": "5.15.1",
     "eslint-plugin-react": "^7.12.4",

@@ -2,10 +2,7 @@
 
 const process = require("process");
 const fs = require("fs");
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-}
+const _ = require("lodash");
 
 const file = process.argv[2];
 const lines = fs
@@ -15,9 +12,10 @@ const lines = fs
 
 const definitions = {};
 lines.forEach(line => {
+  // Constants
   Object.keys(definitions).forEach(k => {
     line = line.replace(
-      new RegExp("(\\s)" + escapeRegExp(k) + "(\\s|\\))", "g"),
+      new RegExp("(\\s)" + _.escapeRegExp(k) + "(\\s|\\))", "g"),
       "$1" + definitions[k] + " (; = " + k + " ;)$2"
     );
   });
@@ -25,5 +23,6 @@ lines.forEach(line => {
   if (m) {
     definitions[m[1]] = m[2];
   }
+
   console.log(line);
 });
