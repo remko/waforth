@@ -1,11 +1,11 @@
 WASM2WAT=wasm2wat
 WAT2WASM=wat2wasm
-WAT2WASM_FLAGS=--enable-bulk-memory  
+WAT2WASM_FLAGS=
 ifeq ($(DEBUG),1)
 WAT2WASM_FLAGS:=$(WAT2WASM_FLAGS) --debug-names
 endif
 
-WASM_FILES=src/waforth.wasm tests/benchmarks/sieve-vanilla.wasm
+WASM_FILES=src/waforth.wasm src/waforth.bulkmem.wasm tests/benchmarks/sieve-vanilla.wasm
 
 all: $(WASM_FILES)
 	yarn -s build
@@ -15,18 +15,20 @@ dev-server: $(WASM_FILES)
 
 wasm: $(WASM_FILES) src/waforth.assembled.wat src/tools/quadruple.wasm.hex
 
-src/waforth.wasm: src/waforth.wat dist
-	./src/tools/preprocess.js $< > src/waforth.out.wat
-	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ src/waforth.out.wat
+src/waforth.wasm: src/waforth.vanilla.wat
+	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-src/waforth.assembled.wat: src/waforth.wasm
-	$(WASM2WAT) --fold-exprs --inline-imports --inline-exports -o $@ $<
+src/waforth.vanilla.wat: src/waforth.wat
+	./src/tools/preprocess.js $< > $@
+
+src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
+	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
+
+src/waforth.bulkmem.wat: src/waforth.wat
+	./src/tools/preprocess.js --enable-bulk-memory $< > $@
 
 tests/benchmarks/sieve-vanilla.wasm: tests/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
-
-dist:
-	mkdir -p $@
 
 src/tools/quadruple.wasm: src/tools/quadruple.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<

@@ -3,14 +3,28 @@
 const process = require("process");
 const fs = require("fs");
 const _ = require("lodash");
+const program = require("commander");
 
-const file = process.argv[2];
+let file;
+program
+  .arguments("<file>")
+  .option(
+    "--enable-bulk-memory",
+    "use bulk memory operations instead of own implementation"
+  )
+  .action(f => {
+    file = f;
+  });
+program.parse(process.argv);
+
 const lines = fs
   .readFileSync(file)
   .toString()
   .split("\n");
 
 const definitions = {};
+let skipLevel = 0;
+let skippingDefinition = false;
 lines.forEach(line => {
   // Constants
   Object.keys(definitions).forEach(k => {
@@ -24,5 +38,27 @@ lines.forEach(line => {
     definitions[m[1]] = m[2];
   }
 
-  console.log(line);
+  // Bulk memory operations
+  if (program.enableBulkMemory) {
+    line = line
+      .replace(/\(call \$memcopy/g, "(memory.copy")
+      .replace(/\(call \$memset/g, "(memory.fill");
+    if (line.match(/\(func (\$memset|\$memcopy)/)) {
+      skippingDefinition = true;
+      skipLevel = 0;
+    }
+  }
+  if (skippingDefinition) {
+    skipLevel += (line.match(/\(/g) || []).length;
+    skipLevel -= (line.match(/\)/g) || []).length;
+  }
+
+  // Output line
+  if (!skippingDefinition) {
+    console.log(line);
+  }
+
+  if (skippingDefinition && skipLevel <= 0) {
+    skippingDefinition = false;
+  }
 });

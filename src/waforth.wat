@@ -694,7 +694,7 @@
     (i32.store8 (global.get $here) (tee_local $length (i32.load8_u (i32.const WORD_BASE))))
     (global.set $here (i32.add (global.get $here) (i32.const 1)))
 
-    (call $memmove (global.get $here) (i32.const WORD_BASE_PLUS_1) (local.get $length))
+    (call $memcopy (global.get $here) (i32.const WORD_BASE_PLUS_1) (local.get $length))
 
     (global.set $here (i32.add (global.get $here) (local.get $length)))
 
@@ -1040,7 +1040,7 @@
   ;; 6.1.1900
   (func $MOVE
     (local $bbbtos i32)
-    (call $memmove (i32.load (i32.sub (global.get $tos) (i32.const 8)))
+    (call $memcopy (i32.load (i32.sub (global.get $tos) (i32.const 8)))
                    (i32.load (tee_local $bbbtos (i32.sub (global.get $tos) (i32.const 12))))
                    (i32.load (i32.sub (global.get $tos) (i32.const 4))))
     (global.set $tos (local.get $bbbtos)))
@@ -1616,7 +1616,7 @@
                     (i32.add (i32.const 1) (local.get $nameLength)))
         (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (local.get $nameLength)) 
         (global.set $cp (i32.add (global.get $cp) (i32.const 3)))
-        (call $memmove (global.get $cp)
+        (call $memcopy (global.get $cp)
                       (i32.add (global.get $latest) (i32.const 5))
                       (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))
@@ -1628,7 +1628,7 @@
         (i32.store8 (i32.add (global.get $cp) (i32.const 3)) (i32.const 0x00))
         (i32.store8 (i32.add (global.get $cp) (i32.const 4)) (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (i32.const 5)))
-        (call $memmove (global.get $cp)
+        (call $memcopy (global.get $cp)
                       (i32.add (global.get $latest) (i32.const 5))
                       (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))))
@@ -2069,7 +2069,7 @@
         (i32.load (i32.add (global.get $latest) (i32.const 4)))
         (i32.const F_HIDDEN))))
 
-  (func $memmove (param $dst i32) (param $src i32) (param $n i32)
+  (func $memcopy (param $dst i32) (param $src i32) (param $n i32)
     (local $end i32)
     (if (i32.gt_u (local.get $dst) (local.get $src))
       (then
