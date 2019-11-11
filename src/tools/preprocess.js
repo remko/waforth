@@ -33,7 +33,7 @@ lines.forEach(line => {
       "$1" + definitions[k] + " (; = " + k + " ;)$2"
     );
   });
-  const m = line.match(/^;;\s+([!a-zA-Z0-9_]+)\s*:=\s*([^\s]+)/);
+  const m = line.match(/^\s*;;\s+([!a-zA-Z0-9_]+)\s*:=\s*([^\s]+)/);
   if (m) {
     definitions[m[1]] = m[2];
   }

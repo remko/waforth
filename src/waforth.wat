@@ -1,65 +1,4 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
-;; Memmory offsets:
-;;
-;;   BASE_BASE := 0x100
-;;   STATE_BASE := 0x104
-;;   IN_BASE := 0x108
-;;   WORD_BASE := 0x200
-;;   WORD_BASE_PLUS_1 := 0x201
-;;   WORD_BASE_PLUS_2 := 0x202
-;;   INPUT_BUFFER_BASE := 0x300
-;; Compiled modules are limited to 4096 bytes until Chrome refuses to load
-;; them synchronously
-;;   MODULE_HEADER_BASE := 0x1000 
-;;   RETURN_STACK_BASE := 0x2000
-;;   STACK_BASE := 0x10000
-;;   DICTIONARY_BASE := 0x21000
-;;   MEMORY_SIZE := 104857600     (100*1024*1024)
-;;   MEMORY_SIZE_PAGES := 1600     (MEMORY_SIZE / 65536)
-
-;; Compiled module header offsets:
-;;
-;;   MODULE_HEADER_SIZE := 0x68
-;;   MODULE_HEADER_CODE_SIZE_OFFSET := 0x59
-;;   MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 := 0x5d
-;;   MODULE_HEADER_BODY_SIZE_OFFSET := 0x5e
-;;   MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 := 0x62
-;;   MODULE_HEADER_LOCAL_COUNT_OFFSET := 0x63
-;;   MODULE_HEADER_TABLE_INDEX_OFFSET := 0x51
-;;   MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET := 0x2b
-;;   MODULE_HEADER_FUNCTION_TYPE_OFFSET := 0x4b
-;;
-;;   MODULE_BODY_BASE := 0x1068                    (MODULE_HEADER_BASE + MODULE_HEADER_SIZE)
-;;   MODULE_HEADER_CODE_SIZE_BASE := 0x1059          (MODULE_HEADER_BASE + MODULE_HEADER_CODE_SIZE_OFFSET)
-;;   MODULE_HEADER_BODY_SIZE_BASE := 0x105e          (MODULE_HEADER_BASE + MODULE_HEADER_BODY_SIZE_OFFSET)
-;;   MODULE_HEADER_LOCAL_COUNT_BASE := 0x1063        (MODULE_HEADER_BASE + MODULE_HEADER_LOCAL_COUNT_OFFSET)
-;;   MODULE_HEADER_TABLE_INDEX_BASE := 0x1051        (MODULE_HEADER_BASE + MODULE_HEADER_TABLE_INDEX_OFFSET)
-;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102b  (MODULE_HEADER_BASE + MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET)
-;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x104b      (MODULE_HEADER_BASE + MODULE_HEADER_FUNCTION_TYPE_OFFSET)
-
-;; Dictionary word flags:
-;;
-;;   F_IMMEDIATE := 0x80
-;;   F_DATA := 0x40
-;;   F_HIDDEN := 0x20
-;;   LENGTH_MASK := 0x1F
-
-;; Predefined table indices
-;;   PUSH_INDEX := 1
-;;   POP_INDEX := 2
-;;   PUSH_DATA_ADDRESS_INDEX := 3
-;;   SET_LATEST_BODY_INDEX := 4
-;;   COMPILE_CALL_INDEX := 5
-;;   PUSH_INDIRECT_INDEX := 6
-;;   TYPE_INDEX := 0x85
-;;   ABORT_INDEX := 0x39
-;;   CONSTANT_INDEX := 0x4c
-;;   NEXT_TABLE_INDEX := 0xa7
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; WebAssembly module definition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -71,6 +10,24 @@
   (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
+  ;; Memory size:
+  ;;   MEMORY_SIZE := 104857600     (100*1024*1024)
+  ;;   MEMORY_SIZE_PAGES := 1600     (MEMORY_SIZE / 65536)
+  ;;
+  ;; Memory layout:
+  ;;   BASE_BASE          :=   0x100
+  ;;   STATE_BASE         :=   0x104
+  ;;   IN_BASE            :=   0x108
+  ;;   WORD_BASE          :=   0x200
+  ;;   WORD_BASE_PLUS_1   :=   0x201
+  ;;   WORD_BASE_PLUS_2   :=   0x202
+  ;;   INPUT_BUFFER_BASE  :=   0x300
+  ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
+  ;;   MODULE_HEADER_BASE :=  0x1000 
+  ;;   STACK_BASE := 0x10000
+  ;;   RETURN_STACK_BASE  :=  0x2000
+  ;;   STRINGS_BASE       := 0x20000
+  ;;   DICTIONARY_BASE    := 0x21000
   (memory (export "memory") MEMORY_SIZE_PAGES)
 
   (type $word (func))
@@ -78,9 +35,77 @@
 
   (global $tos (mut i32) (i32.const STACK_BASE))
   (global $tors (mut i32) (i32.const RETURN_STACK_BASE))
-  (global $inputBufferSize (mut i32) (i32.const 0))
   (global $inputBufferBase (mut i32) (i32.const INPUT_BUFFER_BASE))
+  (global $inputBufferSize (mut i32) (i32.const 0))
+
   (global $sourceID (mut i32) (i32.const 0))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Data
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (data (i32.const BASE_BASE) "\0A\00\00\00")
+  (data (i32.const STATE_BASE) "\00\00\00\00")
+  (data (i32.const IN_BASE) "\00\00\00\00")
+
+  (data (i32.const MODULE_HEADER_BASE)
+    "\00\61\73\6D" ;; Header
+    "\01\00\00\00" ;; Version
+
+    "\01" "\11" ;; Type section
+      "\04" ;; #Entries
+        "\60\00\00" ;; (func)
+        "\60\01\7F\00" ;; (func (param i32))
+        "\60\00\01\7F" ;; (func (result i32))
+        "\60\01\7f\01\7F" ;; (func (param i32) (result i32))
+
+    "\02" "\2B" ;; Import section
+      "\03" ;; #Entries
+      "\03\65\6E\76" "\05\74\61\62\6C\65" ;; 'env' . 'table'
+        "\01" "\70" "\00" "\FB\00\00\00" ;; table, anyfunc, flags, initial size
+      "\03\65\6E\76" "\06\6d\65\6d\6f\72\79" ;; 'env' . 'memory'
+        "\02" "\00" "\01" ;; memory
+      "\03\65\6E\76" "\03\74\6f\73" ;; 'env' . 'tos'
+        "\03" "\7F" "\00" ;; global, i32, immutable
+
+    
+    "\03" "\02" ;; Function section
+      "\01" ;; #Entries
+      "\FA" ;; Type 0
+      
+    "\09" "\0a" ;; Element section
+      "\01" ;; #Entries
+      "\00" ;; Table 0
+      "\41\FC\00\00\00\0B" ;; i32.const ..., end
+      "\01" ;; #elements
+        "\00" ;; function 0
+
+    "\0A" "\FF\00\00\00" ;; Code section (padded length)
+    "\01" ;; #Bodies
+      "\FE\00\00\00" ;; Body size (padded)
+      "\01" ;; #locals
+        "\FD\00\00\00\7F") ;; # #i32 locals (padded)
+
+  ;; Compiled module header offsets:
+  ;;
+  ;;   MODULE_HEADER_SIZE := 0x68
+  ;;   MODULE_HEADER_CODE_SIZE_OFFSET := 0x59
+  ;;   MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 := 0x5d
+  ;;   MODULE_HEADER_BODY_SIZE_OFFSET := 0x5e
+  ;;   MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 := 0x62
+  ;;   MODULE_HEADER_LOCAL_COUNT_OFFSET := 0x63
+  ;;   MODULE_HEADER_TABLE_INDEX_OFFSET := 0x51
+  ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET := 0x2b
+  ;;   MODULE_HEADER_FUNCTION_TYPE_OFFSET := 0x4b
+  ;;
+  ;;   MODULE_BODY_BASE := 0x1068                    (MODULE_HEADER_BASE + MODULE_HEADER_SIZE)
+  ;;   MODULE_HEADER_CODE_SIZE_BASE := 0x1059          (MODULE_HEADER_BASE + MODULE_HEADER_CODE_SIZE_OFFSET)
+  ;;   MODULE_HEADER_BODY_SIZE_BASE := 0x105e          (MODULE_HEADER_BASE + MODULE_HEADER_BODY_SIZE_OFFSET)
+  ;;   MODULE_HEADER_LOCAL_COUNT_BASE := 0x1063        (MODULE_HEADER_BASE + MODULE_HEADER_LOCAL_COUNT_OFFSET)
+  ;;   MODULE_HEADER_TABLE_INDEX_BASE := 0x1051        (MODULE_HEADER_BASE + MODULE_HEADER_TABLE_INDEX_OFFSET)
+  ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102b  (MODULE_HEADER_BASE + MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET)
+  ;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x104b      (MODULE_HEADER_BASE + MODULE_HEADER_FUNCTION_TYPE_OFFSET)
+
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Constant strings
@@ -107,16 +132,30 @@
   ;; - prev (4 bytes): Pointer to start of previous entry
   ;; - flags|name-length (1 byte): Length of the entry name, OR-ed with
   ;;   flags in the top 3 bits.
-  ;;   Flags is an OR-ed value of:
-  ;;        Immediate: 0x80
-  ;;        Data: 0x40
-  ;;        Hidden: 0x20
+  ;;   Flags is an OR-ed value of
+  ;;      F_IMMEDIATE := 0x80
+  ;;      F_DATA := 0x40
+  ;;      F_HIDDEN := 0x20
+  ;;   Length is acquired by masking
+  ;;      LENGTH_MASK := 0x1F
   ;; - name (n bytes): Name characters. End is 4-byte aligned.
   ;; - code pointer (4 bytes): Index into the function 
   ;;   table of code to execute
   ;; - data (optional m bytes, only if 'data' flag is set)
   ;;
   ;; Execution tokens are addresses of dictionary entries
+  ;;
+  ;; The following table indices are predefined:
+  ;;   PUSH_INDEX := 1
+  ;;   POP_INDEX := 2
+  ;;   PUSH_DATA_ADDRESS_INDEX := 3
+  ;;   SET_LATEST_BODY_INDEX := 4
+  ;;   COMPILE_CALL_INDEX := 5
+  ;;   PUSH_INDIRECT_INDEX := 6
+  ;;   TYPE_INDEX := 0x85
+  ;;   ABORT_INDEX := 0x39
+  ;;   CONSTANT_INDEX := 0x4c
+  ;;   NEXT_TABLE_INDEX := 0xa7
 
   ;; 6.1.0010 ! 
   (func $!
@@ -124,7 +163,7 @@
     (i32.store (i32.load (i32.sub (global.get $tos) (i32.const 4)))
                (i32.load (tee_local $bbtos (i32.sub (global.get $tos) (i32.const 8)))))
     (global.set $tos (local.get $bbtos)))
-  (data (i32.const 135168) "\00\00\00\00\01!\00\00\10\00\00\00")
+  (data (i32.const DICTIONARY_BASE) "\00\00\00\00\01!\00\00\10\00\00\00")
   (elem (i32.const 0x10) $!)
 
   (func $# (call $fail (i32.const 0x20084))) ;; not implemented
@@ -2267,51 +2306,6 @@
   (data (i32.const 137224) "\f8\17\02\00" "\0c" "sieve_direct\00\00\00" "\9f\00\00\00")
   (elem (i32.const 0x9f) $sieve)
     
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Data
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  (data (i32.const BASE_BASE) "\0A\00\00\00")
-  (data (i32.const STATE_BASE) "\00\00\00\00")
-  (data (i32.const IN_BASE) "\00\00\00\00")
-  (data (i32.const MODULE_HEADER_BASE)
-    "\00\61\73\6D" ;; Header
-    "\01\00\00\00" ;; Version
-
-    "\01" "\11" ;; Type section
-      "\04" ;; #Entries
-        "\60\00\00" ;; (func)
-        "\60\01\7F\00" ;; (func (param i32))
-        "\60\00\01\7F" ;; (func (result i32))
-        "\60\01\7f\01\7F" ;; (func (param i32) (result i32))
-
-    "\02" "\2B" ;; Import section
-      "\03" ;; #Entries
-      "\03\65\6E\76" "\05\74\61\62\6C\65" ;; 'env' . 'table'
-        "\01" "\70" "\00" "\FB\00\00\00" ;; table, anyfunc, flags, initial size
-      "\03\65\6E\76" "\06\6d\65\6d\6f\72\79" ;; 'env' . 'memory'
-        "\02" "\00" "\01" ;; memory
-      "\03\65\6E\76" "\03\74\6f\73" ;; 'env' . 'tos'
-        "\03" "\7F" "\00" ;; global, i32, immutable
-
-    
-    "\03" "\02" ;; Function section
-      "\01" ;; #Entries
-      "\FA" ;; Type 0
-      
-    "\09" "\0a" ;; Element section
-      "\01" ;; #Entries
-      "\00" ;; Table 0
-      "\41\FC\00\00\00\0B" ;; i32.const ..., end
-      "\01" ;; #elements
-        "\00" ;; function 0
-
-    "\0A" "\FF\00\00\00" ;; Code section (padded length)
-    "\01" ;; #Bodies
-      "\FE\00\00\00" ;; Body size (padded)
-      "\01" ;; #locals
-        "\FD\00\00\00\7F") ;; # #i32 locals (padded)
-
   (func (export "tos") (result i32)
     (global.get $tos))
 
