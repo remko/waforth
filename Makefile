@@ -15,17 +15,20 @@ dev-server: $(WASM_FILES)
 
 wasm: $(WASM_FILES) src/waforth.assembled.wat src/tools/quadruple.wasm.hex
 
-src/waforth.wasm: src/waforth.vanilla.wat
+process: src/waforth.vanilla.wat
+	cp $< src/waforth.wat
+
+src/waforth.wasm: src/waforth.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 src/waforth.vanilla.wat: src/waforth.wat
-	./src/tools/preprocess.js $< > $@
+	./src/tools/process.js $< > $@
 
 src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
 
 src/waforth.bulkmem.wat: src/waforth.wat
-	./src/tools/preprocess.js --enable-bulk-memory $< > $@
+	./src/tools/process.js --enable-bulk-memory $< > $@
 
 tests/benchmarks/sieve-vanilla.wasm: tests/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<

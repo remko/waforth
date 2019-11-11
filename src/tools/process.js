@@ -29,8 +29,11 @@ lines.forEach(line => {
   // Constants
   Object.keys(definitions).forEach(k => {
     line = line.replace(
-      new RegExp("(\\s)" + _.escapeRegExp(k) + "(\\s|\\))", "g"),
-      "$1" + definitions[k] + " (; = " + k + " ;)$2"
+      new RegExp(
+        "(\\s)([^\\s])+(\\s)+\\(; = " + _.escapeRegExp(k) + " ;\\)",
+        "g"
+      ),
+      "$1" + definitions[k] + " (; = " + k + " ;)"
     );
   });
   const m = line.match(/^\s*;;\s+([!a-zA-Z0-9_]+)\s*:=\s*([^\s]+)/);

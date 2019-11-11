@@ -58,8 +58,6 @@ WebAssembly's [text
 format](https://webassembly.github.io/spec/core/text/index.html). The text
 format isn't really meant for writing code in, so it has no facilities like a
 real assembler (e.g. constant definitions, macro expansion, ...).
-To help with maintenance, the WebAssembly file is piped through a simple string
-preprocessing script that replaces constants with defined values.
 
 ### The Interpreter
 
