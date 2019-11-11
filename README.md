@@ -50,14 +50,10 @@ You can also run the tests in Node.JS by running
 
 ## Design
 
-### The Preprocessor
-
 The WAForth core is written as [a single
 module](https://github.com/remko/waforth/blob/master/src/waforth.wat) in
 WebAssembly's [text
-format](https://webassembly.github.io/spec/core/text/index.html). The text
-format isn't really meant for writing code in, so it has no facilities like a
-real assembler (e.g. constant definitions, macro expansion, ...).
+format](https://webassembly.github.io/spec/core/text/index.html).
 
 ### The Interpreter
 

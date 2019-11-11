@@ -1,18 +1,75 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; WebAssembly module definition
+;; WAForth
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (module
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; External function dependencies.
+  ;; 
+  ;; These are provided by JavaScript.
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; I/O
   (import "shell" "emit" (func $shell_emit (param i32)))
   (import "shell" "getc" (func $shell_getc (result i32)))
   (import "shell" "key" (func $shell_key (result i32)))
   (import "shell" "accept" (func $shell_accept (param i32) (param i32) (result i32)))
-  (import "shell" "load" (func $shell_load (param i32 i32 i32)))
   (import "shell" "debug" (func $shell_debug (param i32)))
 
+  ;; Load a webassembly module.
+  ;; Parameters: memory offset, size, table index where the new module will
+  ;; be loaded.
+  (import "shell" "load" (func $shell_load (param i32 i32 i32)))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Function types
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; A regular compiled word is a function without any parameters.
+  ;; (arguments are passed via the stack)
+  (type $word (func))
+
+  ;; Words with the 'data' flag set get a pointer to data passed
+  ;; as parameter.
+  (type $dataWord (func (param i32)))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Function table
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; The function table contains entries for each defined word, and some helper
+  ;; functions used in compiled words. All calls from compiled words to other words go
+  ;; through this table.
+  ;;
+  ;; The table starts with 16 reserved addresses for utility, non-words 
+  ;; functions (used in compiled words). From then on, the built-in words start.
+  ;;
+  ;; Predefined entries:
+  ;;
+  ;;   PUSH_INDEX := 1
+  ;;   POP_INDEX := 2
+  ;;   PUSH_DATA_ADDRESS_INDEX := 3
+  ;;   SET_LATEST_BODY_INDEX := 4
+  ;;   COMPILE_CALL_INDEX := 5
+  ;;   PUSH_INDIRECT_INDEX := 6
+  ;;   TYPE_INDEX := 0x85
+  ;;   ABORT_INDEX := 0x39
+  ;;   CONSTANT_INDEX := 0x4c
+  ;;   NEXT_TABLE_INDEX := 0xa7   (; Next available table index for a compiled word ;)
+
+  (table (export "table") 0xa7 (; = NEXT_TABLE_INDEX ;) anyfunc)
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Data
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;;
   ;; Memory size:
   ;;   MEMORY_SIZE := 104857600     (100*1024*1024)
-  ;;   MEMORY_SIZE_PAGES := 1600     (MEMORY_SIZE / 65536)
+  ;;   MEMORY_SIZE_PAGES := 1600    (MEMORY_SIZE / 65536)
   ;;
   ;; Memory layout:
   ;;   BASE_BASE          :=   0x100
@@ -24,30 +81,29 @@
   ;;   INPUT_BUFFER_BASE  :=   0x300
   ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
   ;;   MODULE_HEADER_BASE :=  0x1000 
-  ;;   STACK_BASE := 0x10000
   ;;   RETURN_STACK_BASE  :=  0x2000
+  ;;   STACK_BASE         := 0x10000
   ;;   STRINGS_BASE       := 0x20000
   ;;   DICTIONARY_BASE    := 0x21000
   (memory (export "memory") 1600 (; = MEMORY_SIZE_PAGES ;))
-
-  (type $word (func))
-  (type $dataWord (func (param i32)))
-
-  (global $tos (mut i32) (i32.const 0x10000 (; = STACK_BASE ;)))
-  (global $tors (mut i32) (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-  (global $inputBufferBase (mut i32) (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)))
-  (global $inputBufferSize (mut i32) (i32.const 0))
-
-  (global $sourceID (mut i32) (i32.const 0))
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Data
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (data (i32.const 0x100 (; = BASE_BASE ;)) "\0A\00\00\00")
   (data (i32.const 0x104 (; = STATE_BASE ;)) "\00\00\00\00")
   (data (i32.const 0x108 (; = IN_BASE ;)) "\00\00\00\00")
 
+  ;; The header of a WebAssembly module for a compiled word.
+  ;; The body of the compiled word is directly appended to the end
+  ;; of this chunk:
+  ;;
+  ;; Bytes with the top 4 bits set (0xF.) are placeholders
+  ;; for patching, for which the offsets are computed below:
+  ;;
+  ;;   MODULE_HEADER_CODE_SIZE_PLACEHOLDER          := 0xFF
+  ;;   MODULE_HEADER_BODY_SIZE_PLACEHOLDER          := 0xFE
+  ;;   MODULE_HEADER_LOCAL_COUNT_PLACEHOLDER        := 0xFD
+  ;;   MODULE_HEADER_TABLE_INDEX_PLACEHOLDER        := 0xFC
+  ;;   MODULE_HEADER_TABLE_INITIAl_SIZE_PLACEHOLDER := 0xFB
+  ;;   MODULE_HEADER_FUNCTION_TYPE_PLACEHOLDER      := 0xFA
   (data (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))
     "\00\61\73\6D" ;; Header
     "\01\00\00\00" ;; Version
@@ -68,7 +124,6 @@
       "\03\65\6E\76" "\03\74\6f\73" ;; 'env' . 'tos'
         "\03" "\7F" "\00" ;; global, i32, immutable
 
-    
     "\03" "\02" ;; Function section
       "\01" ;; #Entries
       "\FA" ;; Type 0
@@ -111,14 +166,15 @@
   ;; Constant strings
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (data (i32.const 0x20000) "\0eundefined word")
-  (data (i32.const 0x20014) "\0ddivision by 0")
-  (data (i32.const 0x20028) "\10incomplete input")
-  (data (i32.const 0x2003C) "\0bmissing ')'")
-  (data (i32.const 0x2004C) "\09missing \22")
-  (data (i32.const 0x2005C) "\24word not supported in interpret mode")
-  (data (i32.const 0x20084) "\0Fnot implemented")
+  (data (i32.const 0x20000) "\0e" "undefined word")
+  (data (i32.const 0x20014) "\0d" "division by 0")
+  (data (i32.const 0x20028) "\10" "incomplete input")
+  (data (i32.const 0x2003C) "\0b" "missing ')'")
+  (data (i32.const 0x2004C) "\09" "missing \22")
+  (data (i32.const 0x2005C) "\24" "word not supported in interpret mode")
+  (data (i32.const 0x20084) "\0F" "not implemented")
   
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -145,17 +201,6 @@
   ;;
   ;; Execution tokens are addresses of dictionary entries
   ;;
-  ;; The following table indices are predefined:
-  ;;   PUSH_INDEX := 1
-  ;;   POP_INDEX := 2
-  ;;   PUSH_DATA_ADDRESS_INDEX := 3
-  ;;   SET_LATEST_BODY_INDEX := 4
-  ;;   COMPILE_CALL_INDEX := 5
-  ;;   PUSH_INDIRECT_INDEX := 6
-  ;;   TYPE_INDEX := 0x85
-  ;;   ABORT_INDEX := 0x39
-  ;;   CONSTANT_INDEX := 0x4c
-  ;;   NEXT_TABLE_INDEX := 0xa7
 
   ;; 6.1.0010 ! 
   (func $!
@@ -1609,6 +1654,172 @@
         (call $shell_emit (i32.add (local.get $m) (i32.const 0x30))))))
 
   
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Interpreter
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Interprets the string in the input, until the end of string is reached.
+  ;; Returns 0 if processed, 1 if still compiling, or traps if a word 
+  ;; was not found.
+  (func $interpret (result i32)
+    (local $FINDResult i32)
+    (local $FINDToken i32)
+    (local $error i32)
+    (local.set $error (i32.const 0))
+    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
+    (block $endLoop
+      (loop $loop
+        (call $readWord (i32.const 0x20))
+        (br_if $endLoop (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
+        (call $FIND)
+        (local.set $FINDResult (call $pop))
+        (local.set $FINDToken (call $pop))
+        (if (i32.eqz (local.get $FINDResult))
+          (then ;; Not in the dictionary. Is it a number?
+            (if (i32.eqz (call $number))
+              (then ;; It's a number. Are we compiling?
+                (if (i32.ne (i32.load (i32.const 0x104 (; = STATE_BASE ;))) (i32.const 0))
+                  (then
+                    ;; We're compiling. Pop it off the stack and 
+                    ;; add it to the compiled list
+                    (call $compilePushConst (call $pop)))))
+                  ;; We're not compiling. Leave the number on the stack.
+              (else ;; It's not a number.
+                (call $fail (i32.const 0x20000))))) ;; undefined word
+          (else ;; Found the word. 
+            ;; Are we compiling or is it immediate?
+            (if (i32.or (i32.eqz (i32.load (i32.const 0x104 (; = STATE_BASE ;))))
+                        (i32.eq (local.get $FINDResult) (i32.const 1)))
+              (then
+                (call $push (local.get $FINDToken))
+                (call $EXECUTE))
+              (else
+                ;; We're compiling a non-immediate
+                (call $compileCall (local.get $FINDToken))))))
+          (br $loop)))
+    ;; 'WORD' left the address on the stack
+    (drop (call $pop))
+    (return (i32.load (i32.const 0x104 (; = STATE_BASE ;)))))
+
+  (func $readWord (param $delimiter i32)
+    (local $char i32)
+    (local $stringPtr i32)
+
+    ;; Skip leading delimiters
+    (block $endSkipBlanks
+      (loop $skipBlanks
+        (local.set $char (call $readChar))
+        (br_if $skipBlanks (i32.eq (local.get $char) (local.get $delimiter)))
+        (br_if $skipBlanks (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
+        (br $endSkipBlanks)))
+
+    (local.set $stringPtr (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
+    (if (i32.ne (local.get $char) (i32.const -1)) 
+      (if (i32.ne (local.get $char) (i32.const 0x0a))
+        (then 
+          ;; Search for delimiter
+          (i32.store8 (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $char))
+          (local.set $stringPtr (i32.const 0x202 (; = WORD_BASE_PLUS_2 ;)))
+          (block $endReadChars
+            (loop $readChars
+              (local.set $char (call $readChar))
+              (br_if $endReadChars (i32.eq (local.get $char) (local.get $delimiter)))
+              (br_if $endReadChars (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
+              (br_if $endReadChars (i32.eq (local.get $char) (i32.const -1)))
+              (i32.store8 (local.get $stringPtr) (local.get $char))
+              (local.set $stringPtr (i32.add (local.get $stringPtr) (i32.const 0x1)))
+              (br $readChars))))))
+
+     ;; Write word length
+     (i32.store8 (i32.const 0x200 (; = WORD_BASE ;)) 
+       (i32.sub (local.get $stringPtr) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
+     
+     (call $push (i32.const 0x200 (; = WORD_BASE ;))))
+
+
+  ;; Reads a number from the word buffer, and puts it on the stack. 
+  ;; Returns -1 if an error occurred.
+  ;; TODO: Support other bases
+  (func $number (result i32)
+    (local $sign i32)
+    (local $length i32)
+    (local $char i32)
+    (local $value i32)
+    (local $base i32)
+    (local $p i32)
+    (local $end i32)
+    (local $n i32)
+
+    (if (i32.eqz (tee_local $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
+      (return (i32.const -1)))
+
+    (local.set $p (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
+    (local.set $end (i32.add (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length)))
+    (local.set $base (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+
+    ;; Read first character
+    (if (i32.eq (tee_local $char (i32.load8_u (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
+                (i32.const 0x2d (; '-' ;)))
+      (then 
+        (local.set $sign (i32.const -1))
+        (local.set $char (i32.const 48 (; '0' ;) )))
+      (else 
+        (local.set $sign (i32.const 1))))
+
+    ;; Read all characters
+    (local.set $value (i32.const 0))
+    (block $endLoop
+      (loop $loop
+        (if (i32.lt_s (local.get $char) (i32.const 48 (; '0' ;) ))
+          (return (i32.const -1)))
+
+        (if (i32.le_s (local.get $char) (i32.const 57 (; '9' ;) ))
+          (then
+            (local.set $n (i32.sub (local.get $char) (i32.const 48))))
+          (else
+            (if (i32.lt_s (local.get $char) (i32.const 65 (; 'A' ;) ))
+              (return (i32.const -1)))
+            (local.set $n (i32.sub (local.get $char) (i32.const 55)))
+            (if (i32.ge_s (local.get $n) (local.get $base))
+              (return (i32.const -1)))))
+
+        (local.set $value (i32.add (i32.mul (local.get $value) (local.get $base))
+                                   (local.get $n)))
+        (local.set $p (i32.add (local.get $p) (i32.const 1)))
+        (br_if $endLoop (i32.eq (local.get $p) (local.get $end)))
+        (local.set $char (i32.load8_s (local.get $p)))
+        (br $loop)))
+    (call $push (i32.mul (local.get $sign) (local.get $value)))
+    (return (i32.const 0)))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Interpreter state
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Top of stack
+  (global $tos (mut i32) (i32.const 0x10000 (; = STACK_BASE ;)))
+
+  ;; Top of return stack
+  (global $tors (mut i32) (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
+
+  ;; Input buffer
+  (global $inputBufferBase (mut i32) (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)))
+  (global $inputBufferSize (mut i32) (i32.const 0))
+
+  ;; Source ID
+  (global $sourceID (mut i32) (i32.const 0))
+
+  ;; Dictionary pointers
+  (global $latest (mut i32) (i32.const 0x21884))
+  (global $here (mut i32) (i32.const 0x21890))
+  (global $nextTableIndex (mut i32) (i32.const 0xa7 (; = NEXT_TABLE_INDEX ;)))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Compiler functions
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
   ;; Initializes compilation.
   ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
   ;; or type 1 (1 param)
@@ -1700,154 +1911,6 @@
     (global.set $nextTableIndex (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
 
-  ;; Reads a number from the word buffer, and puts it on the stack. 
-  ;; Returns -1 if an error occurred.
-  ;; TODO: Support other bases
-  (func $number (result i32)
-    (local $sign i32)
-    (local $length i32)
-    (local $char i32)
-    (local $value i32)
-    (local $base i32)
-    (local $p i32)
-    (local $end i32)
-    (local $n i32)
-
-    (if (i32.eqz (tee_local $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
-      (return (i32.const -1)))
-
-    (local.set $p (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
-    (local.set $end (i32.add (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length)))
-    (local.set $base (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
-
-    ;; Read first character
-    (if (i32.eq (tee_local $char (i32.load8_u (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
-                (i32.const 0x2d (; '-' ;)))
-      (then 
-        (local.set $sign (i32.const -1))
-        (local.set $char (i32.const 48 (; '0' ;) )))
-      (else 
-        (local.set $sign (i32.const 1))))
-
-    ;; Read all characters
-    (local.set $value (i32.const 0))
-    (block $endLoop
-      (loop $loop
-        (if (i32.lt_s (local.get $char) (i32.const 48 (; '0' ;) ))
-          (return (i32.const -1)))
-
-        (if (i32.le_s (local.get $char) (i32.const 57 (; '9' ;) ))
-          (then
-            (local.set $n (i32.sub (local.get $char) (i32.const 48))))
-          (else
-            (if (i32.lt_s (local.get $char) (i32.const 65 (; 'A' ;) ))
-              (return (i32.const -1)))
-            (local.set $n (i32.sub (local.get $char) (i32.const 55)))
-            (if (i32.ge_s (local.get $n) (local.get $base))
-              (return (i32.const -1)))))
-
-        (local.set $value (i32.add (i32.mul (local.get $value) (local.get $base))
-                                   (local.get $n)))
-        (local.set $p (i32.add (local.get $p) (i32.const 1)))
-        (br_if $endLoop (i32.eq (local.get $p) (local.get $end)))
-        (local.set $char (i32.load8_s (local.get $p)))
-        (br $loop)))
-    (call $push (i32.mul (local.get $sign) (local.get $value)))
-    (return (i32.const 0)))
-
-  (func $fail (param $str i32)
-    (call $push (local.get $str))
-    (call $COUNT)
-    (call $TYPE)
-    (call $shell_emit (i32.const 10))
-    (call $ABORT))
-
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Interpreter
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ;; Interprets the string in the input, until the end of string is reached.
-  ;; Returns 0 if processed, 1 if still compiling, or traps if a word 
-  ;; was not found.
-  (func $interpret (result i32)
-    (local $FINDResult i32)
-    (local $FINDToken i32)
-    (local $error i32)
-    (local.set $error (i32.const 0))
-    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-    (block $endLoop
-      (loop $loop
-        (call $readWord (i32.const 0x20))
-        (br_if $endLoop (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
-        (call $FIND)
-        (local.set $FINDResult (call $pop))
-        (local.set $FINDToken (call $pop))
-        (if (i32.eqz (local.get $FINDResult))
-          (then ;; Not in the dictionary. Is it a number?
-            (if (i32.eqz (call $number))
-              (then ;; It's a number. Are we compiling?
-                (if (i32.ne (i32.load (i32.const 0x104 (; = STATE_BASE ;))) (i32.const 0))
-                  (then
-                    ;; We're compiling. Pop it off the stack and 
-                    ;; add it to the compiled list
-                    (call $compilePushConst (call $pop)))))
-                  ;; We're not compiling. Leave the number on the stack.
-              (else ;; It's not a number.
-                (call $fail (i32.const 0x20000))))) ;; undefined word
-          (else ;; Found the word. 
-            ;; Are we compiling or is it immediate?
-            (if (i32.or (i32.eqz (i32.load (i32.const 0x104 (; = STATE_BASE ;))))
-                        (i32.eq (local.get $FINDResult) (i32.const 1)))
-              (then
-                (call $push (local.get $FINDToken))
-                (call $EXECUTE))
-              (else
-                ;; We're compiling a non-immediate
-                (call $compileCall (local.get $FINDToken))))))
-          (br $loop)))
-    ;; 'WORD' left the address on the stack
-    (drop (call $pop))
-    (return (i32.load (i32.const 0x104 (; = STATE_BASE ;)))))
-
-  (func $readWord (param $delimiter i32)
-    (local $char i32)
-    (local $stringPtr i32)
-
-    ;; Skip leading delimiters
-    (block $endSkipBlanks
-      (loop $skipBlanks
-        (local.set $char (call $readChar))
-        (br_if $skipBlanks (i32.eq (local.get $char) (local.get $delimiter)))
-        (br_if $skipBlanks (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
-        (br $endSkipBlanks)))
-
-    (local.set $stringPtr (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
-    (if (i32.ne (local.get $char) (i32.const -1)) 
-      (if (i32.ne (local.get $char) (i32.const 0x0a))
-        (then 
-          ;; Search for delimiter
-          (i32.store8 (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $char))
-          (local.set $stringPtr (i32.const 0x202 (; = WORD_BASE_PLUS_2 ;)))
-          (block $endReadChars
-            (loop $readChars
-              (local.set $char (call $readChar))
-              (br_if $endReadChars (i32.eq (local.get $char) (local.get $delimiter)))
-              (br_if $endReadChars (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
-              (br_if $endReadChars (i32.eq (local.get $char) (i32.const -1)))
-              (i32.store8 (local.get $stringPtr) (local.get $char))
-              (local.set $stringPtr (i32.add (local.get $stringPtr) (i32.const 0x1)))
-              (br $readChars))))))
-
-     ;; Write word length
-     (i32.store8 (i32.const 0x200 (; = WORD_BASE ;)) 
-       (i32.sub (local.get $stringPtr) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
-     
-     (call $push (i32.const 0x200 (; = WORD_BASE ;))))
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Compiler functions
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (func $compilePushConst (param $n i32)
     (call $emitConst (local.get $n))
@@ -1889,7 +1952,6 @@
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $compilePop)
     (call $emitSetLocal (global.get $currentLocal))
-
     (call $emitGetLocal (global.get $currentLocal))
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitGreaterEqualSigned)
@@ -1903,7 +1965,6 @@
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitAdd)
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitGetLocal (global.get $currentLocal))
     (call $emitGreaterEqualSigned)
@@ -1915,7 +1976,6 @@
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitAdd)
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
     (call $emitEqualsZero)
     (call $emitIf)
@@ -1943,7 +2003,6 @@
     ;; Restore branch nesting
     (global.set $branchNesting (i32.load (tee_local $btors (i32.sub (global.get $tors) (i32.const 4)))))
     (global.set $tors (local.get $btors)))
-
 
   (func $compileLeave
     (call $emitBr (i32.add (global.get $branchNesting) (i32.const 1))))
@@ -1982,7 +2041,6 @@
 
   (func $compilePop
     (call $emitICall (i32.const 2) (i32.const 2 (; = POP_INDEX ;))))
-
 
   (func $compileCall (param $FINDToken i32)
     (local $body i32)
@@ -2079,8 +2137,21 @@
     (i32.store8 (global.get $cp) (i32.const 0x0f))
     (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Compilation state
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (global $currentLocal (mut i32) (i32.const 0))
+  (global $lastLocal (mut i32) (i32.const -1))
+  (global $branchNesting (mut i32) (i32.const -1))
+
+  ;; Compilation pointer
+  (global $cp (mut i32) (i32.const 0x1068 (; = MODULE_BODY_BASE ;)))
+
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Word helper function
+  ;; Word helper functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (func $push (export "push") (param $v i32)
@@ -2105,9 +2176,17 @@
     (call $push (i32.load (local.get $v))))
   (elem (i32.const 6 (; = PUSH_INDIRECT_INDEX ;)) $pushIndirect)
 
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Helper functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (func $fail (param $str i32)
+    (call $push (local.get $str))
+    (call $COUNT)
+    (call $TYPE)
+    (call $shell_emit (i32.const 10))
+    (call $ABORT))
 
   (func $setFlag (param $v i32)
     (i32.store 
@@ -2237,6 +2316,39 @@
           (return (local.get $n)))))
     (unreachable))
 
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; API Functions
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+  (func (export "tos") (result i32)
+    (global.get $tos))
+
+  (func (export "interpret") (result i32)
+    (local $result i32)
+    (call $REFILL)
+    (drop (call $pop))
+    (if (i32.ge_s (tee_local $result (call $interpret)) (i32.const 0))
+      (then
+        ;; Write ok
+        (call $shell_emit (i32.const 111))
+        (call $shell_emit (i32.const 107)))
+      (else
+        ;; Write error
+        (call $shell_emit (i32.const 101))
+        (call $shell_emit (i32.const 114))
+        (call $shell_emit (i32.const 114))
+        (call $shell_emit (i32.const 111))
+        (call $shell_emit (i32.const 114))))
+    (call $shell_emit (i32.const 10))
+    (local.get $result))
+
+  ;; Used for experiments
+  (func (export "set_state") (param $latest i32) (param $here i32)
+    (global.set $latest (local.get $latest))
+    (global.set $here (local.get $here)))
+
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; A sieve with direct calls. Only here for benchmarking
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2305,50 +2417,4 @@
         (br $loop3))))
   (data (i32.const 137224) "\f8\17\02\00" "\0c" "sieve_direct\00\00\00" "\9f\00\00\00")
   (elem (i32.const 0x9f) $sieve)
-    
-  (func (export "tos") (result i32)
-    (global.get $tos))
-
-  (func (export "interpret") (result i32)
-    (local $result i32)
-    (call $REFILL)
-    (drop (call $pop))
-    (if (i32.ge_s (tee_local $result (call $interpret)) (i32.const 0))
-      (then
-        ;; Write ok
-        (call $shell_emit (i32.const 111))
-        (call $shell_emit (i32.const 107)))
-      (else
-        ;; Write error
-        (call $shell_emit (i32.const 101))
-        (call $shell_emit (i32.const 114))
-        (call $shell_emit (i32.const 114))
-        (call $shell_emit (i32.const 111))
-        (call $shell_emit (i32.const 114))))
-    (call $shell_emit (i32.const 10))
-    (local.get $result))
-
-  ;; Used for experiments
-  (func (export "set_state") (param $latest i32) (param $here i32)
-    (global.set $latest (local.get $latest))
-    (global.set $here (local.get $here)))
-
-  ;; Table starts with 16 reserved addresses for utility, non-words 
-  ;; functions (used in compiled words). From then on, the built-in
-  ;; words start.
-  (table (export "table") 0xa7 (; = NEXT_TABLE_INDEX ;) anyfunc)
-
-  (global $latest (mut i32) (i32.const 0x21884))
-  (global $here (mut i32) (i32.const 0x21890))
-  (global $nextTableIndex (mut i32) (i32.const 0xa7 (; = NEXT_TABLE_INDEX ;)))
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Compilation state
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  (global $currentLocal (mut i32) (i32.const 0))
-  (global $lastLocal (mut i32) (i32.const -1))
-  (global $branchNesting (mut i32) (i32.const -1))
-
-  ;; Compilation pointer
-  (global $cp (mut i32) (i32.const 0x1068 (; = MODULE_BODY_BASE ;))))
+)
