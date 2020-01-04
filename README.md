@@ -4,10 +4,12 @@ WAForth is a bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
 [here](https://el-tramo.be/waforth/).
 
-It is entirely written in (raw) WebAssembly, and the compiler
-generates WebAssembly code on the fly. The only parts for which it relies on
-external (JavaScript) code is to dynamically load modules (since WebAssembly [doesn't
-support JIT yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
+It is [entirely written in (raw)
+WebAssembly](https://github.com/remko/waforth/blob/master/src/waforth.wat), and
+the compiler generates WebAssembly code on the fly. The only parts for which it
+relies on external (JavaScript) code is to dynamically load modules (since
+WebAssembly [doesn't support JIT
+yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
 and the I/O primitives to read and write a character to a screen.
 
 Parts of the implementation were influenced by
