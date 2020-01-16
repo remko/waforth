@@ -267,6 +267,34 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe("MIN", () => {
+      it("should min (1)", () => {
+        run("3 7 MIN 5");
+        expect(stack[0]).to.eql(3);
+        expect(stack[1]).to.eql(5);
+      });
+
+      it("should min (1)", () => {
+        run("7 3 MIN 5");
+        expect(stack[0]).to.eql(3);
+        expect(stack[1]).to.eql(5);
+      });
+    });
+
+    describe("MAX", () => {
+      it("should min (1)", () => {
+        run("3 7 MAX 5");
+        expect(stack[0]).to.eql(7);
+        expect(stack[1]).to.eql(5);
+      });
+
+      it("should min (1)", () => {
+        run("7 3 MAX 5");
+        expect(stack[0]).to.eql(7);
+        expect(stack[1]).to.eql(5);
+      });
+    });
+
     describe("*", () => {
       it("should multiply", () => {
         run("3");
