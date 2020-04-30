@@ -4,7 +4,7 @@
   "dependencies": {
     "immutability-helper": "^3.0.0",
     "jq-console": "^2.13.2",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "preact": "^8.2.9",
     "promise-polyfill": "^7.1.2"
   },
