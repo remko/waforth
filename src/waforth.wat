@@ -57,9 +57,9 @@
   ;;   TYPE_INDEX := 0x85
   ;;   ABORT_INDEX := 0x39
   ;;   CONSTANT_INDEX := 0x4c
-  ;;   NEXT_TABLE_INDEX := 0xa7   (; Next available table index for a compiled word ;)
+  ;;   NEXT_TABLE_INDEX := 0xa8   (; Next available table index for a compiled word ;)
 
-  (table (export "table") 0xa7 (; = NEXT_TABLE_INDEX ;) anyfunc)
+  (table (export "table") 0xa8 (; = NEXT_TABLE_INDEX ;) anyfunc)
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1653,6 +1653,20 @@
       (else
         (call $shell_emit (i32.add (local.get $m) (i32.const 0x30))))))
 
+  ;; 15.6.1.0220
+  (func $.S
+    (local $p i32)
+    (local.set $p (i32.const 0x10000 (; = STACK_BASE ;)))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.ge_u (local.get $p) (global.get $tos)))
+        (call $U._ (i32.load (local.get $p)) (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+        (call $shell_emit (i32.const 0x20))
+        (local.set $p (i32.add (local.get $p) (i32.const 4)))
+        (br $loop))))
+  (data (i32.const 0x21890) "\84\18\02\00" "\02" ".S0" "\a7\00\00\00")
+  (elem (i32.const 0xa7) $.S)
+
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
@@ -1811,9 +1825,9 @@
   (global $sourceID (mut i32) (i32.const 0))
 
   ;; Dictionary pointers
-  (global $latest (mut i32) (i32.const 0x21884))
-  (global $here (mut i32) (i32.const 0x21890))
-  (global $nextTableIndex (mut i32) (i32.const 0xa7 (; = NEXT_TABLE_INDEX ;)))
+  (global $latest (mut i32) (i32.const 0x21890))
+  (global $here (mut i32) (i32.const 0x2189c))
+  (global $nextTableIndex (mut i32) (i32.const 0xa8 (; = NEXT_TABLE_INDEX ;)))
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

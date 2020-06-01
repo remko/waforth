@@ -1394,6 +1394,13 @@ function loadTests(wasmModule, arrayToBase64) {
       });
     });
 
+    describe(".S", () => {
+      it("should work", () => {
+        run("2 5 DUP .S");
+        expect(output.trim()).to.eql("2 5 5");
+      });
+    });
+
     describe('ABORT"', () => {
       it("should not abort if check fails", () => {
         run(': FOO 5 = ABORT" Error occurred" 6 ;');
