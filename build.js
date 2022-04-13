@@ -5,7 +5,6 @@ const esbuild = require("esbuild");
 const path = require("path");
 const fs = require("fs");
 const { createServer } = require("http");
-const nstatic = require("node-static");
 const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
 
@@ -151,10 +150,23 @@ async function handleBuildFinished(result) {
 }
 
 if (watch) {
-  const file = new nstatic.Server(path.join(__dirname, "public"));
+  // Simple static file server
   createServer(function (req, res) {
-    file.serve(req, res);
+    let f = path.join(__dirname, "public", req.url);
+    if (fs.lstatSync(f).isDirectory()) {
+      f = path.join(f, "index.html");
+    }
+    fs.readFile(f, function (err, data) {
+      if (err) {
+        res.writeHead(404);
+        res.end(JSON.stringify(err));
+        return;
+      }
+      res.writeHead(200);
+      res.end(data);
+    });
   }).listen(8080);
+
   console.log("listening on port 8080");
   buildConfig = withWatcher(buildConfig, handleBuildFinished, 8081);
 }
