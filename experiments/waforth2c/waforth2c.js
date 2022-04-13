@@ -40,7 +40,7 @@ function here() {
 
 WebAssembly.instantiate(coreWasm, {
   shell: {
-    emit: c => {
+    emit: (c) => {
       process.stdout.write(String.fromCharCode(c));
     },
 
@@ -51,7 +51,7 @@ WebAssembly.instantiate(coreWasm, {
       return buffer.pop();
     },
 
-    debug: c => {
+    debug: (c) => {
       process.stderr.write(String.fromCharCode(c));
     },
 
@@ -64,11 +64,11 @@ WebAssembly.instantiate(coreWasm, {
       var module = new WebAssembly.Module(data);
       modules.push(new Uint8Array(Array.from(data)));
       new WebAssembly.Instance(module, {
-        env: { table, memory, tos: -1 }
+        env: { table, memory, tos: -1 },
       });
-    }
-  }
-}).then(instance => {
+    },
+  },
+}).then((instance) => {
   core = instance.instance;
   table = core.exports.table;
   memory = core.exports.memory;
@@ -99,7 +99,7 @@ WebAssembly.instantiate(coreWasm, {
     "#define WAFORTH_HERE " + savedHere + "\n",
     "#define WAFORTH_TABLE_SIZE " + tableSize + "\n",
     "void waforth_modules_init();",
-    "#undef WASM_RT_MODULE_PREFIX"
+    "#undef WASM_RT_MODULE_PREFIX",
   ];
   const init = [
     "#include <memory.h>",
@@ -112,7 +112,7 @@ WebAssembly.instantiate(coreWasm, {
       dictionaryStart +
       "], dictionary, " +
       (savedHere - dictionaryStart) +
-      ");"
+      ");",
   ];
   const moduleFiles = [];
   for (let i = 0; i < modules.length; ++i) {

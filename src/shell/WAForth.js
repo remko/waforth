@@ -5,7 +5,7 @@ const isSafari =
 class WAForth {
   constructor(wasmModule, arrayToBase64) {
     if (wasmModule == null) {
-      this.wasmModule = require("../waforth.wasm");
+      this.wasmModule = require("../waforth.wat");
     } else {
       this.wasmModule = wasmModule;
     }
@@ -41,7 +41,7 @@ class WAForth {
           return buffer.pop();
         },
 
-        debug: d => {
+        debug: (d) => {
           console.log("DEBUG: ", d, String.fromCharCode(d));
         },
 
@@ -88,11 +88,11 @@ class WAForth {
           // console.log("Load", index, this.arrayToBase64(data));
           var module = new WebAssembly.Module(data);
           new WebAssembly.Instance(module, {
-            env: { table, memory, tos: -1 }
+            env: { table, memory, tos: -1 },
           });
-        }
-      }
-    }).then(instance => {
+        },
+      },
+    }).then((instance) => {
       this.core = instance.instance;
       table = this.core.exports.table;
       memory = this.core.exports.memory;

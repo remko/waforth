@@ -1,5 +1,5 @@
-import WAForth from "../src/shell/WAForth";
-import sieve from "../src/shell/sieve";
+import WAForth from "../shell/WAForth";
+import sieve from "../shell/sieve";
 import standardTestSuiteTester from "./standard-testsuite/tester.f";
 import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
 import { expect, assert } from "chai";
@@ -10,7 +10,7 @@ function loadTests(wasmModule, arrayToBase64) {
 
     beforeEach(() => {
       forth = new WAForth(wasmModule, arrayToBase64);
-      forth.onEmit = c => {
+      forth.onEmit = (c) => {
         output = output + String.fromCharCode(c);
         // console.log(output);
       };
@@ -25,7 +25,7 @@ function loadTests(wasmModule, arrayToBase64) {
           stack = new Int32Array(core.memory.buffer, core.tos(), 0x100);
           initialTOS = core.tos();
         },
-        err => {
+        (err) => {
           console.error(err);
         }
       );
@@ -81,7 +81,7 @@ function loadTests(wasmModule, arrayToBase64) {
     }
 
     function run(ss, expectErrors = false) {
-      ss.split("\n").forEach(s => {
+      ss.split("\n").forEach((s) => {
         // console.log("Running: ", s);
         const r = forth.run(s);
         if (expectErrors) {

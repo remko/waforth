@@ -26,7 +26,7 @@ const dictionaryEntry = [
   encodeLE(latest, 4),
   encodeLE(name.length | flags, 1),
   _.padEnd(name, 4 * Math.floor((name.length + 4) / 4) - 1, "0"),
-  encodeLE(nextTableIndex, 4)
+  encodeLE(nextTableIndex, 4),
 ];
 console.log(
   "(data (i32.const 0x" +

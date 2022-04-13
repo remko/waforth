@@ -40,7 +40,7 @@ To build everything:
 
 To run the development server:
 
-    make dev-server
+    make dev
 
 ## Testing
 

@@ -1,7 +1,6 @@
 .DS_Store
-.cache/
 node_modules/
-dist/
+public/waforth/
 src/waforth.bulkmem.wat
 src/waforth.vanilla.wat
 *.wasm

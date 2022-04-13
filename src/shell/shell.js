@@ -2,25 +2,38 @@ import "promise-polyfill/src/polyfill";
 import $ from "jquery";
 import WAForth from "./WAForth";
 import sieve from "./sieve";
-import "./index.css";
+import "./shell.css";
 
 window.jQuery = $;
 require("jq-console");
 
+document.title = "WAForth";
+
 const forth = new WAForth();
 
-let jqconsole = $("#console").jqconsole("WAForth\n", "");
-$("#console").hide();
+const consoleEl = document.createElement("div");
+consoleEl.className = "console";
+document.body.appendChild(consoleEl);
+
+const messageContainerEl = document.createElement("div");
+messageContainerEl.className = "messageContainer";
+const messageEl = document.createElement("div");
+messageEl.className = "message";
+messageContainerEl.appendChild(messageEl);
+document.body.appendChild(messageContainerEl);
+
+let jqconsole = $(consoleEl).jqconsole("WAForth\n", "");
+$(consoleEl).hide();
 $(".jqconsole-header").html(
   "<span><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span>"
 );
 let outputBuffer = [];
-forth.onEmit = c => {
+forth.onEmit = (c) => {
   outputBuffer.push(String.fromCharCode(c));
 };
 
 function prompt() {
-  jqconsole.Prompt(false, input => {
+  jqconsole.Prompt(false, (input) => {
     jqconsole.Write(" ");
 
     // Avoid console inserting a newline
@@ -38,18 +51,16 @@ function prompt() {
   });
 }
 
-$("#message").text("Loading...");
+$(messageEl).text("Loading...");
 forth.start().then(
   () => {
     forth.run(sieve);
     outputBuffer = [];
-    $("#message").hide();
-    $("#console").show();
+    $(messageEl).hide();
+    $(consoleEl).show();
     prompt();
   },
   () => {
-    $("#message")
-      .addClass("error")
-      .text("Error");
+    $(messageEl).addClass("error").text("Error");
   }
 );

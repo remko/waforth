@@ -1,9 +1,10 @@
+import React from "react";
+import { createRoot } from "react-dom/client";
 import WAForth from "../../src/shell/WAForth";
 import sieve from "../../src/shell/sieve";
-import sieveVanillaModule from "./sieve-vanilla.wasm";
-import { Component, render, h } from "preact";
+import sieveVanillaModule from "./sieve-vanilla.wat";
 import update from "immutability-helper";
-import "./index.css";
+import "./benchmarks.css";
 
 ////////////////////////////////////////////////////////////////////////////////
 // Initial setup
@@ -13,7 +14,7 @@ const setup = [];
 
 const forth = new WAForth();
 let outputBuffer = [];
-forth.onEmit = c => {
+forth.onEmit = (c) => {
   outputBuffer.push(String.fromCharCode(c));
 };
 setup.push(
@@ -26,9 +27,9 @@ let sieveVanilla;
 setup.push(
   WebAssembly.instantiate(sieveVanillaModule, {
     js: {
-      print: x => console.log(x)
-    }
-  }).then(instance => {
+      print: (x) => console.log(x),
+    },
+  }).then((instance) => {
     sieveVanilla = instance.instance.exports.sieve;
   })
 );
@@ -44,7 +45,7 @@ const benchmarks = [
       outputBuffer = [];
       forth.run(`${LIMIT} sieve`);
       return outputBuffer.join("");
-    }
+    },
   },
   {
     name: "sieve-direct",
@@ -52,21 +53,21 @@ const benchmarks = [
       outputBuffer = [];
       forth.run(`${LIMIT} sieve_direct .`);
       return outputBuffer.join("");
-    }
+    },
   },
   {
     name: "sieve-vanilla",
     fn: () => {
       return sieveVanilla(LIMIT);
-    }
-  }
+    },
+  },
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const iterations = Array.from(Array(ITERATIONS).keys());
 
-class Benchmarks extends Component {
+class Benchmarks extends React.Component {
   constructor(props) {
     super(props);
     const results = {};
@@ -74,7 +75,7 @@ class Benchmarks extends Component {
     this.state = {
       initialized: false,
       done: false,
-      results
+      results,
     };
   }
 
@@ -91,10 +92,10 @@ class Benchmarks extends Component {
           results: update(this.state.results, {
             [benchmarks[benchmarkIndex].name]: {
               [benchmarkIteration]: {
-                $set: { time: (t2 - t1) / 1000.0, output }
-              }
-            }
-          })
+                $set: { time: (t2 - t1) / 1000.0, output },
+              },
+            },
+          }),
         });
         if (benchmarkIteration < ITERATIONS - 1) {
           benchmarkIteration += 1;
@@ -122,7 +123,9 @@ class Benchmarks extends Component {
           <thead>
             <tr>
               <th />
-              {iterations.map(i => <th key={i}>{i}</th>)}
+              {iterations.map((i) => (
+                <th key={i}>{i}</th>
+              ))}
               <th>Avg</th>
             </tr>
           </thead>
@@ -133,7 +136,7 @@ class Benchmarks extends Component {
               return [
                 <tr key={`${name}-time`}>
                   <th>{name}</th>
-                  {iterations.map(i => (
+                  {iterations.map((i) => (
                     <td key={i}>
                       {benchmark[i] == null ? null : (
                         <span>{benchmark[i].time.toFixed(2)}s</span>
@@ -150,14 +153,14 @@ class Benchmarks extends Component {
                 </tr>,
                 <tr key={`${name}-output`}>
                   <th />
-                  {iterations.map(i => (
+                  {iterations.map((i) => (
                     <td key={i}>
                       <pre className="output">
                         {benchmark[i] == null ? null : benchmark[i].output}
                       </pre>
                     </td>
                   ))}
-                </tr>
+                </tr>,
               ];
             })}
           </tbody>
@@ -166,4 +169,7 @@ class Benchmarks extends Component {
     );
   }
 }
-render(<Benchmarks />, document.body);
+
+const rootEl = document.createElement("div");
+document.body.appendChild(rootEl);
+createRoot(rootEl).render(<Benchmarks />);

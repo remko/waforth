@@ -12,22 +12,19 @@ program
     "--enable-bulk-memory",
     "use bulk memory operations instead of own implementation"
   )
-  .action(f => {
+  .action((f) => {
     file = f;
   });
 program.parse(process.argv);
 
-const lines = fs
-  .readFileSync(file)
-  .toString()
-  .split("\n");
+const lines = fs.readFileSync(file).toString().split("\n");
 
 const definitions = {};
 let skipLevel = 0;
 let skippingDefinition = false;
-lines.forEach(line => {
+lines.forEach((line) => {
   // Constants
-  Object.keys(definitions).forEach(k => {
+  Object.keys(definitions).forEach((k) => {
     line = line.replace(
       new RegExp(
         "(\\s)([^\\s])+(\\s)+\\(; = " + _.escapeRegExp(k) + " ;\\)",
