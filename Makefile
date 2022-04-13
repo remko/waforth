@@ -26,13 +26,13 @@ src/waforth.wasm: src/waforth.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 src/waforth.vanilla.wat: src/waforth.wat
-	./src/tools/process.js $< > $@
+	./src/tools/process.js $< $@
 
 src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
 
 src/waforth.bulkmem.wat: src/waforth.wat
-	./src/tools/process.js --enable-bulk-memory $< > $@
+	./src/tools/process.js --enable-bulk-memory $< $@
 
 src/benchmarks/sieve-vanilla.wasm: src/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<

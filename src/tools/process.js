@@ -3,25 +3,21 @@
 const process = require("process");
 const fs = require("fs");
 const _ = require("lodash");
-const program = require("commander");
 
-let file;
-program
-  .arguments("<file>")
-  .option(
-    "--enable-bulk-memory",
-    "use bulk memory operations instead of own implementation"
-  )
-  .action((f) => {
-    file = f;
-  });
-program.parse(process.argv);
+const args = process.argv.slice(2);
+let enableBulkMemory = false;
+if (args[0] === "--enable-bulk-memory") {
+  enableBulkMemory = true;
+  args.shift();
+}
+const [file, outfile] = args;
 
 const lines = fs.readFileSync(file).toString().split("\n");
 
 const definitions = {};
 let skipLevel = 0;
 let skippingDefinition = false;
+let out = [];
 lines.forEach((line) => {
   // Constants
   Object.keys(definitions).forEach((k) => {
@@ -39,7 +35,7 @@ lines.forEach((line) => {
   }
 
   // Bulk memory operations
-  if (program.enableBulkMemory) {
+  if (enableBulkMemory) {
     line = line
       .replace(/\(call \$memcopy/g, "(memory.copy")
       .replace(/\(call \$memset/g, "(memory.fill");
@@ -55,10 +51,12 @@ lines.forEach((line) => {
 
   // Output line
   if (!skippingDefinition) {
-    console.log(line);
+    out.push(line);
   }
 
   if (skippingDefinition && skipLevel <= 0) {
     skippingDefinition = false;
   }
 });
+
+fs.writeFileSync(outfile, out.join("\n"));

@@ -10,7 +10,6 @@
     "@babel/preset-env": "^7.16.11",
     "@babel/register": "^7.17.7",
     "chai": "^4.3.6",
-    "commander": "^9.1.0",
     "esbuild": "^0.14.36",
     "eslint": "^8.13.0",
     "eslint-plugin-prettier": "^4.0.0",
