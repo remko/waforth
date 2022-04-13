@@ -1,4 +1,3 @@
-import "promise-polyfill/src/polyfill";
 import $ from "jquery";
 import WAForth from "./WAForth";
 import sieve from "./sieve";
