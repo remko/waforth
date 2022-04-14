@@ -4,12 +4,12 @@ import standardTestSuiteTester from "./standard-testsuite/tester.f";
 import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
 import { expect, assert } from "chai";
 
-function loadTests(arrayToBase64) {
+function loadTests() {
   describe("WAForth", () => {
     let forth, stack, output, core, memory, memory8, initialTOS;
 
     beforeEach(() => {
-      forth = new WAForth(arrayToBase64);
+      forth = new WAForth();
       forth.onEmit = (c) => {
         output = output + String.fromCharCode(c);
         // console.log(output);
