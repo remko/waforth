@@ -5,8 +5,7 @@ const esbuild = require("esbuild");
 const path = require("path");
 const fs = require("fs");
 const { createServer } = require("http");
-const { promisify } = require("util");
-const exec = promisify(require("child_process").exec);
+const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
 
 function withWatcher(config, handleBuildFinished = () => {}, port = 8880) {
   const watchClients = [];
@@ -71,49 +70,10 @@ let buildConfig = {
   loader: {
     ".wasm": "binary",
     ".js": "jsx",
-    ".png": "file",
-    ".m4a": "file",
-    ".woff2": "file",
-    ".svg": "file",
-    ".woff": "file",
-    ".ttf": "file",
-    ".eot": "file",
-    ".md": "text",
   },
   sourcemap: true,
   metafile: true,
-  plugins: [
-    {
-      name: "wat",
-      setup(build) {
-        build.onResolve({ filter: /.\.wat$/ }, async (args) => {
-          if (args.resolveDir === "") {
-            return;
-          }
-          const watPath = path.isAbsolute(args.path)
-            ? args.path
-            : path.join(args.resolveDir, args.path);
-          return {
-            path: watPath,
-            namespace: "wat",
-            watchFiles: [watPath],
-          };
-        });
-        build.onLoad({ filter: /.*/, namespace: "wat" }, async (args) => {
-          // Would be handy if we could get output from stdout without going through file
-          const out = args.path.replace(".wat", ".wasm");
-          const flags = "";
-          // flags = --debug-names
-          // console.log("wat: compiling %s", args.path);
-          await exec(`wat2wasm ${flags} --output=${out} ${args.path}`);
-          return {
-            contents: await fs.promises.readFile(out),
-            loader: "binary",
-          };
-        });
-      },
-    },
-  ],
+  plugins: [wasmTextPlugin()],
 };
 
 const INDEX_TEMPLATE = `<!doctype html>

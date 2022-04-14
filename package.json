@@ -6,9 +6,6 @@
     "jquery": "^3.5.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.9",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/register": "^7.17.7",
     "chai": "^4.3.6",
     "esbuild": "^0.14.36",
     "eslint": "^8.13.0",
@@ -25,8 +22,8 @@
   "scripts": {
     "build": "./build.js",
     "dev": "./build.js --watch --development",
-    "test": "mocha src/tests/tests.node.js",
-    "test-watch": "mocha --watch src/tests/tests.node.js",
+    "test": "./test.js",
+    "test-watch": "./test.js --watch",
     "lint": "eslint ."
   }
 }

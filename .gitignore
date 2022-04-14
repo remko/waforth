@@ -3,6 +3,7 @@ node_modules/
 public/waforth/
 src/waforth.bulkmem.wat
 src/waforth.vanilla.wat
+build/
 *.wasm
 *.wasm.hex
 *.tmp
