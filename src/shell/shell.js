@@ -1,65 +1,78 @@
-import $ from "jquery";
 import WAForth from "./WAForth";
 import sieve from "./sieve";
 import "./shell.css";
-
-window.jQuery = $;
-require("jq-console");
 
 document.title = "WAForth";
 
 const forth = new WAForth();
 
-const consoleEl = document.createElement("div");
+const consoleEl = document.createElement("pre");
 consoleEl.className = "console";
+consoleEl.innerHTML =
+  "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span>";
 document.body.appendChild(consoleEl);
 
-const messageContainerEl = document.createElement("div");
-messageContainerEl.className = "messageContainer";
-const messageEl = document.createElement("div");
-messageEl.className = "message";
-messageContainerEl.appendChild(messageEl);
-document.body.appendChild(messageContainerEl);
-
-let jqconsole = $(consoleEl).jqconsole("WAForth\n", "");
-$(consoleEl).hide();
-$(".jqconsole-header").html(
-  "<span><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span>"
-);
-let outputBuffer = [];
-forth.onEmit = (c) => {
-  outputBuffer.push(String.fromCharCode(c));
-};
-
-function prompt() {
-  jqconsole.Prompt(false, (input) => {
-    jqconsole.Write(" ");
-
-    // Avoid console inserting a newline
-    const $el = $(".jqconsole-old-prompt span").last();
-    $el.html($el.html().replace(/\n$/, ""));
-
-    forth.run(input);
-    let output = outputBuffer.join("");
-    if (output.length === 0) {
-      output = "\n";
+let currentConsoleEl;
+let currentConsoleElIsInput = false;
+function output(s, isInput) {
+  if (currentConsoleEl == null || currentConsoleElIsInput !== isInput) {
+    currentConsoleEl = document.createElement("span");
+    currentConsoleEl.className = isInput ? "in" : "out";
+    currentConsoleElIsInput = isInput;
+    consoleEl.insertBefore(currentConsoleEl, consoleEl.lastChild);
+  }
+  currentConsoleEl.appendChild(document.createTextNode(s));
+}
+function unoutput(isInput) {
+  if (
+    currentConsoleElIsInput !== isInput ||
+    currentConsoleEl.lastChild == null
+  ) {
+    console.log("not erasing character");
+    return;
+  }
+  currentConsoleEl.lastChild.remove();
+}
+function startConsole() {
+  let inputbuffer = [];
+  document.addEventListener("keypress", (ev) => {
+    if (ev.key === "Enter") {
+      output(" ", true);
+      forth.run(inputbuffer.join(""));
+      inputbuffer = [];
+    } else if (ev.key === "Backspace") {
+      if (inputbuffer.length > 0) {
+        inputbuffer = inputbuffer.slice(0, inputbuffer.length - 1);
+        unoutput(true);
+      }
+    } else if (ev.key.length === 1) {
+      output(ev.key, true);
+      inputbuffer.push(ev.key);
+    } else {
+      console.log("ignoring key %s", ev.key);
     }
-    jqconsole.Write(output, "jqconsole-output");
-    outputBuffer = [];
-    prompt();
   });
 }
 
-$(messageEl).text("Loading...");
+forth.onEmit = (c) => {
+  output(String.fromCharCode(c), false);
+};
+
+const loadingEl = document.createElement("span");
+loadingEl.innerText = "Loading...";
+consoleEl.insertBefore(loadingEl, consoleEl.lastChild);
 forth.start().then(
   () => {
+    loadingEl.remove();
+    startConsole();
     forth.run(sieve);
-    outputBuffer = [];
-    $(messageEl).hide();
-    $(consoleEl).show();
-    prompt();
   },
   () => {
-    $(messageEl).addClass("error").text("Error");
+    loadingEl.remove();
+    const errorEl = document.createElement("span");
+    errorEl.className = "error";
+    errorEl.innerText = "Error";
+    consoleEl.lastChild.remove();
+    consoleEl.appendChild(errorEl);
   }
 );

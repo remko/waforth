@@ -1,10 +1,7 @@
 {
   "private": true,
   "license": "MIT",
-  "dependencies": {
-    "jq-console": "^2.13.2",
-    "jquery": "^3.5.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "chai": "^4.3.6",
     "esbuild": "^0.14.36",

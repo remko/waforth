@@ -1,4 +1,4 @@
 const loadTests = require("./suite.js").default;
-loadTests(undefined, (s) => {
+loadTests((s) => {
   return Buffer.from(s).toString("base64");
 });

@@ -1,14 +1,11 @@
+import wasmModule from "../waforth.wat";
+
 const isSafari =
   typeof navigator != "undefined" &&
   /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 class WAForth {
-  constructor(wasmModule, arrayToBase64) {
-    if (wasmModule == null) {
-      this.wasmModule = require("../waforth.wat");
-    } else {
-      this.wasmModule = wasmModule;
-    }
+  constructor(arrayToBase64) {
     this.arrayToBase64 =
       arrayToBase64 ||
       function arrayToBase64(bytes) {
@@ -26,7 +23,7 @@ class WAForth {
     let memory;
     const buffer = (this.buffer = []);
 
-    return WebAssembly.instantiate(this.wasmModule, {
+    return WebAssembly.instantiate(wasmModule, {
       shell: {
         ////////////////////////////////////////
         // I/O
