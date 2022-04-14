@@ -38,7 +38,7 @@ let buildConfig = {
   ...(watch
     ? {
         watch: {
-          async onRebuild(error, result) {
+          async onRebuild(error) {
             if (error) {
               console.error(error);
             } else {
