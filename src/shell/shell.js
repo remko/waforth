@@ -75,7 +75,11 @@ function startConsole() {
   });
 }
 
+let ignoreEmit = false;
 forth.onEmit = (c) => {
+  if (ignoreEmit) {
+    return;
+  }
   output(String.fromCharCode(c), false);
 };
 
@@ -86,7 +90,9 @@ forth.start().then(
   () => {
     loadingEl.remove();
     startConsole();
+    ignoreEmit = true;
     forth.run(sieve);
+    ignoreEmit = false;
   },
   () => {
     loadingEl.remove();
