@@ -8,8 +8,6 @@ const forth = new WAForth();
 
 const consoleEl = document.createElement("pre");
 consoleEl.className = "console";
-consoleEl.innerHTML =
-  "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span>";
 document.body.appendChild(consoleEl);
 
 let currentConsoleEl;
@@ -74,31 +72,29 @@ function startConsole() {
     inputbuffer = newInputBuffer;
   });
 }
+function clearConsole() {
+  consoleEl.innerHTML =
+    "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span>";
+}
 
-let ignoreEmit = false;
 forth.onEmit = (c) => {
-  if (ignoreEmit) {
-    return;
-  }
   output(String.fromCharCode(c), false);
 };
 
-const loadingEl = document.createElement("span");
-loadingEl.innerText = "Loading...";
-consoleEl.insertBefore(loadingEl, consoleEl.lastChild);
+clearConsole();
+
+output("Loading core ... ", false);
 forth.start().then(
   () => {
-    loadingEl.remove();
-    startConsole();
-    ignoreEmit = true;
+    output("ok\nLoading sieve ... ", false);
     forth.run(sieve);
-    ignoreEmit = false;
+    clearConsole();
+    startConsole();
   },
   () => {
-    loadingEl.remove();
     const errorEl = document.createElement("span");
     errorEl.className = "error";
-    errorEl.innerText = "Error";
+    errorEl.innerText = "error";
     consoleEl.lastChild.remove();
     consoleEl.appendChild(errorEl);
   }
