@@ -4,8 +4,9 @@ const isSafari =
   typeof navigator != "undefined" &&
   /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+// eslint-disable-next-line no-unused-vars
 const arrayToBase64 =
-  typeof "Buffer" === "undefined"
+  typeof Buffer === "undefined"
     ? function arrayToBase64(bytes) {
         var binary = "";
         var len = bytes.byteLength;
@@ -14,7 +15,7 @@ const arrayToBase64 =
         }
         return window.btoa(binary);
       }
-    : function arrayToBase64(bytes) {
+    : function arrayToBase64(s) {
         return Buffer.from(s).toString("base64");
       };
 
