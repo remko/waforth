@@ -36,6 +36,7 @@ function unoutput(isInput) {
 function startConsole() {
   let inputbuffer = [];
   document.addEventListener("keypress", (ev) => {
+    // console.log(ev);
     if (ev.key === "Enter") {
       output(" ", true);
       forth.run(inputbuffer.join(""));
@@ -45,12 +46,32 @@ function startConsole() {
         inputbuffer = inputbuffer.slice(0, inputbuffer.length - 1);
         unoutput(true);
       }
-    } else if (ev.key.length === 1) {
+    } else if (ev.key.length === 1 && !ev.metaKey && !ev.ctrlKey) {
       output(ev.key, true);
       inputbuffer.push(ev.key);
     } else {
       console.log("ignoring key %s", ev.key);
     }
+  });
+
+  document.addEventListener("paste", (event) => {
+    let paste = (event.clipboardData || window.clipboardData).getData("text");
+    const commands = paste.split("\n");
+    // console.log("paste", paste, commands);
+    let newInputBuffer = [];
+    if (commands.length > 0) {
+      newInputBuffer.push(commands.pop());
+    }
+    for (const command of commands) {
+      output(command, true);
+      output(" ", true);
+      forth.run(inputbuffer.join("") + command);
+      inputbuffer = [];
+    }
+    if (newInputBuffer.length > 0) {
+      output(newInputBuffer.join(""));
+    }
+    inputbuffer = newInputBuffer;
   });
 }
 
