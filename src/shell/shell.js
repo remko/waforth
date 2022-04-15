@@ -1,5 +1,5 @@
-import WAForth from "./WAForth";
-import sieve from "./sieve";
+import WAForth from "../WAForth";
+import sieve from "../sieve";
 import "./shell.css";
 
 document.title = "WAForth";

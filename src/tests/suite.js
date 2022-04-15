@@ -1,5 +1,5 @@
-import WAForth from "../shell/WAForth";
-import sieve from "../shell/sieve";
+import WAForth from "../WAForth";
+import sieve from "../sieve";
 import standardTestSuiteTester from "./standard-testsuite/tester.f";
 import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
 import { expect, assert } from "chai";

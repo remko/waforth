@@ -1,4 +1,4 @@
-import wasmModule from "../waforth.wat";
+import wasmModule from "./waforth.wat";
 
 const isSafari =
   typeof navigator != "undefined" &&

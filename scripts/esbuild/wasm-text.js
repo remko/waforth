@@ -37,8 +37,10 @@ function wasmTextPlugin() {
             loader: "binary",
           };
         } finally {
-          if ((await fs.promises.lstat(out)).isFile()) {
+          try {
             await fs.promises.unlink(out);
+          } catch (e) {
+            // ignore
           }
         }
       });
