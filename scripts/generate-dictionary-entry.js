@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Usage: ./src/tools/generate-dictionary-entry.js "\$foo" FOO 0 0x21820 0x2182c 0xa1
+// Usage: ./scripts/generate-dictionary-entry.js "\$foo" FOO 0 0x21820 0x2182c 0xa1
 
 const _ = require("lodash");
 const process = require("process");

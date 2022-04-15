@@ -17,7 +17,7 @@ check: src/waforth.wasm
 check-watch: src/waforth.wasm
 	yarn -s test-watch
 
-wasm: src/waforth.assembled.wat src/tools/quadruple.wasm.hex
+wasm: src/waforth.assembled.wat scripts/quadruple.wasm.hex
 
 process: src/waforth.vanilla.wat
 	cp $< src/waforth.wat
@@ -26,25 +26,25 @@ src/waforth.wasm: src/waforth.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 src/waforth.vanilla.wat: src/waforth.wat
-	./src/tools/process.js $< $@
+	./scripts/process.js $< $@
 
 src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
 
 src/waforth.bulkmem.wat: src/waforth.wat
-	./src/tools/process.js --enable-bulk-memory $< $@
+	./scripts/process.js --enable-bulk-memory $< $@
 
 src/benchmarks/sieve-vanilla.wasm: src/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-src/tools/quadruple.wasm: src/tools/quadruple.wat
+scripts/quadruple.wasm: scripts/quadruple.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-src/tools/quadruple.wasm.hex: src/tools/quadruple.wasm
+scripts/quadruple.wasm.hex: scripts/quadruple.wasm
 	hexdump -v -e '16/1 "_u%04X" "\n"' $< | sed 's/_/\\/g; s/\\u    //g; s/.*/    "&"/' > $@
 
 clean:
-	-rm -rf $(WASM_FILES) src/tools/quadruple.wasm src/tools/quadruple.wasm.hex src/waforth.wat.tmp dist
+	-rm -rf $(WASM_FILES) scripts/quadruple.wasm scripts/quadruple.wasm.hex src/waforth.wat.tmp dist
 
 lint:
 	yarn -s lint
