@@ -102,32 +102,35 @@ async function handleBuildFinished(result) {
     testIndex = testIndex.replace(`/${sourcefile}`, `/${outfile}`);
     benchmarksIndex = benchmarksIndex.replace(`/${sourcefile}`, `/${outfile}`);
   }
-  fs.writeFileSync("public/waforth/index.html", index);
-  fs.mkdirSync("public/waforth/tests", { recursive: true });
-  fs.writeFileSync("public/waforth/tests/index.html", testIndex);
-  fs.mkdirSync("public/waforth/benchmarks", { recursive: true });
-  fs.writeFileSync("public/waforth/benchmarks/index.html", benchmarksIndex);
+  await fs.promises.writeFile("public/waforth/index.html", index);
+  await fs.promises.mkdir("public/waforth/tests", { recursive: true });
+  await fs.promises.writeFile("public/waforth/tests/index.html", testIndex);
+  await fs.promises.mkdir("public/waforth/benchmarks", { recursive: true });
+  await fs.promises.writeFile(
+    "public/waforth/benchmarks/index.html",
+    benchmarksIndex
+  );
 }
 
 if (watch) {
   // Simple static file server
-  createServer(function (req, res) {
+  createServer(async function (req, res) {
     let f = path.join(__dirname, "public", req.url);
-    if (fs.lstatSync(f).isDirectory()) {
+    if ((await fs.promises.lstat(f)).isDirectory()) {
       f = path.join(f, "index.html");
     }
-    fs.readFile(f, function (err, data) {
-      if (err) {
-        res.writeHead(404);
-        res.end(JSON.stringify(err));
-        return;
-      }
+    try {
+      const data = await fs.promises.readFile(f);
       res.writeHead(200);
       res.end(data);
-    });
+    } catch (err) {
+      res.writeHead(404);
+      res.end(JSON.stringify(err));
+    }
   }).listen(8080);
 
   console.log("listening on port 8080");
   buildConfig = withWatcher(buildConfig, handleBuildFinished, 8081);
 }
+
 esbuild.build(buildConfig).then(handleBuildFinished, () => process.exit(1));

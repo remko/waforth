@@ -24,15 +24,23 @@ function wasmTextPlugin() {
       });
       build.onLoad({ filter: /.*/, namespace: "wasm-text" }, async (args) => {
         // Would be handy if we could get output from stdout without going through file
-        const out = args.path.replace(".wat", ".wasm");
-        const flags = "";
-        // flags = --debug-names
-        // console.log("wat: compiling %s", args.path);
-        await exec(`wat2wasm ${flags} --output=${out} ${args.path}`);
-        return {
-          contents: await fs.promises.readFile(out),
-          loader: "binary",
-        };
+        const out = `wat2wasm.${Math.floor(
+          Math.random() * 1000000000
+        )}.tmp.wasm`;
+        try {
+          const flags = "";
+          // flags = --debug-names
+          // console.log("wat: compiling %s", args.path);
+          await exec(`wat2wasm ${flags} --output=${out} ${args.path}`);
+          return {
+            contents: await fs.promises.readFile(out),
+            loader: "binary",
+          };
+        } finally {
+          if ((await fs.promises.lstat(out)).isFile()) {
+            await fs.promises.unlink(out);
+          }
+        }
       });
     },
   };
