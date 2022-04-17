@@ -2396,7 +2396,7 @@
         (call $DUP) 
         (call $sieve_prime)
         (if (i32.ne (call $pop) (i32.const 0))
-          (block
+          (then
             (call $2DUP) 
             (call $DUP) 
             (call $*)
@@ -2423,9 +2423,9 @@
         (call $push (local.get $i))
         (call $sieve_prime) 
         (if (i32.ne (call $pop) (i32.const 0))
-        (block
-          (call $DROP)
-          (call $push (local.get $i))))
+          (then
+            (call $DROP)
+            (call $push (local.get $i))))
         (local.set $i (i32.add (i32.const 1) (local.get $i)))
         (br_if $endLoop3 (i32.ge_s (local.get $i) (local.get $end)))
         (br $loop3))))
