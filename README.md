@@ -1,6 +1,8 @@
+<img src="./doc/logo.svg" height="64">
+
 # [WAForth](https://el-tramo.be/waforth): Forth Interpreter+Compiler for WebAssembly
 
-WAForth is a bootstrapping Forth interpreter and dynamic compiler for
+WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
 [here](https://el-tramo.be/waforth/).
 
@@ -12,12 +14,15 @@ WebAssembly [doesn't support JIT
 yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-time-jit-compilation)),
 and the I/O primitives to read and write a character to a screen.
 
+The WebAssembly module containing the interpreter, dynamic compiler, and 
+all built-in words comes down to 12k (6k gzipped), with an extra 7k (3k gzipped) for the JavaScript wrapper and web UI.
+
 Parts of the implementation were influenced by
 [jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary).
 
 WAForth is still in an experimental stage. It implements most of the [ANS Core
 Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
-[Forth 200x Test Suite](http://www.forth200x.org/documents/html/testsuite.html)
+[Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
 core word tests.
 
 
