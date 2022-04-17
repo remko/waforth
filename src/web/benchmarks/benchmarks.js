@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import WAForth from "../../src/WAForth";
-import sieve from "../../src/sieve";
+import WAForth from "../WAForth";
+import sieve from "../sieve";
 import sieveVanillaModule from "./sieve-vanilla.wat";
 import update from "immutability-helper";
 import "./benchmarks.css";

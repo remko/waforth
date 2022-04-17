@@ -57,9 +57,9 @@ let buildConfig = {
   bundle: true,
   logLevel: "info",
   entryPoints: [
-    path.join(__dirname, "src", "shell", "shell"),
-    path.join(__dirname, "src", "tests", "tests"),
-    path.join(__dirname, "src", "benchmarks", "benchmarks"),
+    path.join(__dirname, "src", "web", "shell", "shell"),
+    path.join(__dirname, "src", "web", "tests", "tests"),
+    path.join(__dirname, "src", "web", "benchmarks", "benchmarks"),
   ],
   entryNames: dev ? "[name]" : "[name]-c$[hash]",
   assetNames: "[name]-c$[hash]",

@@ -11,11 +11,14 @@ all:
 dev:
 	yarn -s dev
 
-check: src/waforth.wasm
+check:
 	yarn -s test
 
-check-watch: src/waforth.wasm
+check-watch:
 	yarn -s test-watch
+
+lint:
+	yarn -s lint
 
 wasm: src/waforth.assembled.wat scripts/quadruple.wasm.hex
 
@@ -46,5 +49,3 @@ scripts/quadruple.wasm.hex: scripts/quadruple.wasm
 clean:
 	-rm -rf $(WASM_FILES) scripts/quadruple.wasm scripts/quadruple.wasm.hex src/waforth.wat.tmp dist
 
-lint:
-	yarn -s lint

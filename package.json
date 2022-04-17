@@ -17,10 +17,10 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "./build.js",
-    "dev": "./build.js --watch --development",
-    "test": "./test.js",
-    "test-watch": "./test.js --watch",
+    "build": "./build-web.js",
+    "dev": "./build-web.js --watch --development",
+    "test": "./test-web.js",
+    "test-watch": "./test-web.js --watch",
     "lint": "eslint ."
   }
 }
