@@ -33,8 +33,8 @@ function unoutput(isInput) {
 }
 function startConsole() {
   let inputbuffer = [];
-  document.addEventListener("keypress", (ev) => {
-    // console.log(ev);
+  document.addEventListener("keydown", (ev) => {
+    // console.log("keydown", ev);
     if (ev.key === "Enter") {
       output(" ", true);
       forth.run(inputbuffer.join(""));
