@@ -235,12 +235,10 @@
   ;; 6.1.0080
   (func $paren
     (local $c i32)
-    (block $endLoop
-      (loop $loop
-        (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0)) 
-          (call $fail (i32.const 0x2003C))) ;; missing ')'
-        (br_if $endLoop (i32.eq (local.get $c) (i32.const 41)))
-        (br $loop))))
+    (loop $loop
+      (if (i32.lt_s (tee_local $c (call $readChar)) (i32.const 0)) 
+        (call $fail (i32.const 0x2003C))) ;; missing ')'
+      (br_if $loop (i32.ne (local.get $c) (i32.const 41)))))
   (data (i32.const 135228) "0\10\02\00" "\81" (; immediate ;) "(\00\00\15\00\00\00")
   (elem (i32.const 0x15) $paren)
 
@@ -956,37 +954,33 @@
     (local.set $wordEnd (i32.add (local.get $wordStart) (local.get $wordLength)))
 
     (local.set $entryP (global.get $latest))
-    (block $endLoop
-      (loop $loop
-        (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
-        (block $endCompare
-          (if (i32.and 
-                (i32.eq (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))) (i32.const 0))
-                (i32.eq (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))
-                        (local.get $wordLength)))
-            (then
-              (local.set $wordP (local.get $wordStart))
-              (local.set $entryNameP (i32.add (local.get $entryP) (i32.const 5)))
-              (block $endCompareLoop
-                (loop $compareLoop
-                  (br_if $endCompare (i32.ne (i32.load8_s (local.get $entryNameP))
-                                             (i32.load8_s (local.get $wordP))))
-                  (local.set $entryNameP (i32.add (local.get $entryNameP) (i32.const 1)))
-                  (local.set $wordP (i32.add (local.get $wordP) (i32.const 1)))
-                  (br_if $endCompareLoop (i32.eq (local.get $wordP)
-                                                 (local.get $wordEnd)))
-                  (br $compareLoop)))
-              (i32.store (i32.sub (global.get $tos) (i32.const 4))
-                         (local.get $entryP))
-              (if (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))
-                (then
-                  (call $push (i32.const -1)))
-                (else
-                  (call $push (i32.const 1))))
-              (return))))
-        (local.set $entryP (i32.load (local.get $entryP)))
-        (br_if $endLoop (i32.eqz (local.get $entryP)))
-        (br $loop)))
+    (loop $loop
+      (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
+      (block $endCompare
+        (if (i32.and 
+              (i32.eq (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))) (i32.const 0))
+              (i32.eq (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))
+                      (local.get $wordLength)))
+          (then
+            (local.set $wordP (local.get $wordStart))
+            (local.set $entryNameP (i32.add (local.get $entryP) (i32.const 5)))
+            (loop $compareLoop
+              (br_if $endCompare (i32.ne (i32.load8_s (local.get $entryNameP))
+                                          (i32.load8_s (local.get $wordP))))
+              (local.set $entryNameP (i32.add (local.get $entryNameP) (i32.const 1)))
+              (local.set $wordP (i32.add (local.get $wordP) (i32.const 1)))
+              (br_if $compareLoop (i32.ne (local.get $wordP)
+                                              (local.get $wordEnd))))
+            (i32.store (i32.sub (global.get $tos) (i32.const 4))
+                        (local.get $entryP))
+            (if (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))
+              (then
+                (call $push (i32.const -1)))
+              (else
+                (call $push (i32.const 1))))
+            (return))))
+      (local.set $entryP (i32.load (local.get $entryP)))
+      (br_if $loop (i32.ne (local.get $entryP) (i32.const 0))))
     (call $push (i32.const 0)))
   (data (i32.const 136252) ",\14\02\00\04FIND\00\00\00]\00\00\00")
   (elem (i32.const 0x5d) $FIND)
@@ -1354,11 +1348,11 @@
     (local $end i32)
     (local.set $end (i32.add (call $pop) (tee_local $p (call $pop))))
     (block $endLoop
-     (loop $loop
-       (br_if $endLoop (i32.eq (local.get $p) (local.get $end)))
-       (call $shell_emit (i32.load8_u (local.get $p)))
-       (local.set $p (i32.add (local.get $p) (i32.const 1)))
-       (br $loop))))
+      (loop $loop
+        (br_if $endLoop (i32.eq (local.get $p) (local.get $end)))
+        (call $shell_emit (i32.load8_u (local.get $p)))
+        (local.set $p (i32.add (local.get $p) (i32.const 1)))
+        (br $loop))))
   ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
   (data (i32.const 136844) "|\16\02\00\04TYPE\00\00\00\85\00\00\00")
   (elem (i32.const 0x85) $TYPE) ;; none
@@ -2229,12 +2223,12 @@
         (local.set $src (i32.sub (i32.add (local.get $src) (local.get $n)) (i32.const 1)))
         (local.set $dst (i32.sub (i32.add (local.get $dst) (local.get $n)) (i32.const 1)))
         (block $endLoop
-        (loop $loop
-          (br_if $endLoop (i32.lt_u (local.get $src) (local.get $end)))
-          (i32.store8 (local.get $dst) (i32.load8_u (local.get $src)))
-          (local.set $src (i32.sub (local.get $src) (i32.const 1)))
-          (local.set $dst (i32.sub (local.get $dst) (i32.const 1)))
-          (br $loop))))
+          (loop $loop
+            (br_if $endLoop (i32.lt_u (local.get $src) (local.get $end)))
+            (i32.store8 (local.get $dst) (i32.load8_u (local.get $src)))
+            (local.set $src (i32.sub (local.get $src) (i32.const 1)))
+            (local.set $dst (i32.sub (local.get $dst) (i32.const 1)))
+            (br $loop))))
       (else
         (local.set $end (i32.add (local.get $src) (local.get $n)))
         (block $endLoop
@@ -2285,24 +2279,22 @@
     (local $more i32)
     (local $byte i32)
     (local.set $more (i32.const 1))
-    (block $endLoop
-      (loop $loop
-        (local.set $byte (i32.and (i32.const 0x7F) (local.get $value)))
-        (local.set $value (i32.shr_s (local.get $value) (i32.const 7)))
-        (if (i32.or (i32.and (i32.eqz (local.get $value)) 
-                             (i32.eq (i32.and (local.get $byte) (i32.const 0x40))
-                                     (i32.const 0)))
-                    (i32.and (i32.eq (local.get $value) (i32.const -1))
-                             (i32.eq (i32.and (local.get $byte) (i32.const 0x40))
-                                     (i32.const 0x40))))
-          (then
-            (local.set $more (i32.const 0)))
-          (else
-            (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))))
-        (i32.store8 (local.get $p) (local.get $byte))
-        (local.set $p (i32.add (local.get $p) (i32.const 1)))
-        (br_if $loop (local.get $more))
-        (br $endLoop)))
+    (loop $loop
+      (local.set $byte (i32.and (i32.const 0x7F) (local.get $value)))
+      (local.set $value (i32.shr_s (local.get $value) (i32.const 7)))
+      (if (i32.or (i32.and (i32.eqz (local.get $value)) 
+                            (i32.eq (i32.and (local.get $byte) (i32.const 0x40))
+                                    (i32.const 0)))
+                  (i32.and (i32.eq (local.get $value) (i32.const -1))
+                            (i32.eq (i32.and (local.get $byte) (i32.const 0x40))
+                                    (i32.const 0x40))))
+        (then
+          (local.set $more (i32.const 0)))
+        (else
+          (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))))
+      (i32.store8 (local.get $p) (local.get $byte))
+      (local.set $p (i32.add (local.get $p) (i32.const 1)))
+      (br_if $loop (local.get $more)))
     (local.get $p))
 
   (func $body (param $xt i32) (result i32)
@@ -2319,15 +2311,14 @@
   (func $readChar (result i32)
     (local $n i32)
     (local $in i32)
-    (loop $loop
-      (if (i32.ge_u (tee_local $in (i32.load (i32.const 0x108 (; = IN_BASE ;))))
-                    (global.get $inputBufferSize))
-        (then
-          (return (i32.const -1)))
-        (else
-          (local.set $n (i32.load8_s (i32.add (global.get $inputBufferBase) (local.get $in))))
-          (i32.store (i32.const 0x108 (; = IN_BASE ;)) (i32.add (local.get $in) (i32.const 1)))
-          (return (local.get $n)))))
+    (if (i32.ge_u (tee_local $in (i32.load (i32.const 0x108 (; = IN_BASE ;))))
+                  (global.get $inputBufferSize))
+      (then
+        (return (i32.const -1)))
+      (else
+        (local.set $n (i32.load8_s (i32.add (global.get $inputBufferBase) (local.get $in))))
+        (i32.store (i32.const 0x108 (; = IN_BASE ;)) (i32.add (local.get $in) (i32.const 1)))
+        (return (local.get $n))))
     (unreachable))
 
 
@@ -2402,14 +2393,12 @@
             (call $*)
             (local.set $i (call $pop))
             (local.set $end (call $pop))
-            (block $endLoop2
-              (loop $loop2
-                (call $push (local.get $i))
-                (call $sieve_composite) 
-                (call $DUP)
-                (local.set $i (i32.add (call $pop) (local.get $i)))
-                (br_if $endLoop2 (i32.ge_s (local.get $i) (local.get $end)))
-                (br $loop2)))))
+            (loop $loop2
+              (call $push (local.get $i))
+              (call $sieve_composite) 
+              (call $DUP)
+              (local.set $i (i32.add (call $pop) (local.get $i)))
+              (br_if $loop2 (i32.lt_s (local.get $i) (local.get $end))))))
         (call $1+)
         (br $loop1)))
     (call $DROP) 
@@ -2418,17 +2407,15 @@
     (call $push (i32.const 2))
     (local.set $i (call $pop))
     (local.set $end (call $pop))
-    (block $endLoop3
-      (loop $loop3
-        (call $push (local.get $i))
-        (call $sieve_prime) 
-        (if (i32.ne (call $pop) (i32.const 0))
-          (then
-            (call $DROP)
-            (call $push (local.get $i))))
-        (local.set $i (i32.add (i32.const 1) (local.get $i)))
-        (br_if $endLoop3 (i32.ge_s (local.get $i) (local.get $end)))
-        (br $loop3))))
+    (loop $loop
+      (call $push (local.get $i))
+      (call $sieve_prime) 
+      (if (i32.ne (call $pop) (i32.const 0))
+        (then
+          (call $DROP)
+          (call $push (local.get $i))))
+      (local.set $i (i32.add (i32.const 1) (local.get $i)))
+      (br_if $loop (i32.lt_s (local.get $i) (local.get $end)))))
   (data (i32.const 137224) "\f8\17\02\00" "\0c" "sieve_direct\00\00\00" "\9f\00\00\00")
   (elem (i32.const 0x9f) $sieve)
 )
