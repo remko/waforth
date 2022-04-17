@@ -97,7 +97,7 @@ section](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md#nam
 making it easier for doing some debugging in the browser.
 
 ![Debugger view of a compiled
-word](https://el-tramo.be/blog/waforth/debugger.png "Debugger view of a
+word](doc/debugger.png "Debugger view of a
 compiled word")
 
 
