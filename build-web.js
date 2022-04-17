@@ -117,8 +117,12 @@ if (watch) {
   // Simple static file server
   createServer(async function (req, res) {
     let f = path.join(__dirname, "public", req.url);
-    if ((await fs.promises.lstat(f)).isDirectory()) {
-      f = path.join(f, "index.html");
+    try {
+      if ((await fs.promises.lstat(f)).isDirectory()) {
+        f = path.join(f, "index.html");
+      }
+    } catch (e) {
+      // pass
     }
     try {
       const data = await fs.promises.readFile(f);
