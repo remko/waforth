@@ -87,10 +87,15 @@ class WAForth {
             table.grow(table.length); // Double size
           }
           // console.log("Load", index, arrayToBase64(data));
-          var module = new WebAssembly.Module(data);
-          new WebAssembly.Instance(module, {
-            env: { table, memory, tos: -1 },
-          });
+          try {
+            var module = new WebAssembly.Module(data);
+            new WebAssembly.Instance(module, {
+              env: { table, memory, tos: -1 },
+            });
+          } catch (e) {
+            console.error(e);
+            throw e;
+          }
         },
       },
     }).then((instance) => {
