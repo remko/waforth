@@ -58,9 +58,9 @@
   ;;   TYPE_INDEX := 0x85
   ;;   ABORT_INDEX := 0x39
   ;;   CONSTANT_INDEX := 0x4c
-  ;;   NEXT_TABLE_INDEX := 0xa8   (; Next available table index for a compiled word ;)
+  ;;   NEXT_TABLE_INDEX := 0xa9   (; Next available table index for a compiled word ;)
 
-  (table (export "table") 0xa8 (; = NEXT_TABLE_INDEX ;) anyfunc)
+  (table (export "table") 0xa9 (; = NEXT_TABLE_INDEX ;) anyfunc)
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1662,6 +1662,31 @@
   (data (i32.const 0x21890) "\84\18\02\00" "\02" ".S0" "\a7\00\00\00")
   (elem (i32.const 0xa7) $.S)
 
+  ;; 15.6.1.2465
+  (func $WORDS
+    (local $entryP i32)
+    (local $entryLF i32)
+    (local $entryL i32)
+    (local $p i32)
+    (local $pe i32)
+    (local.set $entryP (global.get $latest))
+    (loop $loop
+      (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
+      (if (i32.eq (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))) (i32.const 0))
+        (then
+          (local.set $p (i32.add (local.get $entryP) (i32.const 5)))
+          (local.set $pe (i32.add (local.get $p) 
+                                  (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))))
+          (loop $emitLoop
+            (call $shell_emit (i32.load8_u (local.get $p)))
+            (local.set $p (i32.add (local.get $p) (i32.const 1)))
+            (br_if $emitLoop (i32.lt_s (local.get $p) (local.get $pe))))))
+      (call $shell_emit (i32.const 0x20))
+      (local.set $entryP (i32.load (local.get $entryP)))
+      (br_if $loop (i32.ne (local.get $entryP) (i32.const 0)))))
+  (data (i32.const 0x2189c) "\90\18\02\00" "\05" "WORDS00" "\a8\00\00\00")
+  (elem (i32.const 0xa8) $WORDS)
+
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
@@ -1820,9 +1845,9 @@
   (global $sourceID (mut i32) (i32.const 0))
 
   ;; Dictionary pointers
-  (global $latest (mut i32) (i32.const 0x21890))
-  (global $here (mut i32) (i32.const 0x2189c))
-  (global $nextTableIndex (mut i32) (i32.const 0xa8 (; = NEXT_TABLE_INDEX ;)))
+  (global $latest (mut i32) (i32.const 0x2189c))
+  (global $here (mut i32) (i32.const 0x218ac))
+  (global $nextTableIndex (mut i32) (i32.const 0xa9 (; = NEXT_TABLE_INDEX ;)))
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
