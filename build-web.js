@@ -6,6 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const { createServer } = require("http");
 const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
+const { forthPlugin } = require("./scripts/esbuild/forth");
 
 function withWatcher(config, handleBuildFinished = () => {}, port = 8880) {
   const watchClients = [];
@@ -73,7 +74,7 @@ let buildConfig = {
   },
   sourcemap: true,
   metafile: true,
-  plugins: [wasmTextPlugin()],
+  plugins: [wasmTextPlugin(), forthPlugin()],
 };
 
 const INDEX_TEMPLATE = `<!doctype html>
