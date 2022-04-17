@@ -17,7 +17,7 @@ all: main
 
 .PHONY: example
 example:
-	./waforth2c.js examples/sieve.f
+	./waforth2c.js ../examples/sieve.f
 	$(MAKE) 
 	./main
 	
