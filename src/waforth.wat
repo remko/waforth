@@ -1931,14 +1931,8 @@
   (func $compileIf
     (call $compilePop)
     (call $emitConst (i32.const 0))
-
-    ;; ne
-    (i32.store8 (global.get $cp) (i32.const 0x47))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-
-    ;; if (empty block)
+    (call $emitNotEqual)
     (call $emitIf)
-
     (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 1))))
 
   (func $compileThen 
@@ -2016,27 +2010,22 @@
     (call $emitBr (i32.add (global.get $branchNesting) (i32.const 1))))
 
   (func $compileBegin
-    (call $emitBlock)
     (call $emitLoop)
     (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 2))))
 
   (func $compileWhile
-    (call $compilePop)
-    (call $emitEqualsZero)
-    (call $emitBrIf (i32.const 1)))
+    (call $compileIf))
 
   (func $compileRepeat
-    (call $emitBr (i32.const 0))
+    (call $emitBr (i32.const 1)) ;; Jump across while to repeat
     (call $emitEnd)
     (call $emitEnd)
-    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 2))))
+    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1))))
 
   (func $compileUntil
     (call $compilePop)
     (call $emitEqualsZero)
     (call $emitBrIf (i32.const 0))
-    (call $emitBr (i32.const 1))
-    (call $emitEnd)
     (call $emitEnd)
     (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 2))))
 
@@ -2131,6 +2120,10 @@
 
   (func $emitEqualsZero
     (i32.store8 (global.get $cp) (i32.const 0x45))
+    (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
+
+  (func $emitNotEqual
+    (i32.store8 (global.get $cp) (i32.const 0x47))
     (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
   (func $emitGreaterEqualSigned
