@@ -6,7 +6,8 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; External function dependencies.
   ;; 
-  ;; These are provided by JavaScript.
+  ;; These are provided by JavaScript (or whoever instantiates the WebAssembly 
+  ;; module)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; I/O

@@ -19,6 +19,14 @@ const arrayToBase64 =
         return Buffer.from(s).toString("base64");
       };
 
+/**
+ * Small JavaScript shell around the WAForth WebAssembly module.
+ *
+ * To users, provides the functions to interact with the WebAssembly module.
+ *
+ * To the WebAssembly module, provides the infrastructure to dynamically load WebAssembly modules and
+ * the I/O primitives with the UI.
+ * */
 class WAForth {
   constructor() {}
 
