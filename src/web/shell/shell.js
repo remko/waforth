@@ -10,10 +10,8 @@ const consoleEl = document.createElement("pre");
 consoleEl.className = "console";
 document.body.appendChild(consoleEl);
 
-const inputEl = document.createElement("input");
-inputEl.style = "position: fixed; bottom: 0; left: 0;";
-inputEl.style.visibility = "hidden";
-document.body.appendChild(inputEl);
+let inputEl;
+let cursorEl;
 
 consoleEl.addEventListener("click", () => {
   inputEl.style.visibility = "visible";
@@ -28,10 +26,10 @@ function output(s, isInput) {
     currentConsoleEl = document.createElement("span");
     currentConsoleEl.className = isInput ? "in" : "out";
     currentConsoleElIsInput = isInput;
-    consoleEl.insertBefore(currentConsoleEl, consoleEl.lastChild);
+    consoleEl.insertBefore(currentConsoleEl, cursorEl);
   }
   currentConsoleEl.appendChild(document.createTextNode(s));
-  document.querySelector(".cursor").scrollIntoView();
+  document.querySelector(".cursor").scrollIntoView(false);
 }
 function unoutput(isInput) {
   if (
@@ -89,7 +87,9 @@ function startConsole() {
 }
 function clearConsole() {
   consoleEl.innerHTML =
-    "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span>";
+    "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span><input type=\"text\">";
+  inputEl = document.querySelector("input");
+  cursorEl = document.querySelector(".cursor");
 }
 
 forth.onEmit = (c) => {
@@ -110,7 +110,8 @@ forth.start().then(
     const errorEl = document.createElement("span");
     errorEl.className = "error";
     errorEl.innerText = "error";
-    consoleEl.lastChild.remove();
+    cursorEl.remove();
+    inputEl.remove();
     consoleEl.appendChild(errorEl);
   }
 );

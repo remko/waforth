@@ -17,14 +17,17 @@ body {
 
 .console {
   position: absolute;
-  width: 100%;
-  height: 100vh;
+  overflow-y: scroll;
   background-color: black;
   font-family: monospace;
   padding: 1em;
   white-space: pre-wrap;
   word-wrap: break-word;
   margin: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .console .header {
@@ -55,4 +58,5 @@ body {
 input {
   width: 100%;
   opacity: 0;
+  visibility: hidden;
 }
