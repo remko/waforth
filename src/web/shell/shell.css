@@ -51,3 +51,8 @@ body {
 .console .error {
   color: red;
 }
+
+input {
+  width: 100%;
+  opacity: 0;
+}

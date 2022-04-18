@@ -10,6 +10,17 @@ const consoleEl = document.createElement("pre");
 consoleEl.className = "console";
 document.body.appendChild(consoleEl);
 
+const inputEl = document.createElement("input");
+inputEl.style = "position: absolute; top: 0; right: 0;";
+inputEl.style.visibility = "hidden";
+document.body.appendChild(inputEl);
+
+consoleEl.addEventListener("click", () => {
+  inputEl.style.visibility = "visible";
+  inputEl.focus();
+  inputEl.style.visibility = "hidden";
+});
+
 let currentConsoleEl;
 let currentConsoleElIsInput = false;
 function output(s, isInput) {
