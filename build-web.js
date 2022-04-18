@@ -72,6 +72,11 @@ let buildConfig = {
     ".wasm": "binary",
     ".js": "jsx",
   },
+  define: {
+    WAFORTH_VERSION: watch
+      ? `"dev"`
+      : `"${new Date().toISOString().replace(/T.*/g, "")}"`,
+  },
   sourcemap: true,
   metafile: true,
   plugins: [wasmTextPlugin(), forthPlugin()],

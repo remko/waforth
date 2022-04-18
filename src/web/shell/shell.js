@@ -1,8 +1,12 @@
+/* global WAFORTH_VERSION */
+
 import WAForth from "../WAForth";
 import sieve from "../../examples/sieve.f";
 import "./shell.css";
 
 document.title = "WAForth";
+const version =
+  typeof WAFORTH_VERSION !== "undefined" ? WAFORTH_VERSION : "dev";
 
 const forth = new WAForth();
 
@@ -86,8 +90,7 @@ function startConsole() {
   });
 }
 function clearConsole() {
-  consoleEl.innerHTML =
-    "<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth</a>\n</span><span class=\"cursor\"> </span><input type=\"text\">";
+  consoleEl.innerHTML = `<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth (${version})</a>\n</span><span class="cursor"> </span><input type="text">`;
   inputEl = document.querySelector("input");
   cursorEl = document.querySelector(".cursor");
 }
