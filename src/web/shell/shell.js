@@ -62,6 +62,9 @@ function startConsole() {
     } else {
       console.log("ignoring key %s", ev.key);
     }
+    if (ev.key === " ") {
+      ev.preventDefault();
+    }
   });
 
   document.addEventListener("paste", (event) => {
