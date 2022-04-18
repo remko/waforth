@@ -11,7 +11,7 @@ consoleEl.className = "console";
 document.body.appendChild(consoleEl);
 
 const inputEl = document.createElement("input");
-inputEl.style = "position: absolute; top: 0; right: 0;";
+inputEl.style = "position: fixed; bottom: 0; left: 0;";
 inputEl.style.visibility = "hidden";
 document.body.appendChild(inputEl);
 
@@ -31,6 +31,7 @@ function output(s, isInput) {
     consoleEl.insertBefore(currentConsoleEl, consoleEl.lastChild);
   }
   currentConsoleEl.appendChild(document.createTextNode(s));
+  document.querySelector(".cursor").scrollIntoView();
 }
 function unoutput(isInput) {
   if (
