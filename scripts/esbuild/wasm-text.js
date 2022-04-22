@@ -5,7 +5,7 @@ const exec = promisify(require("child_process").exec);
 const fs = require("fs");
 const path = require("path");
 
-function wasmTextPlugin() {
+function wasmTextPlugin({ debug } = {}) {
   return {
     name: "wasm-text",
     setup(build) {
@@ -28,10 +28,14 @@ function wasmTextPlugin() {
           Math.random() * 1000000000
         )}.tmp.wasm`;
         try {
-          const flags = "";
-          // flags = --debug-names
+          let flags = [];
+          if (debug) {
+            flags.push("--debug-names");
+          }
           // console.log("wat: compiling %s", args.path);
-          await exec(`wat2wasm ${flags} --output=${out} ${args.path}`);
+          await exec(
+            `wat2wasm ${flags.join(" ")} --output=${out} ${args.path}`
+          );
           return {
             contents: await fs.promises.readFile(out),
             loader: "binary",

@@ -79,7 +79,7 @@ let buildConfig = {
   },
   sourcemap: true,
   metafile: true,
-  plugins: [wasmTextPlugin(), forthPlugin()],
+  plugins: [wasmTextPlugin({ debug: dev }), forthPlugin()],
 };
 
 const INDEX_TEMPLATE = `<!doctype html>

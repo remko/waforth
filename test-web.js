@@ -35,7 +35,7 @@ let buildConfig = {
     ".wasm": "binary",
   },
   sourcemap: true,
-  plugins: [wasmTextPlugin(), forthPlugin()],
+  plugins: [wasmTextPlugin({ debug: true }), forthPlugin()],
   ...(watch
     ? {
         watch: {
