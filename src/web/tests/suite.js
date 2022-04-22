@@ -6,7 +6,7 @@ import { expect, assert } from "chai";
 
 function loadTests() {
   describe("WAForth", () => {
-    let forth, stack, output, core, memory, memory8, initialTOS;
+    let forth, output, core, memory, memory8, initialTOS;
 
     beforeEach(() => {
       forth = new WAForth();
@@ -22,7 +22,6 @@ function loadTests() {
           memory = new Int32Array(core.memory.buffer, 0, 0x30000);
           memory8 = new Uint8Array(core.memory.buffer, 0, 0x30000);
           // dictionary = new Uint8Array(core.memory.buffer, 0x1000, 0x1000);
-          stack = new Int32Array(core.memory.buffer, core.tos(), 0x100);
           initialTOS = core.tos();
         },
         (err) => {
@@ -191,18 +190,18 @@ function loadTests() {
       it("should interpret a positive number", () => {
         forth.read("123");
         expect(core.interpret()).to.eql(0);
-        expect(stack[0]).to.eql(123);
+        expect(stackValues()[0]).to.eql(123);
       });
 
       it("should interpret a negative number", () => {
         forth.read("-123");
         expect(core.interpret()).to.eql(0);
-        expect(stack[0]).to.eql(-123);
+        expect(stackValues()[0]).to.eql(-123);
       });
       it("should interpret a hex", () => {
         forth.read("16 BASE ! DF");
         expect(core.interpret()).to.eql(0);
-        expect(stack[0]).to.eql(223);
+        expect(stackValues()[0]).to.eql(223);
       });
       it("should not interpret hex in decimal mode", () => {
         forth.read("DF");
@@ -221,8 +220,8 @@ function loadTests() {
       it("should work", () => {
         run("121");
         run("DUP");
-        expect(stack[0]).to.eql(121);
-        expect(stack[1]).to.eql(121);
+        expect(stackValues()[0]).to.eql(121);
+        expect(stackValues()[1]).to.eql(121);
       });
     });
 
@@ -230,16 +229,16 @@ function loadTests() {
       it("should duplicate when not 0", () => {
         run("121");
         run("?DUP 5");
-        expect(stack[0]).to.eql(121);
-        expect(stack[1]).to.eql(121);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(121);
+        expect(stackValues()[1]).to.eql(121);
+        expect(stackValues()[2]).to.eql(5);
       });
 
       it("should not duplicate when 0", () => {
         run("0");
         run("?DUP 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -249,49 +248,49 @@ function loadTests() {
         run("173");
         run("2DUP");
         run("5");
-        expect(stack[0]).to.eql(222);
-        expect(stack[1]).to.eql(173);
-        expect(stack[2]).to.eql(222);
-        expect(stack[3]).to.eql(173);
-        expect(stack[4]).to.eql(5);
+        expect(stackValues()[0]).to.eql(222);
+        expect(stackValues()[1]).to.eql(173);
+        expect(stackValues()[2]).to.eql(222);
+        expect(stackValues()[3]).to.eql(173);
+        expect(stackValues()[4]).to.eql(5);
       });
     });
 
     describe("ROT", () => {
       it("should work", () => {
         run("1 2 3 ROT 5");
-        expect(stack[0]).to.eql(2);
-        expect(stack[1]).to.eql(3);
-        expect(stack[2]).to.eql(1);
-        expect(stack[3]).to.eql(5);
+        expect(stackValues()[0]).to.eql(2);
+        expect(stackValues()[1]).to.eql(3);
+        expect(stackValues()[2]).to.eql(1);
+        expect(stackValues()[3]).to.eql(5);
       });
     });
 
     describe("MIN", () => {
       it("should min (1)", () => {
         run("3 7 MIN 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should min (1)", () => {
         run("7 3 MIN 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
     describe("MAX", () => {
       it("should min (1)", () => {
         run("3 7 MAX 5");
-        expect(stack[0]).to.eql(7);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(7);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should min (1)", () => {
         run("7 3 MAX 5");
-        expect(stack[0]).to.eql(7);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(7);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -301,8 +300,8 @@ function loadTests() {
         run("4");
         run("*");
         run("5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should multiply negative", () => {
@@ -310,8 +309,8 @@ function loadTests() {
         run("4");
         run("*");
         run("5");
-        expect(stack[0]).to.eql(-12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-12);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -321,79 +320,79 @@ function loadTests() {
         run("4");
         run("+");
         run("5");
-        expect(stack[0]).to.eql(7);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(7);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
     describe("-", () => {
       it("should subtract", () => {
         run("8 5 - 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should subtract to negative", () => {
         run("8 13 - 5");
-        expect(stack[0]).to.eql(-5);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-5);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should subtract negative", () => {
         run("8 -3 - 5");
-        expect(stack[0]).to.eql(11);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(11);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
     describe("/", () => {
       it("should divide", () => {
         run("15 5 / 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should divide negative", () => {
         run("15 -5 / 5");
-        expect(stack[0]).to.eql(-3);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-3);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
     describe("/MOD", () => {
       it("should work", () => {
         run("15 6 /MOD 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(2);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(2);
+        expect(stackValues()[2]).to.eql(5);
       });
     });
 
     describe("*/", () => {
       it("should work with small numbers", () => {
         run("10 3 5 */ 5");
-        expect(stack[0]).to.eql(6);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(6);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with large numbers", () => {
         run("268435455 1000 5000 */");
-        expect(stack[0]).to.eql(53687091);
+        expect(stackValues()[0]).to.eql(53687091);
       });
     });
 
     describe("*/MOD", () => {
       it("should work with small numbers", () => {
         run("9 3 5 */MOD 7");
-        expect(stack[0]).to.eql(2);
-        expect(stack[1]).to.eql(5);
-        expect(stack[2]).to.eql(7);
+        expect(stackValues()[0]).to.eql(2);
+        expect(stackValues()[1]).to.eql(5);
+        expect(stackValues()[2]).to.eql(7);
       });
 
       it("should work with large numbers", () => {
         run("268435455 1000 3333 */MOD");
-        expect(stack[0]).to.eql(1230);
-        expect(stack[1]).to.eql(80538690);
+        expect(stackValues()[0]).to.eql(1230);
+        expect(stackValues()[1]).to.eql(80538690);
       });
     });
 
@@ -402,16 +401,16 @@ function loadTests() {
         run("3");
         run("1+");
         run("5");
-        expect(stack[0]).to.eql(4);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(4);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with negative numbers", () => {
         run("-3");
         run("1+");
         run("5");
-        expect(stack[0]).to.eql(-2);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-2);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -420,16 +419,16 @@ function loadTests() {
         run("3");
         run("1-");
         run("5");
-        expect(stack[0]).to.eql(2);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(2);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with negative numbers", () => {
         run("-3");
         run("1-");
         run("5");
-        expect(stack[0]).to.eql(-4);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-4);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -439,8 +438,8 @@ function loadTests() {
         run("3");
         run(">");
         run("5");
-        expect(stack[0]).to.eql(-1);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-1);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should test false when smaller", () => {
@@ -448,8 +447,8 @@ function loadTests() {
         run("5");
         run(">");
         run("5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should test false when equal", () => {
@@ -457,8 +456,8 @@ function loadTests() {
         run("5");
         run(">");
         run("5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with negative numbers", () => {
@@ -466,28 +465,28 @@ function loadTests() {
         run("-3");
         run(">");
         run("5");
-        expect(stack[0]).to.eql(-1);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-1);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
     describe("NEGATE", () => {
       it("should negate positive number", () => {
         run("7 NEGATE 5");
-        expect(stack[0]).to.eql(-7);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-7);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should negate negative number", () => {
         run("-7 NEGATE 5");
-        expect(stack[0]).to.eql(7);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(7);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should negate negative zero", () => {
         run("0 NEGATE 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -496,16 +495,16 @@ function loadTests() {
         run("0");
         run("0=");
         run("5");
-        expect(stack[0]).to.eql(-1);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-1);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should test false", () => {
         run("23");
         run("0=");
         run("5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -514,16 +513,16 @@ function loadTests() {
         run("2");
         run("0>");
         run("5");
-        expect(stack[0]).to.eql(-1);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(-1);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should test false", () => {
         run("-3");
         run("0>");
         run("5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -533,10 +532,10 @@ function loadTests() {
         run("34");
         run("OVER");
         run("5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(34);
-        expect(stack[2]).to.eql(12);
-        expect(stack[3]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(34);
+        expect(stackValues()[2]).to.eql(12);
+        expect(stackValues()[3]).to.eql(5);
       });
     });
 
@@ -546,9 +545,9 @@ function loadTests() {
         run("34");
         run("SWAP");
         run("5");
-        expect(stack[0]).to.eql(34);
-        expect(stack[1]).to.eql(12);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(34);
+        expect(stackValues()[1]).to.eql(12);
+        expect(stackValues()[2]).to.eql(5);
       });
     });
 
@@ -574,8 +573,8 @@ function loadTests() {
         run("173");
         run("DROP");
         run("190");
-        expect(stack[0]).to.eql(222);
-        expect(stack[1]).to.eql(190);
+        expect(stackValues()[0]).to.eql(222);
+        expect(stackValues()[1]).to.eql(190);
       });
     });
 
@@ -593,7 +592,7 @@ function loadTests() {
         expect(memory8[ptr + 1]).to.eql(0x00);
         expect(memory8[ptr + 2]).to.eql(0x00);
         expect(memory8[ptr + 3]).to.eql(239);
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
       });
     });
 
@@ -601,8 +600,8 @@ function loadTests() {
       it("should take the then branch without else", () => {
         run(`: FOO IF 8 THEN ;`);
         run("1 FOO 5");
-        expect(stack[0]).to.eql(8);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(8);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should not take the then branch without else", () => {
@@ -614,7 +613,7 @@ function loadTests() {
         run(";");
         run("FOO");
         run("5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
       });
 
       it("should take the then branch with else", () => {
@@ -628,8 +627,8 @@ function loadTests() {
         run("1");
         run("FOO");
         run("5");
-        expect(stack[0]).to.eql(8);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(8);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should take the else branch with else", () => {
@@ -643,8 +642,8 @@ function loadTests() {
         run("0");
         run("FOO");
         run("5");
-        expect(stack[0]).to.eql(9);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(9);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should support nested if", () => {
@@ -657,9 +656,9 @@ function loadTests() {
               THEN
               ;`);
         run("0 1 FOO 5");
-        expect(stack[0]).to.eql(9);
-        expect(stack[1]).to.eql(10);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(9);
+        expect(stackValues()[1]).to.eql(10);
+        expect(stackValues()[2]).to.eql(5);
       });
     });
 
@@ -667,23 +666,23 @@ function loadTests() {
       it("should run a loop", () => {
         run(`: FOO 4 0 DO 3 LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(3);
-        expect(stack[2]).to.eql(3);
-        expect(stack[3]).to.eql(3);
-        expect(stack[4]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(3);
+        expect(stackValues()[2]).to.eql(3);
+        expect(stackValues()[3]).to.eql(3);
+        expect(stackValues()[4]).to.eql(5);
       });
 
       it("should run a nested loop", () => {
         run(`: FOO 3 0 DO 2 0 DO 3 LOOP LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(3);
-        expect(stack[2]).to.eql(3);
-        expect(stack[3]).to.eql(3);
-        expect(stack[4]).to.eql(3);
-        expect(stack[5]).to.eql(3);
-        expect(stack[6]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(3);
+        expect(stackValues()[2]).to.eql(3);
+        expect(stackValues()[3]).to.eql(3);
+        expect(stackValues()[4]).to.eql(3);
+        expect(stackValues()[5]).to.eql(3);
+        expect(stackValues()[6]).to.eql(5);
       });
     });
 
@@ -715,20 +714,20 @@ function loadTests() {
       it("should increment a loop", () => {
         run(`: FOO 10 0 DO 3 2 +LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(3);
-        expect(stack[2]).to.eql(3);
-        expect(stack[3]).to.eql(3);
-        expect(stack[4]).to.eql(3);
-        expect(stack[5]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(3);
+        expect(stackValues()[2]).to.eql(3);
+        expect(stackValues()[3]).to.eql(3);
+        expect(stackValues()[4]).to.eql(3);
+        expect(stackValues()[5]).to.eql(5);
       });
 
       it("should increment a loop beyond the index", () => {
         run(`: FOO 10 0 DO 3 8 +LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(3);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(3);
+        expect(stackValues()[2]).to.eql(5);
       });
 
       it("should work with decrementing loops", () => {
@@ -742,23 +741,23 @@ function loadTests() {
       it("should work", () => {
         run(`: FOO 4 0 DO I LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(1);
-        expect(stack[2]).to.eql(2);
-        expect(stack[3]).to.eql(3);
-        expect(stack[4]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(1);
+        expect(stackValues()[2]).to.eql(2);
+        expect(stackValues()[3]).to.eql(3);
+        expect(stackValues()[4]).to.eql(5);
       });
 
       it("should work in a nested loop", () => {
         run(`: FOO 3 0 DO 2 0 DO I LOOP LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(1);
-        expect(stack[2]).to.eql(0);
-        expect(stack[3]).to.eql(1);
-        expect(stack[4]).to.eql(0);
-        expect(stack[5]).to.eql(1);
-        expect(stack[6]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(1);
+        expect(stackValues()[2]).to.eql(0);
+        expect(stackValues()[3]).to.eql(1);
+        expect(stackValues()[4]).to.eql(0);
+        expect(stackValues()[5]).to.eql(1);
+        expect(stackValues()[6]).to.eql(5);
       });
     });
 
@@ -766,25 +765,25 @@ function loadTests() {
       it("should work", () => {
         run(`: FOO 3 0 DO 2 0 DO J LOOP LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(0);
-        expect(stack[2]).to.eql(1);
-        expect(stack[3]).to.eql(1);
-        expect(stack[4]).to.eql(2);
-        expect(stack[5]).to.eql(2);
-        expect(stack[6]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(0);
+        expect(stackValues()[2]).to.eql(1);
+        expect(stackValues()[3]).to.eql(1);
+        expect(stackValues()[4]).to.eql(2);
+        expect(stackValues()[5]).to.eql(2);
+        expect(stackValues()[6]).to.eql(5);
       });
 
       it("should work in a nested loop", () => {
         run(`: FOO 3 0 DO 2 0 DO J LOOP LOOP ;`);
         run("FOO 5");
-        expect(stack[0]).to.eql(0);
-        expect(stack[1]).to.eql(0);
-        expect(stack[2]).to.eql(1);
-        expect(stack[3]).to.eql(1);
-        expect(stack[4]).to.eql(2);
-        expect(stack[5]).to.eql(2);
-        expect(stack[6]).to.eql(5);
+        expect(stackValues()[0]).to.eql(0);
+        expect(stackValues()[1]).to.eql(0);
+        expect(stackValues()[2]).to.eql(1);
+        expect(stackValues()[3]).to.eql(1);
+        expect(stackValues()[4]).to.eql(2);
+        expect(stackValues()[5]).to.eql(2);
+        expect(stackValues()[6]).to.eql(5);
       });
     });
 
@@ -792,16 +791,16 @@ function loadTests() {
       it("should work", () => {
         run(`: FOO BEGIN DUP 2 * DUP 16 < WHILE DUP REPEAT 7 ;`);
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(2);
-        expect(stack[2]).to.eql(2);
-        expect(stack[3]).to.eql(4);
-        expect(stack[4]).to.eql(4);
-        expect(stack[5]).to.eql(8);
-        expect(stack[6]).to.eql(8);
-        expect(stack[7]).to.eql(16);
-        expect(stack[8]).to.eql(7);
-        expect(stack[9]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(2);
+        expect(stackValues()[2]).to.eql(2);
+        expect(stackValues()[3]).to.eql(4);
+        expect(stackValues()[4]).to.eql(4);
+        expect(stackValues()[5]).to.eql(8);
+        expect(stackValues()[6]).to.eql(8);
+        expect(stackValues()[7]).to.eql(16);
+        expect(stackValues()[8]).to.eql(7);
+        expect(stackValues()[9]).to.eql(5);
       });
 
       it.skip("should work with multiple whiles + else", () => {
@@ -809,16 +808,16 @@ function loadTests() {
           `: FOO BEGIN DUP 2 > WHILE DUP 5 < WHILE DUP 1+ REPEAT 123 ELSE 345 THEN 7 ;`
         );
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(2);
-        expect(stack[2]).to.eql(2);
-        expect(stack[3]).to.eql(4);
-        expect(stack[4]).to.eql(4);
-        expect(stack[5]).to.eql(8);
-        expect(stack[6]).to.eql(8);
-        expect(stack[7]).to.eql(16);
-        expect(stack[8]).to.eql(7);
-        expect(stack[9]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(2);
+        expect(stackValues()[2]).to.eql(2);
+        expect(stackValues()[3]).to.eql(4);
+        expect(stackValues()[4]).to.eql(4);
+        expect(stackValues()[5]).to.eql(8);
+        expect(stackValues()[6]).to.eql(8);
+        expect(stackValues()[7]).to.eql(16);
+        expect(stackValues()[8]).to.eql(7);
+        expect(stackValues()[9]).to.eql(5);
       });
     });
 
@@ -826,14 +825,14 @@ function loadTests() {
       it("should work", () => {
         run(`: FOO BEGIN DUP 2 * DUP 16 > UNTIL 7 ;`);
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(2);
-        expect(stack[2]).to.eql(4);
-        expect(stack[3]).to.eql(8);
-        expect(stack[4]).to.eql(16);
-        expect(stack[5]).to.eql(32);
-        expect(stack[6]).to.eql(7);
-        expect(stack[7]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(2);
+        expect(stackValues()[2]).to.eql(4);
+        expect(stackValues()[3]).to.eql(8);
+        expect(stackValues()[4]).to.eql(16);
+        expect(stackValues()[5]).to.eql(32);
+        expect(stackValues()[6]).to.eql(7);
+        expect(stackValues()[7]).to.eql(5);
       });
     });
 
@@ -841,8 +840,8 @@ function loadTests() {
       it("should work", () => {
         run(`: FOO IF 3 EXIT 4 THEN 5 ;`);
         run("1 FOO 6");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(6);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(6);
       });
     });
 
@@ -850,31 +849,31 @@ function loadTests() {
       it("should work", () => {
         run(": FOO ( bad -- x ) 7 ;");
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(7);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(7);
+        expect(stackValues()[2]).to.eql(5);
       });
 
       it("should ignore nesting", () => {
         run(": FOO ( ( bad -- x ) 7 ;");
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(7);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(7);
+        expect(stackValues()[2]).to.eql(5);
       });
     });
 
     describe("CHAR", () => {
       it("should work with a single character", () => {
         run("CHAR A 5");
-        expect(stack[0]).to.eql(65);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(65);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with multiple characters", () => {
         run("CHAR ABC 5");
-        expect(stack[0]).to.eql(65);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(65);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -882,19 +881,19 @@ function loadTests() {
       it("should work with a single character", () => {
         run(": FOO [CHAR] A 5 ;");
         run("4 FOO 6");
-        expect(stack[0]).to.eql(4);
-        expect(stack[1]).to.eql(65);
-        expect(stack[2]).to.eql(5);
-        expect(stack[3]).to.eql(6);
+        expect(stackValues()[0]).to.eql(4);
+        expect(stackValues()[1]).to.eql(65);
+        expect(stackValues()[2]).to.eql(5);
+        expect(stackValues()[3]).to.eql(6);
       });
 
       it("should work with multiple characters", () => {
         run(": FOO [CHAR] ABC 5 ;");
         run("4 FOO 6");
-        expect(stack[0]).to.eql(4);
-        expect(stack[1]).to.eql(65);
-        expect(stack[2]).to.eql(5);
-        expect(stack[3]).to.eql(6);
+        expect(stackValues()[0]).to.eql(4);
+        expect(stackValues()[1]).to.eql(65);
+        expect(stackValues()[2]).to.eql(5);
+        expect(stackValues()[3]).to.eql(6);
       });
     });
 
@@ -902,26 +901,26 @@ function loadTests() {
     //   it("should read a word", () => {
     //     forth.read(" FOO BAR BAZ ");
     //     core.WORD();
-    //     expect(getCountedString(stack[0])).to.eql("FOO");
+    //     expect(getCountedString(stackValues()[0])).to.eql("FOO");
     //   });
     //
     //   it("should read two words", () => {
     //     forth.read(" FOO BAR BAZ ");
     //     core.WORD();
     //     core.WORD();
-    //     expect(getCountedString(stack[1])).to.eql("BAR");
+    //     expect(getCountedString(stackValues()[1])).to.eql("BAR");
     //   });
     //
     //   it("should skip comments", () => {
     //     forth.read("  \\ FOO BAZ\n BART BAZ");
     //     core.WORD();
-    //     expect(getCountedString(stack[0])).to.eql("BART");
+    //     expect(getCountedString(stackValues()[0])).to.eql("BART");
     //   });
     //
     //   it("should stop at end of buffer while parsing word", () => {
     //     forth.read("FOO");
     //     core.WORD();
-    //     expect(getCountedString(stack[0])).to.eql("FOO");
+    //     expect(getCountedString(stackValues()[0])).to.eql("FOO");
     //   });
     //
     //   it("should stop at end of buffer while parsing comments", () => {
@@ -947,42 +946,42 @@ function loadTests() {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stack[0]).to.eql(136120);
-        expect(stack[1]).to.eql(-1);
+        expect(stackValues()[0]).to.eql(136120);
+        expect(stackValues()[1]).to.eql(-1);
       });
 
       it("should find a short word", () => {
         loadString("!");
         run("FIND");
-        expect(stack[0]).to.eql(135168);
-        expect(stack[1]).to.eql(-1);
+        expect(stackValues()[0]).to.eql(135168);
+        expect(stackValues()[1]).to.eql(-1);
       });
 
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stack[0]).to.eql(135304);
-        expect(stack[1]).to.eql(1);
+        expect(stackValues()[0]).to.eql(135304);
+        expect(stackValues()[1]).to.eql(1);
       });
 
       it("should not find an unexisting word", () => {
         loadString("BADWORD");
         run("FIND");
-        expect(stack[1]).to.eql(0);
+        expect(stackValues()[1]).to.eql(0);
       });
 
       it("should not find a very long unexisting word", () => {
         loadString("VERYVERYVERYBADWORD");
         run("FIND");
-        expect(stack[1]).to.eql(0);
+        expect(stackValues()[1]).to.eql(0);
       });
     });
 
     describe("BASE", () => {
       it("should contain the base", () => {
         run("BASE @ 5");
-        expect(stack[0]).to.eql(10);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(10);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -990,8 +989,8 @@ function loadTests() {
     //   it("should read a key", () => {
     //     run("KEY F");
     //     run("5");
-    //     expect(stack[0]).to.eql(70);
-    //     expect(stack[1]).to.eql(5);
+    //     expect(stackValues()[0]).to.eql(70);
+    //     expect(stackValues()[1]).to.eql(5);
     //   });
     // });
 
@@ -999,8 +998,8 @@ function loadTests() {
       it("should put a literal on the stack", () => {
         run("20 : FOO LITERAL ;");
         run("5 FOO");
-        expect(stack[0]).to.eql(5);
-        expect(stack[1]).to.eql(20);
+        expect(stackValues()[0]).to.eql(5);
+        expect(stackValues()[1]).to.eql(20);
       });
     });
 
@@ -1008,9 +1007,9 @@ function loadTests() {
       it("should work", () => {
         run(": FOO [ 20 5 * ] LITERAL ;");
         run("5 FOO 6");
-        expect(stack[0]).to.eql(5);
-        expect(stack[1]).to.eql(100);
-        expect(stack[2]).to.eql(6);
+        expect(stackValues()[0]).to.eql(5);
+        expect(stackValues()[1]).to.eql(100);
+        expect(stackValues()[2]).to.eql(6);
       });
     });
 
@@ -1021,7 +1020,7 @@ function loadTests() {
         memory8[ptr + 1] = 173;
         run(ptr.toString());
         run("C@");
-        expect(stack[0]).to.eql(222);
+        expect(stackValues()[0]).to.eql(222);
       });
 
       it("should fetch an unaligned character", () => {
@@ -1030,7 +1029,7 @@ function loadTests() {
         memory8[ptr + 1] = 173;
         run((ptr + 1).toString());
         run("C@");
-        expect(stack[0]).to.eql(173);
+        expect(stackValues()[0]).to.eql(173);
       });
     });
 
@@ -1042,7 +1041,7 @@ function loadTests() {
         run("190");
         run(ptr.toString());
         run("C! 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory8[ptr]).to.eql(190);
         expect(memory8[ptr + 1]).to.eql(173);
       });
@@ -1054,7 +1053,7 @@ function loadTests() {
         run("190");
         run((ptr + 1).toString());
         run("C! 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory8[ptr]).to.eql(222);
         expect(memory8[ptr + 1]).to.eql(190);
       });
@@ -1066,8 +1065,8 @@ function loadTests() {
         memory[ptr / 4] = 123456;
         run(ptr.toString());
         run("@ 5");
-        expect(stack[0]).to.eql(123456);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(123456);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -1077,7 +1076,7 @@ function loadTests() {
         run("12345");
         run(ptr.toString());
         run("! 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory[ptr / 4]).to.eql(12345);
       });
     });
@@ -1088,8 +1087,8 @@ function loadTests() {
         run("1234");
         run(",");
         run("HERE");
-        expect(stack[1] - stack[0]).to.eql(4);
-        expect(memory[stack[0] / 4]).to.eql(1234);
+        expect(stackValues()[1] - stackValues()[0]).to.eql(4);
+        expect(memory[stackValues()[0] / 4]).to.eql(1234);
       });
     });
 
@@ -1097,18 +1096,18 @@ function loadTests() {
       it("should work", () => {
         run(': FOO S" Foo Bar" ;');
         run("FOO");
-        expect(stack[1]).to.eql(7);
-        expect(getString(stack[0], stack[1])).to.eql("Foo Bar");
+        expect(stackValues()[1]).to.eql(7);
+        expect(getString(stackValues()[0], stackValues()[1])).to.eql("Foo Bar");
       });
 
       it("should work with 2 strings", () => {
         run(': FOO S" Foo Bar" ;');
         run(': BAR S" Baz Ba" ;');
         run("FOO BAR 5");
-        expect(stack[1]).to.eql(7);
-        expect(getString(stack[0], stack[1])).to.eql("Foo Bar");
-        expect(stack[3]).to.eql(6);
-        expect(getString(stack[2], stack[3])).to.eql("Baz Ba");
+        expect(stackValues()[1]).to.eql(7);
+        expect(getString(stackValues()[0], stackValues()[1])).to.eql("Foo Bar");
+        expect(stackValues()[3]).to.eql(6);
+        expect(getString(stackValues()[2], stackValues()[3])).to.eql("Baz Ba");
       });
     });
 
@@ -1124,7 +1123,7 @@ function loadTests() {
       it("should work", () => {
         run(': FOO ." Foo Bar" ;');
         run("FOO 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(output).to.eql("Foo Bar");
       });
     });
@@ -1139,7 +1138,7 @@ function loadTests() {
         memory8[ptr + 4] = 5;
         run("HERE HERE 10 + 4 MOVE 5");
 
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory8[ptr + 10]).to.eql(1);
         expect(memory8[ptr + 11]).to.eql(2);
         expect(memory8[ptr + 12]).to.eql(3);
@@ -1156,7 +1155,7 @@ function loadTests() {
         memory8[ptr + 4] = 5;
         run("HERE HERE 2 + 4 MOVE 5");
 
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory8[ptr + 0]).to.eql(1);
         expect(memory8[ptr + 1]).to.eql(2);
         expect(memory8[ptr + 2]).to.eql(1);
@@ -1175,7 +1174,7 @@ function loadTests() {
         memory8[ptr + 14] = 5;
         run("HERE 10 + DUP 2 - 4 MOVE 5");
 
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(memory8[ptr + 8]).to.eql(1);
         expect(memory8[ptr + 9]).to.eql(2);
         expect(memory8[ptr + 10]).to.eql(3);
@@ -1190,16 +1189,16 @@ function loadTests() {
       it("should recurse", () => {
         run(": FOO DUP 4 < IF DUP 1+ RECURSE ELSE 12 THEN 13 ;");
         run("1 FOO 5");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(2);
-        expect(stack[2]).to.eql(3);
-        expect(stack[3]).to.eql(4);
-        expect(stack[4]).to.eql(12);
-        expect(stack[5]).to.eql(13);
-        expect(stack[6]).to.eql(13);
-        expect(stack[7]).to.eql(13);
-        expect(stack[8]).to.eql(13);
-        expect(stack[9]).to.eql(5);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(2);
+        expect(stackValues()[2]).to.eql(3);
+        expect(stackValues()[3]).to.eql(4);
+        expect(stackValues()[4]).to.eql(12);
+        expect(stackValues()[5]).to.eql(13);
+        expect(stackValues()[6]).to.eql(13);
+        expect(stackValues()[7]).to.eql(13);
+        expect(stackValues()[8]).to.eql(13);
+        expect(stackValues()[9]).to.eql(5);
       });
     });
 
@@ -1210,9 +1209,9 @@ function loadTests() {
         run("CREATE DUP");
         run("HERE");
         run("LATEST");
-        expect(stack[2] - stack[0]).to.eql(4 + 4 + 4);
-        expect(stack[3]).to.eql(stack[0]);
-        expect(stack[3]).to.not.eql(stack[1]);
+        expect(stackValues()[2] - stackValues()[0]).to.eql(4 + 4 + 4);
+        expect(stackValues()[3]).to.eql(stackValues()[0]);
+        expect(stackValues()[3]).to.not.eql(stackValues()[1]);
       });
 
       it("should create findable words", () => {
@@ -1221,27 +1220,27 @@ function loadTests() {
         run("CREATE BAM");
         loadString("FOOBAR");
         run("FIND");
-        expect(stack[1]).to.eql(stack[0]);
-        expect(stack[2]).to.eql(-1);
+        expect(stackValues()[1]).to.eql(stackValues()[0]);
+        expect(stackValues()[2]).to.eql(-1);
       });
 
       it("should align unaligned words", () => {
         run("CREATE DUPE");
         run("HERE");
-        expect(stack[0] % 4).to.eql(0);
+        expect(stackValues()[0] % 4).to.eql(0);
       });
 
       it("should align aligned words", () => {
         run("CREATE DUP");
         run("HERE");
-        expect(stack[0] % 4).to.eql(0);
+        expect(stackValues()[0] % 4).to.eql(0);
       });
 
       it("should assign default semantics to created words", () => {
         run("CREATE DUP");
         run("HERE");
         run("DUP");
-        expect(stack[0]).to.eql(stack[1]);
+        expect(stackValues()[0]).to.eql(stackValues()[1]);
       });
     });
 
@@ -1250,7 +1249,7 @@ function loadTests() {
         run(': FOOBAR ." Hello World" ; IMMEDIATE');
         expect(output).to.eql("");
         run("FOOBAR 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(output).to.eql("Hello World");
       });
 
@@ -1265,35 +1264,35 @@ function loadTests() {
       it("should compile multiple instructions", () => {
         run(": FOOBAR 4 * ;");
         run("3 FOOBAR");
-        expect(stack[0]).to.eql(12);
+        expect(stackValues()[0]).to.eql(12);
       });
 
       it("should compile negative numbers", () => {
         run(": FOOBAR -4 * ;");
         run("3 FOOBAR");
-        expect(stack[0]).to.eql(-12);
+        expect(stackValues()[0]).to.eql(-12);
       });
 
       it("should compile large numbers", () => {
         run(": FOOBAR 111111 * ;");
         run("3 FOOBAR");
-        expect(stack[0]).to.eql(333333);
+        expect(stackValues()[0]).to.eql(333333);
       });
 
       it("should skip comments", () => {
         run(": FOOBAR\n\n    \\ Test string  \n  4 * ;");
         run("3 FOOBAR 5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should override", () => {
         run(": FOOBAR 3 ;");
         run(": FOOBAR FOOBAR 4 ;");
         run("FOOBAR 5");
-        expect(stack[0]).to.eql(3);
-        expect(stack[1]).to.eql(4);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(3);
+        expect(stackValues()[1]).to.eql(4);
+        expect(stackValues()[2]).to.eql(5);
       });
 
       it("should compile a name with an illegal WASM character", () => {
@@ -1307,7 +1306,7 @@ function loadTests() {
         run(': FOO POSTPONE FOOBAR ." !!" ;');
         expect(output).to.eql("");
         run("FOO 5");
-        expect(stack[0]).to.eql(5);
+        expect(stackValues()[0]).to.eql(5);
         expect(output).to.eql("Hello World!!");
       });
 
@@ -1327,17 +1326,17 @@ function loadTests() {
         run("VARIABLE FOO");
         run("12 FOO !");
         run("FOO @ 5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should work with two variables", () => {
         run("VARIABLE FOO VARIABLE BAR");
         run("12 FOO ! 13 BAR !");
         run("FOO @ BAR @ 5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(13);
-        expect(stack[2]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(13);
+        expect(stackValues()[2]).to.eql(5);
       });
     });
 
@@ -1345,8 +1344,8 @@ function loadTests() {
       it("should work", () => {
         run("12 CONSTANT FOO");
         run("FOO 5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -1362,16 +1361,16 @@ function loadTests() {
       it("should store a value", () => {
         run("12 VALUE FOO");
         run("FOO 5");
-        expect(stack[0]).to.eql(12);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(12);
+        expect(stackValues()[1]).to.eql(5);
       });
 
       it("should update a value", () => {
         run("12 VALUE FOO");
         run("13 TO FOO");
         run("FOO 5");
-        expect(stack[0]).to.eql(13);
-        expect(stack[1]).to.eql(5);
+        expect(stackValues()[0]).to.eql(13);
+        expect(stackValues()[1]).to.eql(5);
       });
     });
 
@@ -1380,21 +1379,21 @@ function loadTests() {
         run(": ID CREATE 23 , DOES> @ ;");
         run("ID boo");
         run("boo boo 44");
-        expect(stack[0]).to.eql(23);
-        expect(stack[1]).to.eql(23);
-        expect(stack[2]).to.eql(44);
+        expect(stackValues()[0]).to.eql(23);
+        expect(stackValues()[1]).to.eql(23);
+        expect(stackValues()[2]).to.eql(44);
       });
     });
 
     describe("UWIDTH", () => {
       it("should work with 3 digits", () => {
         run("123 UWIDTH");
-        expect(stack[0]).to.eql(3);
+        expect(stackValues()[0]).to.eql(3);
       });
 
       it("should work with 4 digits", () => {
         run("1234 UWIDTH");
-        expect(stack[0]).to.eql(4);
+        expect(stackValues()[0]).to.eql(4);
       });
     });
 
@@ -1424,10 +1423,10 @@ function loadTests() {
         run("1 2 FOO 7");
         run("8");
         expect(output.trim()).to.eql("");
-        expect(stack[0]).to.eql(1);
-        expect(stack[1]).to.eql(6);
-        expect(stack[2]).to.eql(7);
-        expect(stack[3]).to.eql(8);
+        expect(stackValues()[0]).to.eql(1);
+        expect(stackValues()[1]).to.eql(6);
+        expect(stackValues()[2]).to.eql(7);
+        expect(stackValues()[3]).to.eql(8);
       });
 
       it("should abort if check succeeds", () => {
@@ -1435,21 +1434,21 @@ function loadTests() {
         run("1 5 FOO 7", true);
         run("8");
         expect(output.trim()).to.eql("Error occurred");
-        expect(stack[0]).to.eql(8);
+        expect(stackValues()[0]).to.eql(8);
       });
     });
 
     describe("S>D", () => {
       it("should work with positive number", () => {
         run("2 S>D");
-        expect(stack[0]).to.eql(2);
-        expect(stack[1]).to.eql(0);
+        expect(stackValues()[0]).to.eql(2);
+        expect(stackValues()[1]).to.eql(0);
       });
 
       it("should work with negative number", () => {
         run("-2 S>D");
-        expect(stack[0]).to.eql(-2);
-        expect(stack[1]).to.eql(-1);
+        expect(stackValues()[0]).to.eql(-2);
+        expect(stackValues()[1]).to.eql(-1);
       });
     });
 
@@ -1463,7 +1462,7 @@ function loadTests() {
       it("should run direct sieve", () => {
         run(sieve);
         run("100 sieve_direct");
-        expect(stack[0]).to.eql(97);
+        expect(stackValues()[0]).to.eql(97);
       });
     });
 
