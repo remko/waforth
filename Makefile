@@ -44,7 +44,7 @@ scripts/word.wasm: scripts/word.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
 scripts/word.wasm.hex: scripts/word.wasm
-	hexdump -v -e '16/1 "_u%04X" "\n"' $< | sed 's/_/\\/g; s/\\u    //g; s/.*/    "&"/' > $@
+	hexdump -v -e '16/1 "_%02X" "\n"' $< | sed 's/_/\\/g; s/\\u    //g; s/.*/    "&"/' > $@
 
 clean:
 	-rm -rf $(WASM_FILES) scripts/word.wasm scripts/word.wasm.hex src/waforth.wat.tmp \
