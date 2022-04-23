@@ -20,7 +20,7 @@ check-watch:
 lint:
 	yarn -s lint
 
-wasm: src/waforth.assembled.wat scripts/quadruple.wasm.hex
+wasm: src/waforth.assembled.wat scripts/word.wasm.hex
 
 process: src/waforth.vanilla.wat
 	cp $< src/waforth.wat
@@ -40,13 +40,13 @@ src/waforth.bulkmem.wat: src/waforth.wat
 src/benchmarks/sieve-vanilla.wasm: src/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-scripts/quadruple.wasm: scripts/quadruple.wat
+scripts/word.wasm: scripts/word.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-scripts/quadruple.wasm.hex: scripts/quadruple.wasm
+scripts/word.wasm.hex: scripts/word.wasm
 	hexdump -v -e '16/1 "_u%04X" "\n"' $< | sed 's/_/\\/g; s/\\u    //g; s/.*/    "&"/' > $@
 
 clean:
-	-rm -rf $(WASM_FILES) scripts/quadruple.wasm scripts/quadruple.wasm.hex src/waforth.wat.tmp \
+	-rm -rf $(WASM_FILES) scripts/word.wasm scripts/word.wasm.hex src/waforth.wat.tmp \
 		public/waforth
 
