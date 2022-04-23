@@ -98,7 +98,7 @@ class WAForth {
           try {
             var module = new WebAssembly.Module(data);
             new WebAssembly.Instance(module, {
-              env: { table, memory, tos: -1 },
+              env: { table, memory },
             });
           } catch (e) {
             console.error(e);

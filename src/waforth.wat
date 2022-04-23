@@ -102,7 +102,7 @@
 ;;   MODULE_HEADER_BODY_SIZE_PLACEHOLDER          := 0xFE
 ;;   MODULE_HEADER_LOCAL_COUNT_PLACEHOLDER        := 0xFD
 ;;   MODULE_HEADER_TABLE_INDEX_PLACEHOLDER        := 0xFC
-;;   MODULE_HEADER_TABLE_INITIAl_SIZE_PLACEHOLDER := 0xFB
+;;   MODULE_HEADER_TABLE_INITIAL_SIZE_PLACEHOLDER := 0xFB
 ;;   MODULE_HEADER_FUNCTION_TYPE_PLACEHOLDER      := 0xFA
 (data (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))
   "\00\61\73\6D" ;; Header
@@ -115,14 +115,12 @@
       "\60\01\7f\02\7F\7f" ;; (func (param i32) (result i32) (result i32))
 
 
-  "\02" "\2B" ;; Import section
-    "\03" ;; #Entries
+  "\02" "\20" ;; Import section
+    "\02" ;; #Entries
     "\03\65\6E\76" "\05\74\61\62\6C\65" ;; 'env' . 'table'
       "\01" "\70" "\00" "\FB\00\00\00" ;; table, anyfunc, flags, initial size
     "\03\65\6E\76" "\06\6d\65\6d\6f\72\79" ;; 'env' . 'memory'
       "\02" "\00" "\01" ;; memory
-    "\03\65\6E\76" "\03\74\6f\73" ;; 'env' . 'tos'
-      "\03" "\7F" "\00" ;; global, i32, immutable
 
   "\03" "\02" ;; Function section
     "\01" ;; #Entries
@@ -144,23 +142,23 @@
 
 ;; Compiled module header offsets:
 ;;
-;;   MODULE_HEADER_SIZE := 0x6b
-;;   MODULE_HEADER_CODE_SIZE_OFFSET := 0x5a
-;;   MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 := 0x5e
-;;   MODULE_HEADER_BODY_SIZE_OFFSET := 0x5f
-;;   MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 := 0x63
-;;   MODULE_HEADER_LOCAL_COUNT_OFFSET := 0x64
-;;   MODULE_HEADER_TABLE_INDEX_OFFSET := 0x52
+;;   MODULE_HEADER_SIZE := 0x60
+;;   MODULE_HEADER_CODE_SIZE_OFFSET := 0x4f
+;;   MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 := 0x53
+;;   MODULE_HEADER_BODY_SIZE_OFFSET := 0x54
+;;   MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 := 0x58
+;;   MODULE_HEADER_LOCAL_COUNT_OFFSET := 0x59
+;;   MODULE_HEADER_TABLE_INDEX_OFFSET := 0x47
 ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET := 0x2c
-;;   MODULE_HEADER_FUNCTION_TYPE_OFFSET := 0x4c
+;;   MODULE_HEADER_FUNCTION_TYPE_OFFSET := 0x41
 ;;
-;;   MODULE_BODY_BASE := 0x106b                    (MODULE_HEADER_BASE + 0x6b (; = MODULE_HEADER_SIZE ;))
-;;   MODULE_HEADER_CODE_SIZE_BASE := 0x105a          (MODULE_HEADER_BASE + 0x5a (; = MODULE_HEADER_CODE_SIZE_OFFSET ;))
-;;   MODULE_HEADER_BODY_SIZE_BASE := 0x105f          (MODULE_HEADER_BASE + 0x5f (; = MODULE_HEADER_BODY_SIZE_OFFSET ;))
-;;   MODULE_HEADER_LOCAL_COUNT_BASE := 0x1064        (MODULE_HEADER_BASE + 0x64 (; = MODULE_HEADER_LOCAL_COUNT_OFFSET ;))
-;;   MODULE_HEADER_TABLE_INDEX_BASE := 0x1052        (MODULE_HEADER_BASE + 0x52 (; = MODULE_HEADER_TABLE_INDEX_OFFSET ;))
+;;   MODULE_BODY_BASE := 0x1060                    (MODULE_HEADER_BASE + 0x60 (; = MODULE_HEADER_SIZE ;))
+;;   MODULE_HEADER_CODE_SIZE_BASE := 0x104f          (MODULE_HEADER_BASE + 0x4f (; = MODULE_HEADER_CODE_SIZE_OFFSET ;))
+;;   MODULE_HEADER_BODY_SIZE_BASE := 0x1054          (MODULE_HEADER_BASE + 0x54 (; = MODULE_HEADER_BODY_SIZE_OFFSET ;))
+;;   MODULE_HEADER_LOCAL_COUNT_BASE := 0x1059        (MODULE_HEADER_BASE + 0x59 (; = MODULE_HEADER_LOCAL_COUNT_OFFSET ;))
+;;   MODULE_HEADER_TABLE_INDEX_BASE := 0x1047        (MODULE_HEADER_BASE + 0x47 (; = MODULE_HEADER_TABLE_INDEX_OFFSET ;))
 ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102c  (MODULE_HEADER_BASE + 0x2c (; = MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET ;))
-;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x104c      (MODULE_HEADER_BASE + 0x4c (; = MODULE_HEADER_FUNCTION_TYPE_OFFSET ;))
+;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x1041      (MODULE_HEADER_BASE + 0x41 (; = MODULE_HEADER_FUNCTION_TYPE_OFFSET ;))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1978,8 +1976,8 @@
 ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
 ;; or type 1 (1 param)
 (func $startColon (param $params i32)
-  (i32.store8 (i32.const 0x104c (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $params))
-  (global.set $cp (i32.const 0x106b (; = MODULE_BODY_BASE ;)))
+  (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $params))
+  (global.set $cp (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
   (global.set $currentLocal (i32.sub (local.get $params) (i32.const 1)))
   (global.set $lastLocal (i32.sub (local.get $params) (i32.const 1)))
   (global.set $branchNesting (i32.const -1)))
@@ -1993,26 +1991,26 @@
   ;; Update code size
   (local.set $bodySize (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)))) 
   (i32.store 
-    (i32.const 0x105a (; = MODULE_HEADER_CODE_SIZE_BASE ;))
+    (i32.const 0x104f (; = MODULE_HEADER_CODE_SIZE_BASE ;))
     (call $leb128-4p
         (i32.sub (local.get $bodySize) 
-                (i32.const 0x5e (; = MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 ;)))))
+                (i32.const 0x53 (; = MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 ;)))))
 
   ;; Update body size
   (i32.store 
-    (i32.const 0x105f (; = MODULE_HEADER_BODY_SIZE_BASE ;))
+    (i32.const 0x1054 (; = MODULE_HEADER_BODY_SIZE_BASE ;))
     (call $leb128-4p
         (i32.sub (local.get $bodySize) 
-                (i32.const 0x63 (; = MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 ;)))))
+                (i32.const 0x58 (; = MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 ;)))))
 
   ;; Update #locals
   (i32.store 
-    (i32.const 0x1064 (; = MODULE_HEADER_LOCAL_COUNT_BASE ;))
+    (i32.const 0x1059 (; = MODULE_HEADER_LOCAL_COUNT_BASE ;))
     (call $leb128-4p (i32.add (global.get $lastLocal) (i32.const 1))))
 
   ;; Update table offset
   (i32.store 
-    (i32.const 0x1052 (; = MODULE_HEADER_TABLE_INDEX_BASE ;))
+    (i32.const 0x1047 (; = MODULE_HEADER_TABLE_INDEX_BASE ;))
     (call $leb128-4p (global.get $nextTableIndex)))
   ;; Also store the initial table size to satisfy other tools (e.g. wasm-as)
   (i32.store 
@@ -2295,7 +2293,7 @@
 (global $branchNesting (mut i32) (i32.const -1))
 
 ;; Compilation pointer
-(global $cp (mut i32) (i32.const 0x106b (; = MODULE_BODY_BASE ;)))
+(global $cp (mut i32) (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

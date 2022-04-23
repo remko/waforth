@@ -3,7 +3,6 @@
 (module $quadruple
   (import "env" "table" (table 4 anyfunc))
   (import "env" "memory" (memory 1))
-  (import "env" "tos" (global $tos i32))
 
   (type $void (func (param i32) (result i32)))
   (type $push (func (param i32) (param i32) (result i32)))
