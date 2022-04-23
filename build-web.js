@@ -131,10 +131,7 @@ if (watch) {
     }
     try {
       const data = await fs.promises.readFile(f);
-      res.writeHead(
-        200,
-        f.endsWith(".html") ? { "Content-Type": "text/html" } : undefined
-      );
+      res.writeHead(200);
       res.end(data);
     } catch (err) {
       res.writeHead(404);
