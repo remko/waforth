@@ -2068,8 +2068,6 @@
 
   (global.set $nextTableIndex (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
-
-
 (func $compilePushConst (param $n i32)
   (call $emitSetLocal (i32.const 0)) ;; Save tos currently on operand stack
   (call $emitGetLocal (i32.const 0)) ;; Put tos on operand stack again
