@@ -1978,8 +1978,8 @@
 (func $startColon (param $params i32)
   (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $params))
   (global.set $cp (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
-  (global.set $currentLocal (i32.sub (local.get $params) (i32.const 1)))
-  (global.set $lastLocal (i32.sub (local.get $params) (i32.const 1)))
+  (global.set $currentLocal (local.get $params))
+  (global.set $lastLocal (local.get $params))
   (global.set $branchNesting (i32.const -1)))
 
 (func $endColon
@@ -2006,7 +2006,13 @@
   ;; Update #locals
   (i32.store 
     (i32.const 0x1059 (; = MODULE_HEADER_LOCAL_COUNT_BASE ;))
-    (call $leb128-4p (i32.add (global.get $lastLocal) (i32.const 1))))
+    (call $leb128-4p 
+      (i32.sub 
+        (global.get $lastLocal) 
+        ;; Subtract the number of incoming parameters. We could use a global to keep track of
+        ;; the type, but for now getting this from the module header (where we stored this at
+        ;; start of compilation)
+        (i32.load8_u (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;))))))
 
   ;; Update table offset
   (i32.store 
