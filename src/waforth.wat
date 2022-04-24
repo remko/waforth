@@ -2071,12 +2071,22 @@
 
 
 (func $compilePushConst (param $n i32)
+  (call $emitSetLocal (i32.const 0)) ;; Save tos currently on operand stack
+  (call $emitGetLocal (i32.const 0)) ;; Put tos on operand stack again
   (call $emitConst (local.get $n))
-  (call $emitICall (i32.const 1) (i32.const 1 (; = PUSH_INDEX ;))))
+  (call $compilePush))
 
 (func $compilePushLocal (param $n i32)
+  (call $emitSetLocal (i32.const 0)) ;; Save tos currently on operand stack
+  (call $emitGetLocal (i32.const 0)) ;; Put tos on operand stack again
   (call $emitGetLocal (local.get $n))
-  (call $emitICall (i32.const 1) (i32.const 1 (; = PUSH_INDEX ;))))
+  (call $compilePush))
+
+(func $compilePush
+  (call $emitStore)
+  (call $emitGetLocal (i32.const 0)) ;; Put $tos+4 on operand stack
+  (call $emitConst (i32.const 4))
+  (call $emitAdd))
 
 (func $compileIf
   (call $compilePop)
@@ -2187,8 +2197,12 @@
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
 (func $compilePop
-  (call $emitICall (i32.const 2) (i32.const 2 (; = POP_INDEX ;))))
-
+  (call $emitConst (i32.const 4))
+  (call $emitSub)
+  (call $emitTeeLocal (i32.const 0))
+  (call $emitGetLocal (i32.const 0))
+  (call $emitLoad))
+  
 (func $compileCall (param $tos i32) (param $FINDToken i32) (result i32)
   (local $body i32)
   (local.set $body (call $body (local.get $FINDToken)))
@@ -2265,8 +2279,17 @@
   (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
   (global.set $cp (call $leb128 (global.get $cp) (local.get $n))))
 
+(func $emitTeeLocal (param $n i32)
+  (i32.store8 (global.get $cp) (i32.const 0x22))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (global.set $cp (call $leb128 (global.get $cp) (local.get $n))))
+
 (func $emitAdd
   (i32.store8 (global.get $cp) (i32.const 0x6a))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
+
+(func $emitSub
+  (i32.store8 (global.get $cp) (i32.const 0x6b))
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
 (func $emitEqualsZero
@@ -2289,6 +2312,21 @@
   (i32.store8 (global.get $cp) (i32.const 0x0f))
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
+(func $emitStore
+  (i32.store8 (global.get $cp) (i32.const 0x36))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (i32.store8 (global.get $cp) (i32.const 0x02)) ;; Alignment
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Offset
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
+
+(func $emitLoad
+  (i32.store8 (global.get $cp) (i32.const 0x28))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (i32.store8 (global.get $cp) (i32.const 0x02)) ;; Alignment
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Offset
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Compilation state

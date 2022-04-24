@@ -16,10 +16,18 @@
     (get_local $tos)  
 
     ;; Push
-    (call_indirect (type $push) (i32.const 43) (i32.const 1))
+    (set_local $tos)
+    (i32.store (local.get $tos) (i32.const 43))
+    (i32.add (local.get $tos) (i32.const 4))
 
     ;; Word call
     (call_indirect (type $push) (i32.const 10) (i32.const 9))
+
+    ;; Pop   
+    (tee_local $tos (i32.sub (i32.const 4)))
+    (local.get $tos)
+    (i32.load)
+    (drop)
 
     ;; Conditional
     (if (param i32) (result i32) (i32.ne (call_indirect (type $pop) (i32.const 2)) (i32.const 0))
