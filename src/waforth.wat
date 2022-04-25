@@ -48,11 +48,8 @@
 ;;
 ;; Predefined entries:
 ;;
-;;   PUSH_INDEX := 1
-;;   POP_INDEX := 2
 ;;   PUSH_DATA_ADDRESS_INDEX := 3
 ;;   SET_LATEST_BODY_INDEX := 4
-;;   COMPILE_CALL_INDEX := 5
 ;;   PUSH_INDIRECT_INDEX := 6
 ;;   TYPE_INDEX := 0x85
 ;;   ABORT_INDEX := 0x39
@@ -2342,16 +2339,6 @@
 ;; Word helper functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(func $push (export "push") (param $tos i32) (param $v i32) (result i32)
-  (i32.store (local.get $tos) (local.get $v))
-  (i32.add (local.get $tos) (i32.const 4)))
-(elem (i32.const 1 (; = PUSH_INDEX ;)) $push)
-
-(func $pop (export "pop") (param $tos i32) (result i32) (result i32)
-  (local.tee $tos (i32.sub (local.get $tos) (i32.const 4)))
-  (i32.load (local.get $tos)))
-(elem (i32.const 2 (; = POP_INDEX ;)) $pop)
-
 (func $pushDataAddress (param $tos i32) (param $d i32) (result i32)
   (call $push (local.get $tos) (local.get $d)))
 (elem (i32.const 3 (; = PUSH_DATA_ADDRESS_INDEX ;)) $pushDataAddress)
@@ -2364,10 +2351,17 @@
   (call $push (local.get $tos) (i32.load (local.get $v))))
 (elem (i32.const 6 (; = PUSH_INDIRECT_INDEX ;)) $pushIndirect)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(func $push (export "push") (param $tos i32) (param $v i32) (result i32)
+  (i32.store (local.get $tos) (local.get $v))
+  (i32.add (local.get $tos) (i32.const 4)))
+
+(func $pop (export "pop") (param $tos i32) (result i32) (result i32)
+  (local.tee $tos (i32.sub (local.get $tos) (i32.const 4)))
+  (i32.load (local.get $tos)))
 
 (func $fail (param $tos i32) (param $str i32) (result i32)
   (local.get $tos)
