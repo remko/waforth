@@ -13,10 +13,10 @@
     (local $end1 i32)
     (local $incr1 i32)
 
-    (get_local $tos)  
+    (local.get $tos)  
 
     ;; Push
-    (set_local $tos)
+    (local.set $tos)
     (i32.store (local.get $tos) (i32.const 43))
     (i32.add (local.get $tos) (i32.const 4))
 
@@ -41,16 +41,16 @@
         (nop)))
 
     ;; do loop
-    (set_local $index1 (call_indirect (type $pop) (i32.const 2)))
-    (set_local $end1 (call_indirect (type $pop) (i32.const 2)))
-    (set_local $incr1 (i32.ge_s (get_local $end1) (get_local $index1)))
+    (local.set $index1 (call_indirect (type $pop) (i32.const 2)))
+    (local.set $end1 (call_indirect (type $pop) (i32.const 2)))
+    (local.set $incr1 (i32.ge_s (local.get $end1) (local.get $index1)))
     (block $endDoLoop
       (loop $doLoop
         (nop)
-        (set_local $index1 (i32.add (get_local $index1) (i32.const 1)))
-        (if (i32.eqz (get_local $incr1))
-          (then (br_if $endDoLoop (i32.le_s (get_local $index1) (get_local $end1))))
-          (else (br_if $endDoLoop (i32.ge_s (get_local $index1) (get_local $end1)))))
+        (local.set $index1 (i32.add (local.get $index1) (i32.const 1)))
+        (if (i32.eqz (local.get $incr1))
+          (then (br_if $endDoLoop (i32.le_s (local.get $index1) (local.get $end1))))
+          (else (br_if $endDoLoop (i32.ge_s (local.get $index1) (local.get $end1)))))
         (br $doLoop)))
 
     ;; repeat loop
@@ -68,6 +68,6 @@
       (nop))
 
     
-    (call $word (get_local $n)))
+    (call $word (local.get $n)))
 
   (elem (i32.const 44) $word))
