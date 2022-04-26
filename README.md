@@ -127,9 +127,3 @@ console-based interface around this shell to type Forth code, which you can see
 in action [here](https://el-tramo.be/waforth/).
 
 ![WAForth Console](https://el-tramo.be/waforth/console.gif "WAForth Console")
-
-### Misc notes
-
-- The exposed return stack isn't used. Control flow is kept implicitly in the
-  code (e.g. through branches, indirect calls, ...). This also means that
-  control flow can't be influenced by code.

@@ -48,9 +48,13 @@
 ;;
 ;; Predefined entries:
 ;;
+;;   START_DO_INDEX := 1
+;;   UPDATE_DO_INDEX := 2
 ;;   PUSH_DATA_ADDRESS_INDEX := 3
 ;;   SET_LATEST_BODY_INDEX := 4
+;;   COMPILE_CALL_INDEX := 5
 ;;   PUSH_INDIRECT_INDEX := 6
+;;   END_DO_INDEX := 9
 ;;   TYPE_INDEX := 0x85
 ;;   ABORT_INDEX := 0x39
 ;;   CONSTANT_INDEX := 0x4c
@@ -1064,10 +1068,9 @@
 
 ;; 6.1.1680
 (func $I (param $tos i32) (result i32)
-  (local.get $tos)
-  (call $ensureCompiling)
-  (call $compilePushLocal (i32.sub (global.get $currentLocal) (i32.const 1))))
-(data (i32.const 136316) "l\14\02\00" "\81" (; immediate ;) "I\00\00" "a\00\00\00")
+  (i32.store (local.get $tos) (i32.load (i32.sub (global.get $tors) (i32.const 4))))
+  (i32.add (local.get $tos) (i32.const 4)))
+(data (i32.const 136316) "l\14\02\00" "\01" "I\00\00" "a\00\00\00")
 (elem (i32.const 0x61) $I)
 
 ;; 6.1.1700
@@ -1096,11 +1099,10 @@
 
 ;; 6.1.1730
 (func $J (param $tos i32) (result i32)
-  (local.get $tos)
-  (call $ensureCompiling)
-  (call $compilePushLocal (i32.sub (global.get $currentLocal) (i32.const 4))))
-(data (i32.const 136376) "\a8\14\02\00\81J\00\00e\00\00\00")
-(elem (i32.const 0x65) $J) ;; immediate
+  (i32.store (local.get $tos) (i32.load (i32.sub (global.get $tors) (i32.const 8))))
+  (i32.add (local.get $tos) (i32.const 4)))
+(data (i32.const 136376) "\a8\14\02\00\01J\00\00e\00\00\00")
+(elem (i32.const 0x65) $J)
 
 ;; 6.1.1750
 (func $KEY (param $tos i32) (result i32)
@@ -1478,7 +1480,8 @@
 ;; 6.1.2380
 (func $UNLOOP (param $tos i32) (result i32)
   (local.get $tos)
-  (call $ensureCompiling))
+  (call $ensureCompiling)
+  (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;))))
 (data (i32.const 136912) "\c0\16\02\00\86UNLOOP\00\8a\00\00\00")
 (elem (i32.const 0x8a) $UNLOOP) ;; immediate
 
@@ -2115,6 +2118,8 @@
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitGreaterEqualSigned)
   (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitICall (i32.const 1) (i32.const 1 (; = START_DO_INDEX ;)))
   (call $emitBlock)
   (call $emitLoop))
 
@@ -2123,6 +2128,8 @@
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
   (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitICall (i32.const 1) (i32.const 2 (; = UPDATE_DO_INDEX ;)))
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitGetLocal (global.get $currentLocal))
   (call $emitLesserSigned)
   (call $emitBrIf (i32.const 0))
@@ -2132,7 +2139,9 @@
   (call $compilePop)
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
-  (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))  
+  (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitICall (i32.const 1) (i32.const 2 (; = UPDATE_DO_INDEX ;)))
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
   (call $emitEqualsZero)
   (call $emitIf2)
@@ -2149,6 +2158,7 @@
 ;; Assumes increment is on the operand stack
 (func $compileLoopEnd
   (local $btors i32)
+  (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
   (call $emitEnd)
   (call $emitEnd)
   (global.set $currentLocal (i32.sub (global.get $currentLocal) (i32.const 3)))
@@ -2158,6 +2168,7 @@
   (global.set $tors (local.get $btors)))
 
 (func $compileLeave
+  (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
   (call $emitBr (i32.add (global.get $branchNesting) (i32.const 1))))
 
 (func $compileBegin
@@ -2340,6 +2351,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Word helper functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(func $startDo (param $tos i32) (param $i i32) (result i32)
+  (i32.store (global.get $tors) (local.get $i))
+  (global.set $tors (i32.add (global.get $tors) (i32.const 4)))
+  (local.get $tos))
+(elem (i32.const 1 (; = START_DO_INDEX ;)) $startDo)
+
+(func $endDo (param $tos i32) (result i32)
+  (global.set $tors (i32.sub (global.get $tors) (i32.const 4)))
+  (local.get $tos))
+(elem (i32.const 9 (; = END_DO_INDEX ;)) $endDo)
+
+(func $updateDo (param $tos i32) (param $i i32) (result i32)
+  (i32.store (i32.sub (global.get $tors) (i32.const 4)) (local.get $i))
+  (local.get $tos))
+(elem (i32.const 2 (; = UPDATE_DO_INDEX ;)) $updateDo)
 
 (func $pushDataAddress (param $tos i32) (param $d i32) (result i32)
   (call $push (local.get $tos) (local.get $d)))

@@ -719,7 +719,7 @@ T{ : GD6  ( PAT: T{0 0},{0 0}{1 0}{1 1},{0 0}{1 0}{1 1}{2 0}{2 1}{2 2} )
     LOOP ; -> }T
 T{ 1 GD6 -> 1 }T
 T{ 2 GD6 -> 3 }T
-\ TODO T{ 3 GD6 -> 4 1 2 }T
+T{ 3 GD6 -> 4 1 2 }T
 
 \ ------------------------------------------------------------------------
 TESTING DEFINING WORDS: : ; CONSTANT VARIABLE CREATE DOES> >BODY

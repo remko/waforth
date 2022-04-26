@@ -687,12 +687,12 @@ function loadTests() {
     });
 
     describe("UNLOOP", () => {
-      it.skip("should work with nested loops", () => {
+      it("should work with nested loops", () => {
         run(
           ": GD6 0 3 0 DO I 1+ 0 DO I J + 3 = IF I UNLOOP I UNLOOP EXIT THEN 1+ LOOP LOOP ;"
         );
         run("GD6");
-        expect(stackValues()).to.eql([4, 2, 1]);
+        expect(stackValues()).to.eql([4, 1, 2]);
       });
     });
 
