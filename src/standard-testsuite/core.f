@@ -904,10 +904,10 @@ T{ GS4 123 456
 \ TODO T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
 \ TODO T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
 \ TODO T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
-\ TODO 
-\ TODO : GN2   \ ( -- 16 10 )
-\ TODO    BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;
-\ TODO T{ GN2 -> 10 A }T
+ 
+: GN2   \ ( -- 16 10 )
+   BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;
+T{ GN2 -> 10 A }T
 
 \ ------------------------------------------------------------------------
 TESTING FILL MOVE
