@@ -2095,6 +2095,9 @@
   (call $emitEnd))
 
 (func $compileDo
+  ;; var 1: whether the start index was greater than the end index (necessary for +loop)
+  ;; var 2: current index
+  ;; var 3: end index
   (global.set $currentLocal (i32.add (global.get $currentLocal) (i32.const 3)))
   (if (i32.gt_s (global.get $currentLocal) (global.get $lastLocal))
     (then
@@ -2108,12 +2111,10 @@
   (call $compilePop)
   (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $compilePop)
-  (call $emitSetLocal (global.get $currentLocal))
-  (call $emitGetLocal (global.get $currentLocal))
+  (call $emitTeeLocal (global.get $currentLocal))
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitGreaterEqualSigned)
   (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
-
   (call $emitBlock)
   (call $emitLoop))
 
@@ -2121,38 +2122,33 @@
   (call $emitConst (i32.const 1))
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
-  (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitGetLocal (global.get $currentLocal))
-  (call $emitGreaterEqualSigned)
-  (call $emitBrIf (i32.const 1))
+  (call $emitLesserSigned)
+  (call $emitBrIf (i32.const 0))
   (call $compileLoopEnd))
 
 (func $compilePlusLoop 
   (call $compilePop)
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
-  (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))  
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
   (call $emitEqualsZero)
-  (call $emitIf)
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-  (call $emitGetLocal (global.get $currentLocal))
-  (call $emitLesserSigned)
-  (call $emitBrIf (i32.const 2))
-  (call $emitElse)
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitIf2)
   (call $emitGetLocal (global.get $currentLocal))
   (call $emitGreaterEqualSigned)
-  (call $emitBrIf (i32.const 2))
+  (call $emitBrIf (i32.const 1))
+  (call $emitElse)
+  (call $emitGetLocal (global.get $currentLocal))
+  (call $emitLesserSigned)
+  (call $emitBrIf (i32.const 1))
   (call $emitEnd)
-
   (call $compileLoopEnd))
 
 ;; Assumes increment is on the operand stack
 (func $compileLoopEnd
   (local $btors i32)
-  (call $emitBr (i32.const 0))
   (call $emitEnd)
   (call $emitEnd)
   (global.set $currentLocal (i32.sub (global.get $currentLocal) (i32.const 3)))
@@ -2242,6 +2238,12 @@
   (i32.store8 (global.get $cp) (i32.const 0x04))
   (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
   (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Block type
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
+
+(func $emitIf2
+  (i32.store8 (global.get $cp) (i32.const 0x04))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (i32.store8 (global.get $cp) (i32.const 0x01)) ;; Block type
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
 (func $emitElse
