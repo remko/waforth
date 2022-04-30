@@ -1975,11 +1975,13 @@
 ;; Initializes compilation.
 ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
 ;; or type 1 (1 param)
-(func $startColon (param $params i32)
-  (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $params))
+(func $startColon (param $type i32)
+  (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $type))
   (global.set $cp (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
-  (global.set $currentLocal (local.get $params))
-  (global.set $lastLocal (local.get $params))
+  (global.set $firstTemporaryLocal (i32.add (local.get $type) (i32.const 1)))
+  ;; 1 temporary local for computations
+  (global.set $currentLocal (global.get $firstTemporaryLocal))
+  (global.set $lastLocal (global.get $currentLocal))
   (global.set $branchNesting (i32.const -1)))
 
 (func $endColon
@@ -2007,12 +2009,11 @@
   (i32.store 
     (i32.const 0x1059 (; = MODULE_HEADER_LOCAL_COUNT_BASE ;))
     (call $leb128-4p 
-      (i32.sub 
-        (global.get $lastLocal) 
-        ;; Subtract the number of incoming parameters. We could use a global to keep track of
-        ;; the type, but for now getting this from the module header (where we stored this at
-        ;; start of compilation)
-        (i32.load8_u (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;))))))
+      (i32.add
+        (i32.sub 
+          (global.get $lastLocal) 
+          (global.get $firstTemporaryLocal))
+        (i32.const 1))))
 
   ;; Update table offset
   (i32.store 
@@ -2098,10 +2099,9 @@
   (call $emitEnd))
 
 (func $compileDo
-  ;; var 1: whether the start index was greater than the end index (necessary for +loop)
-  ;; var 2: current index
-  ;; var 3: end index
-  (global.set $currentLocal (i32.add (global.get $currentLocal) (i32.const 3)))
+  ;; 1: $diff_i = end index - current index
+  ;; 2: $end_i
+  (global.set $currentLocal (i32.add (global.get $currentLocal) (i32.const 2)))
   (if (i32.gt_s (global.get $currentLocal) (global.get $lastLocal))
     (then
       (global.set $lastLocal (global.get $currentLocal))))
@@ -2111,48 +2111,70 @@
   (global.set $tors (i32.add (global.get $tors) (i32.const 4)))
   (global.set $branchNesting (i32.const 0))
 
+  ;; $1 = current index (temporary)
   (call $compilePop)
   (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  ;; $end_i = end index
   (call $compilePop)
-  (call $emitTeeLocal (global.get $currentLocal))
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-  (call $emitGreaterEqualSigned)
-  (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
+  (call $emitSetLocal (global.get $currentLocal))
+
+  ;; startDo $1
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitICall (i32.const 1) (i32.const 1 (; = START_DO_INDEX ;)))
+  
+  ;; $diff = $1 - $end_i
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitGetLocal (global.get $currentLocal))
+  (call $emitSub)
+  (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+
   (call $emitBlock)
   (call $emitLoop))
 
 (func $compileLoop 
+  ;; $diff = $diff + 1
   (call $emitConst (i32.const 1))
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
   (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-  (call $emitICall (i32.const 1) (i32.const 2 (; = UPDATE_DO_INDEX ;)))
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+
+  ;; updateDo $diff + $end_i
   (call $emitGetLocal (global.get $currentLocal))
-  (call $emitLesserSigned)
+  (call $emitAdd)
+  (call $emitICall (i32.const 1) (i32.const 2 (; = UPDATE_DO_INDEX ;)))
+  
+  ;; loop if $diff != 0
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitConst (i32.const 0))
+  (call $emitNotEqual)
   (call $emitBrIf (i32.const 0))
+
   (call $compileLoopEnd))
 
 (func $compilePlusLoop 
+  ;; temporarily store old diff 
+  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+  (call $emitSetLocal (global.get $firstTemporaryLocal))
+
+  ;; $diff = $diff + $n
   (call $compilePop)
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
   (call $emitAdd)
   (call $emitTeeLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
+
+  ;; updateDo $diff + $end_i
+  (call $emitGetLocal (global.get $currentLocal))
+  (call $emitAdd)
   (call $emitICall (i32.const 1) (i32.const 2 (; = UPDATE_DO_INDEX ;)))
+
+  ;; compare signs to see if limit crossed
   (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
-  (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
-  (call $emitEqualsZero)
-  (call $emitIf2)
-  (call $emitGetLocal (global.get $currentLocal))
+  (call $emitGetLocal (global.get $firstTemporaryLocal))
+  (call $emitXOR)
+  (call $emitConst (i32.const 0))
   (call $emitGreaterEqualSigned)
-  (call $emitBrIf (i32.const 1))
-  (call $emitElse)
-  (call $emitGetLocal (global.get $currentLocal))
-  (call $emitLesserSigned)
-  (call $emitBrIf (i32.const 1))
-  (call $emitEnd)
+  (call $emitBrIf (i32.const 0))
+  
   (call $compileLoopEnd))
 
 ;; Assumes increment is on the operand stack
@@ -2161,7 +2183,7 @@
   (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
   (call $emitEnd)
   (call $emitEnd)
-  (global.set $currentLocal (i32.sub (global.get $currentLocal) (i32.const 3)))
+  (global.set $currentLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
 
   ;; Restore branch nesting
   (global.set $branchNesting (i32.load (local.tee $btors (i32.sub (global.get $tors) (i32.const 4)))))
@@ -2251,12 +2273,6 @@
   (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Block type
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
-(func $emitIf2
-  (i32.store8 (global.get $cp) (i32.const 0x04))
-  (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-  (i32.store8 (global.get $cp) (i32.const 0x01)) ;; Block type
-  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
-
 (func $emitElse
   (i32.store8 (global.get $cp) (i32.const 0x05))
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
@@ -2298,6 +2314,10 @@
 
 (func $emitSub
   (i32.store8 (global.get $cp) (i32.const 0x6b))
+  (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
+
+(func $emitXOR
+  (i32.store8 (global.get $cp) (i32.const 0x73))
   (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
 (func $emitEqualsZero
@@ -2342,6 +2362,7 @@
 
 (global $currentLocal (mut i32) (i32.const 0))
 (global $lastLocal (mut i32) (i32.const -1))
+(global $firstTemporaryLocal (mut i32) (i32.const 0))
 (global $branchNesting (mut i32) (i32.const -1))
 
 ;; Compilation pointer
