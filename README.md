@@ -17,9 +17,6 @@ and the I/O primitives to read and write a character to a screen.
 The WebAssembly module containing the interpreter, dynamic compiler, and 
 all built-in words comes down to 12k (6k gzipped), with an extra 7k (3k gzipped) for the JavaScript wrapper and web UI.
 
-Parts of the implementation were influenced by
-[jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary).
-
 WAForth is still in an experimental stage. It implements most of the [ANS Core
 Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
 [Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
@@ -49,7 +46,7 @@ To run the development server:
 
 ## Testing
 
-The tests are served from `/tests` by the development server.
+The tests are served from `/waforth/tests` by the development server.
 
 You can also run the tests in Node.JS by running
 
