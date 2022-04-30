@@ -368,6 +368,30 @@ function loadTests() {
       });
     });
 
+    describe("FM/MOD", () => {
+      it("should work", () => {
+        run("7 S>D 3 FM/MOD");
+        expect(stackValues()).to.eql([1, 2]);
+      });
+
+      it("should work with negative divisor", () => {
+        run("7 S>D -3 FM/MOD");
+        expect(stackValues()).to.eql([-2, -3]);
+      });
+
+      it("should work with large dividend", () => {
+        run("0 INVERT 1 4 FM/MOD");
+        expect(stackValues()).to.eql([3, 2147483647]);
+      });
+    });
+
+    describe("UM/MOD", () => {
+      it("should work", () => {
+        run("1 0 2 UM/MOD");
+        expect(stackValues()).to.eql([1, 0]);
+      });
+    });
+
     describe("*/", () => {
       it("should work with small numbers", () => {
         run("10 3 5 */ 5");

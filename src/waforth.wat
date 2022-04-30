@@ -1044,12 +1044,25 @@
   (local $btos i32)
   (local $bbbtos i32)
   (local $n1 i64)
-  (local $n2 i32)
-  (i32.store (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))
-              (i32.wrap_i64 (i64.rem_s (local.tee $n1 (i64.load (local.get $bbbtos)))
-                            (i64.extend_i32_s (local.tee $n2 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))))))
-  (i32.store (i32.sub (local.get $tos) (i32.const 8))
-              (i32.wrap_i64 (i64.div_s (local.get $n1) (i64.extend_i32_s (local.get $n2)))))
+  (local $n2 i64)
+  (local $n2_32 i32)
+  (local $q i32)
+  (local $mod i32)
+  (local.set $mod
+    (i32.wrap_i64 
+      (i64.rem_s 
+        (local.tee $n1 (i64.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))))
+        (local.tee $n2 (i64.extend_i32_s (local.tee $n2_32 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))))))
+  (local.set $q (i32.wrap_i64 (i64.div_s (local.get $n1) (local.get $n2))))
+  (if 
+      (i32.and 
+        (i32.ne (local.get $mod (i32.const 0))) 
+        (i64.lt_s (i64.xor (local.get $n1) (local.get $n2)) (i64.const 0)))
+    (then
+      (local.set $q (i32.sub (local.get $q) (i32.const 1)))
+      (local.set $mod (i32.add (local.get $mod) (local.get $n2_32)))))
+  (i32.store (local.get $bbbtos) (local.get $mod))
+  (i32.store (i32.sub (local.get $tos) (i32.const 8)) (local.get $q))
   (local.get $btos))
 (data (i32.const 136268) "<\14\02\00\06FM/MOD\00^\00\00\00")
 (elem (i32.const 0x5e) $FM/MOD)
@@ -1118,7 +1131,6 @@
   (call $compileLeave))
 (data (i32.const 136400) "\c4\14\02\00\85LEAVE\00\00g\00\00\00")
 (elem (i32.const 0x67) $LEAVE) ;; immediate
-
 
 ;; 6.1.1780
 (func $LITERAL (param $tos i32) (result i32)
@@ -1357,13 +1369,30 @@
 (data (i32.const 136704) "\f4\15\02\00\03S>D|\00\00\00")
 (elem (i32.const 0x7c) $S>D)
 
+;; 6.1.2210
 (func $SIGN (param $tos i32) (result i32)
   (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
 (data (i32.const 136716) "\00\16\02\00\04SIGN\00\00\00}\00\00\00")
 (elem (i32.const 0x7d) $SIGN)
 
+;; 6.1.2214
+;; See e.g. https://www.nimblemachines.com/symmetric-division-considered-harmful/
 (func $SM/REM (param $tos i32) (result i32)
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (local $btos i32)
+  (local $bbbtos i32)
+  (local $n1 i64)
+  (local $n2 i64)
+  (i32.store 
+    (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))
+    (i32.wrap_i64 
+      (i64.rem_s 
+        (local.tee $n1 (i64.load (local.get $bbbtos)))
+        (local.tee $n2 (i64.extend_i32_s (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))))))
+  (i32.store 
+    (i32.sub (local.get $tos) (i32.const 8))
+    (i32.wrap_i64 
+      (i64.div_s (local.get $n1) (local.get $n2))))
+  (local.get $btos))
 (data (i32.const 136732) "\0c\16\02\00\06SM/REM\00~\00\00\00")
 (elem (i32.const 0x7e) $SM/REM)
 
@@ -1472,8 +1501,23 @@
 (data (i32.const 136884) "\a8\16\02\00\03UM*\88\00\00\00")
 (elem (i32.const 0x88) $UM*)
 
+;; 6.1.2370
 (func $UM/MOD (param $tos i32) (result i32)
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (local $btos i32)
+  (local $bbbtos i32)
+  (local $n1 i64)
+  (local $n2 i64)
+  (i32.store 
+    (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))
+    (i32.wrap_i64 
+      (i64.rem_u 
+        (local.tee $n1 (i64.load (local.get $bbbtos)))
+        (local.tee $n2 (i64.extend_i32_u (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))))))
+  (i32.store 
+    (i32.sub (local.get $tos) (i32.const 8))
+    (i32.wrap_i64 
+      (i64.div_u (local.get $n1) (local.get $n2))))
+  (local.get $btos))
 (data (i32.const 136896) "\b4\16\02\00\06UM/MOD\00\89\00\00\00")
 (elem (i32.const 0x89) $UM/MOD) ;; TODO: Rename
 
