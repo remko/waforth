@@ -1476,6 +1476,26 @@ function loadTests() {
       });
     });
 
+    describe(">NUMBER", () => {
+      it("should work", () => {
+        run(': FOO 0 0 S" 123AB" >NUMBER ;');
+        run("FOO");
+        expect(stackValues()).to.eql([123, 0, 137403, 2]);
+      });
+
+      it("should work with init", () => {
+        run(': FOO 1 0 S" 1" >NUMBER ;');
+        run("FOO");
+        expect(stackValues()).to.eql([11, 0, 137401, 0]);
+      });
+
+      it("should not parse sign", () => {
+        run(': FOO 0 0 S" -" >NUMBER ;');
+        run("FOO");
+        expect(stackValues()).to.eql([0, 0, 137400, 1]);
+      });
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);

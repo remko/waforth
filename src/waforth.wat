@@ -596,8 +596,25 @@
 (data (i32.const 135632) "\c0\11\02\00\03>IN4\00\00\00")
 (elem (i32.const 0x34) $>IN)
 
+;; 6.1.0570
 (func $>NUMBER (param $tos i32) (result i32) 
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (local $btos i32)
+  (local $bbtos i32)
+  (local $bbbbtos i32)
+  (local $value i64)
+  (local $rest i32)
+  (local $restcount i32)
+  (call $number
+    (i64.load (local.tee $bbbbtos (i32.sub (local.get $tos) (i32.const 16))))
+    (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
+    (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
+  (local.set $restcount)
+  (local.set $rest)
+  (local.set $value)
+  (i32.store (local.get $btos) (local.get $restcount))
+  (i32.store (local.get $bbtos) (local.get $rest))
+  (i64.store (local.get $bbbbtos) (local.get $value))
+  (local.get $tos))
 (data (i32.const 135644) "\d0\11\02\00\07>NUMBER5\00\00\00")
 (elem (i32.const 0x35) $>NUMBER)
 
@@ -1859,6 +1876,7 @@
   (local $FINDResult i32)
   (local $FINDToken i32)
   (local $error i32)
+  (local $number i32)
   (local.set $error (i32.const 0))
   (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
   (local.get $tos)
@@ -1871,15 +1889,19 @@
       (local.set $FINDToken (call $pop))
       (if (param i32) (result i32) (i32.eqz (local.get $FINDResult))
         (then ;; Not in the dictionary. Is it a number?
-          (if (param i32) (result i32) (i32.eqz (call $number))
+          (if (param i32 i32) (result i32) (i32.eqz (call $readNumber))
             (then ;; It's a number. Are we compiling?
+              (local.set $number)
               (if (param i32) (result i32) (i32.ne (i32.load (i32.const 0x104 (; = STATE_BASE ;))) (i32.const 0))
                 (then
                   ;; We're compiling. Pop it off the stack and 
                   ;; add it to the compiled list
-                  (call $compilePushConst (call $pop)))))
-                ;; We're not compiling. Leave the number on the stack.
+                  (call $compilePushConst (local.get $number)))
+                (else 
+                  ;; We're not compiling. Put the number on the stack.
+                  (call $push (local.get $number)))))
             (else ;; It's not a number.
+              (drop)
               (call $fail (i32.const 0x20000))))) ;; undefined word
         (else ;; Found the word. 
           ;; Are we compiling or is it immediate?
@@ -1933,61 +1955,68 @@
     (call $push (i32.const 0x200 (; = WORD_BASE ;))))
 
 
-;; Reads a number from the word buffer, and puts it on the stack. 
-;; Returns -1 if an error occurred.
-;; TODO: Support other bases
-(func $number (param $tos i32) (result i32) (result i32)
-  (local $sign i32)
+(func $readNumber (result i32 i32)
   (local $length i32)
-  (local $char i32)
+  (local $restcount i32)
   (local $value i32)
-  (local $base i32)
+  (if (i32.eqz (local.tee $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
+    (return (i32.const -1) (i32.const -1)))
+  (call $number (i64.const 0) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length) )
+  (local.set $restcount)
+  (drop)
+  (i32.wrap_i64)
+  (local.get $restcount))
+
+;; Parse a number
+;; Returns (number, unparsed start address, unparsed length)
+(func $number (param $value i64) (param $addr i32) (param $length i32) (result i64 i32 i32)
   (local $p i32)
+  (local $sign i64)
+  (local $char i32)
+  (local $base i32)
   (local $end i32)
-  (local $n i32)
-
-  (local.get $tos)
-  (if (param i32) (result i32) (i32.eqz (local.tee $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
-    (return (i32.const -1)))
-
-  (local.set $p (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
-  (local.set $end (i32.add (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length)))
+  (local $n i32)  
+  (local.set $p (local.get $addr))
+  (local.set $end (i32.add (local.get $p) (local.get $length)))  
   (local.set $base (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
 
   ;; Read first character
-  (if (i32.eq (local.tee $char (i32.load8_u (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
-              (i32.const 0x2d (; '-' ;)))
+  (if (i32.eq (local.tee $char (i32.load8_u (local.get $p))) (i32.const 0x2d (; '-' ;)))
     (then 
-      (local.set $sign (i32.const -1))
-      (local.set $char (i32.const 48 (; '0' ;) )))
+      (local.set $sign (i64.const -1))
+      (local.set $char (i32.const 48 (; '0' ;) ))
+      (if (i32.eq (local.get $length) (i32.const 1))
+        (then
+          (return (local.get $value) (local.get $p) (local.get $length)))))
     (else 
-      (local.set $sign (i32.const 1))))
+      (local.set $sign (i64.const 1))))
 
   ;; Read all characters
-  (local.set $value (i32.const 0))
-  (block $endLoop (param i32) (result i32)
-    (loop $loop (param i32) (result i32)
-      (if (param i32) (result i32) (i32.lt_s (local.get $char) (i32.const 48 (; '0' ;) ))
-        (return (i32.const -1)))
-
-      (if (param i32) (result i32) (i32.le_s (local.get $char) (i32.const 57 (; '9' ;) ))
+  (block $endLoop
+    (loop $loop
+      (if (i32.lt_s (local.get $char) (i32.const 48 (; '0' ;) ))
+        (br $endLoop))      
+      (if (i32.le_s (local.get $char) (i32.const 57 (; '9' ;) ))
         (then 
           (local.set $n (i32.sub (local.get $char) (i32.const 48))))
         (else
-          (if (param i32) (result i32) (i32.lt_s (local.get $char) (i32.const 65 (; 'A' ;) ))
-            (return (i32.const -1)))
-          (local.set $n (i32.sub (local.get $char) (i32.const 55)))
-          (if (param i32) (result i32) (i32.ge_s (local.get $n) (local.get $base))
-            (return (i32.const -1)))))
-
-      (local.set $value (i32.add (i32.mul (local.get $value) (local.get $base))
-                                  (local.get $n)))
+          (if (i32.lt_s (local.get $char) (i32.const 65 (; 'A' ;) ))
+            (br $endLoop))
+          (local.set $n (i32.sub (local.get $char) (i32.const 55)))))
+      (if (i32.ge_s (local.get $n) (local.get $base))
+        (br $endLoop))
+      (local.set $value 
+        (i64.add 
+          (i64.mul (local.get $value) (i64.extend_i32_u (local.get $base)))
+          (i64.extend_i32_u (local.get $n))))
       (local.set $p (i32.add (local.get $p) (i32.const 1)))
       (br_if $endLoop (i32.eq (local.get $p) (local.get $end)))
       (local.set $char (i32.load8_s (local.get $p)))
       (br $loop)))
-  (call $push (i32.mul (local.get $sign) (local.get $value)))
-  (i32.const 0))
+
+  (i64.mul (local.get $sign) (local.get $value))
+  (local.get $p) 
+  (i32.sub (local.get $end) (local.get $p)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interpreter state
