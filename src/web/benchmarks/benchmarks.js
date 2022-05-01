@@ -2,7 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import WAForth from "../WAForth";
 import sieve from "../../examples/sieve.f";
-import sieveVanillaModule from "./sieve-vanilla.wat";
+import sieveWasmModule from "./sieve/sieve.wat";
+import sieveJS from "./sieve/sieve.js";
 import update from "immutability-helper";
 import "./benchmarks.css";
 
@@ -23,14 +24,14 @@ setup.push(
   })
 );
 
-let sieveVanilla;
+let sieveWasm;
 setup.push(
-  WebAssembly.instantiate(sieveVanillaModule, {
+  WebAssembly.instantiate(sieveWasmModule, {
     js: {
       print: (x) => console.log(x),
     },
   }).then((instance) => {
-    sieveVanilla = instance.instance.exports.sieve;
+    sieveWasm = instance.instance.exports.sieve;
   })
 );
 
@@ -48,9 +49,16 @@ const benchmarks = [
     },
   },
   {
-    name: "sieve-vanilla",
+    name: "sieve-raw-wasm",
     fn: () => {
-      return sieveVanilla(LIMIT);
+      return sieveWasm(LIMIT);
+    },
+  },
+  {
+    name: "sieve-js",
+    fn: () => {
+      const r = sieveJS(LIMIT);
+      return r[r.length - 1];
     },
   },
 ];
