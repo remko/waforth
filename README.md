@@ -1,10 +1,10 @@
 <img src="./doc/logo.svg" height="64">
 
-# [WAForth](https://el-tramo.be/waforth): Forth Interpreter+Compiler for WebAssembly
+# [WAForth](https://mko.re/waforth): Forth Interpreter+Compiler for WebAssembly
 
 WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
-[here](https://el-tramo.be/waforth/).
+[here](https://mko.re/waforth/).
 
 It is [entirely written in (raw)
 WebAssembly](https://github.com/remko/waforth/blob/master/src/waforth.wat), and
@@ -15,7 +15,7 @@ yet](https://webassembly.org/docs/future-features/#platform-independent-just-in-
 and the I/O primitives to read and write a character to a screen.
 
 The WebAssembly module containing the interpreter, dynamic compiler, and 
-all built-in words comes down to 12k (6k gzipped), with an extra 7k (3k gzipped) for the JavaScript wrapper and web UI.
+all built-in words comes down to 13k (6k gzipped), with an extra 7k (3k gzipped) for the JavaScript wrapper and web UI.
 
 WAForth is still in an experimental stage. It implements most of the [ANS Core
 Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
@@ -121,6 +121,6 @@ Forth code.
 
 To tie everything together into an interactive system, there's a small
 console-based interface around this shell to type Forth code, which you can see
-in action [here](https://el-tramo.be/waforth/).
+in action [here](https://mko.re/waforth/).
 
-![WAForth Console](https://el-tramo.be/waforth/console.gif "WAForth Console")
+![WAForth Console](https://mko.re/waforth/console.gif "WAForth Console")

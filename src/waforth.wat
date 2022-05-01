@@ -355,12 +355,10 @@
   (local $btos i32)
   (local $bbtos i32)
   (local $divisor i32)
-  (local.get $tos)
-  (if (param i32) (result i32) (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
-    (call $fail (i32.const 0x20014))) ;; division by 0
+  (if (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
+    (return (call $fail (local.get $tos) (i32.const 0x20014)))) ;; division by 0
   (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
               (i32.div_s (i32.load (local.get $bbtos)) (local.get $divisor)))
-  (drop)
   (local.get $btos))
 (data (i32.const 135356) "\b0\10\02\00\01/\00\00\1f\00\00\00")
 (elem (i32.const 0x1f) $/)
@@ -392,7 +390,6 @@
 (data (i32.const 135384) "\c8\10\02\00\020<\00!\00\00\00")
 (elem (i32.const 0x21) $0<)
 
-
 ;; 6.1.0270
 (func $0= (param $tos i32) (result i32)
   (local $btos i32)
@@ -421,7 +418,6 @@
   (local.get $tos))
 (data (i32.const 135420) "\f0\10\02\00\021-\00$\00\00\00")
 (elem (i32.const 0x24) $1-)
-
 
 ;; 6.1.0310
 (func $2! (param $tos i32) (result i32)
@@ -583,8 +579,7 @@
 (func $>BODY (param $tos i32) (result i32)
   (local $btos i32)
   (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
-              (i32.add (call $body (i32.load (local.get $btos)))
-                      (i32.const 4)))
+    (i32.add (call $body (i32.load (local.get $btos))) (i32.const 4)))
   (local.get $tos))
 (data (i32.const 135616) "\b4\11\02\00\05>BODY\00\003\00\00\00")
 (elem (i32.const 0x33) $>BODY)
@@ -629,11 +624,13 @@
 ;; 6.1.0630 
 (func $?DUP (param $tos i32) (result i32)
   (local $btos i32)
-  (if (result i32) (i32.ne (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
-              (i32.const 0))
+  (if (result i32) 
+      (i32.ne 
+        (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
+        (i32.const 0))
     (then
       (i32.store (local.get $tos)
-                  (i32.load (local.get $btos)))
+        (i32.load (local.get $btos)))
       (i32.add (local.get $tos) (i32.const 4)))
     (else 
       (local.get $tos))))
@@ -644,7 +641,7 @@
 (func $@ (param $tos i32) (result i32)
   (local $btos i32)
   (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
-              (i32.load (i32.load (local.get $btos))))
+    (i32.load (i32.load (local.get $btos))))
   (local.get $tos))
 (data (i32.const 135688) "\f8\11\02\00\01@\00\008\00\00\00")
 (elem (i32.const 0x38) $@)
@@ -652,9 +649,8 @@
 ;; 6.1.0670 ABORT 
 (func $ABORT (param $tos i32) (result i32)
   (call $QUIT (i32.const 0x10000 (; = STACK_BASE ;))))
-;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
 (data (i32.const 135700) "\08\12\02\00\05ABORT\00\009\00\00\00")
-(elem (i32.const 0x39) $ABORT) ;; none
+(elem (i32.const 0x39 (; = ABORT_INDEX ;)) $ABORT) ;; none
 
 ;; 6.1.0680 ABORT"
 (func $ABORTq (param $tos i32) (result i32)
@@ -917,9 +913,8 @@
 
 ;; 6.1.1290
 (func $DUP (param $tos i32) (result i32)
-  (i32.store
-  (local.get $tos)
-  (i32.load (i32.sub (local.get $tos) (i32.const 4))))
+  (i32.store (local.get $tos)
+    (i32.load (i32.sub (local.get $tos) (i32.const 4))))
   (i32.add (local.get $tos) (i32.const 4)))
 (data (i32.const 136120) "\a8\13\02\00\03DUPU\00\00\00")
 (elem (i32.const 0x55) $DUP)
@@ -1319,7 +1314,6 @@
 (data (i32.const 136632) "\ac\15\02\00\87RECURSEw\00\00\00")
 (elem (i32.const 0x77) $RECURSE) ;; immediate
 
-
 ;; 6.1.2140
 (func $REPEAT (param $tos i32) (result i32)
   (local.get $tos)
@@ -1382,7 +1376,7 @@
   (local $btos i32)
   (i64.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
               (i64.extend_i32_s (i32.load (local.get $btos))))
- (i32.add (local.get $tos) (i32.const 4)))
+  (i32.add (local.get $tos) (i32.const 4)))
 (data (i32.const 136704) "\f4\15\02\00\03S>D|\00\00\00")
 (elem (i32.const 0x7c) $S>D)
 
@@ -1649,10 +1643,10 @@
 (func $PICK (param $tos i32) (result i32)
   (local $btos i32)
   (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
-              (i32.load (i32.sub (local.get $tos) 
-                                (i32.shl (i32.add (i32.load (local.get $btos))
-                                                  (i32.const 2))
-                                          (i32.const 2)))))
+    (i32.load 
+      (i32.sub 
+        (local.get $tos) 
+        (i32.shl (i32.add (i32.load (local.get $btos)) (i32.const 2)) (i32.const 2)))))
   (local.get $tos))
 (data (i32.const 137088) "p\17\02\00\04PICK\00\00\00\96\00\00\00")
 (elem (i32.const 0x96) $PICK)
@@ -2544,6 +2538,7 @@
       (i32.load (i32.add (global.get $latest) (i32.const 4)))
       (i32.const 0x20 (; = F_HIDDEN ;)))))
 
+;; Drop-in replacement of memory.copy
 (func $memcopy (param $dst i32) (param $src i32) (param $n i32)
   (local $end i32)
   (if (i32.gt_u (local.get $dst) (local.get $src))
@@ -2568,15 +2563,16 @@
           (local.set $dst (i32.add (local.get $dst) (i32.const 1)))
           (br $loop))))))
 
+  ;; Drop-in replacement of memory.fill
   (func $memset (param $dst i32) (param $c i32) (param $n i32)
-  (local $end i32)
-  (local.set $end (i32.add (local.get $dst) (local.get $n)))
-  (block $endLoop
-    (loop $loop
-      (br_if $endLoop (i32.eq (local.get $dst) (local.get $end)))
-      (i32.store8 (local.get $dst) (local.get $c))
-      (local.set $dst (i32.add (local.get $dst) (i32.const 1)))
-      (br $loop))))
+    (local $end i32)
+    (local.set $end (i32.add (local.get $dst) (local.get $n)))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.eq (local.get $dst) (local.get $end)))
+        (i32.store8 (local.get $dst) (local.get $c))
+        (local.set $dst (i32.add (local.get $dst) (i32.const 1)))
+        (br $loop))))
 
 ;; LEB128 with fixed 4 bytes (with padding bytes)
 ;; This means we can only represent 28 bits, which should be plenty.
