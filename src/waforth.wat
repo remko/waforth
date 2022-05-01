@@ -85,6 +85,7 @@
 ;;   RETURN_STACK_BASE  :=  0x2000
 ;;   STACK_BASE         := 0x10000
 ;;   STRINGS_BASE       := 0x20000
+;;   PICTURED_OUTPUT_BASE := 0x21000 (filled backward)
 ;;   DICTIONARY_BASE    := 0x21000
 (memory (export "memory") 1600 (; = MEMORY_SIZE_PAGES ;))
 
@@ -214,16 +215,49 @@
 (data (i32.const 0x21000 (; = DICTIONARY_BASE ;)) "\00\00\00\00\01!\00\00\10\00\00\00")
 (elem (i32.const 0x10) $!)
 
-(func $# (param $tos i32) (result i32) 
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+(func $# (param $tos i32) (result i32)
+  (local $v i64)
+  (local $base i64)
+  (local $bbtos i32)
+  (local $m i64)
+  (local $npo i32)
+  (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x100 (; = BASE_BASE ;)))))
+  (local.set $v (i64.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
+  (local.set $m (i64.rem_u (local.get $v) (local.get $base)))
+  (local.set $v (i64.div_u (local.get $v) (local.get $base)))
+  (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1)))
+    (call $numberToChar (i32.wrap_i64 (local.get $m))))
+  (i64.store (local.get $bbtos) (local.get $v))
+  (global.set $po (local.get $npo))
+  (local.get $tos))
 (data (i32.const 135180) "\00\10\02\00\01#\00\00\11\00\00\00")
 (elem (i32.const 0x11) $#)
 
-(func $#> (param $tos i32) (result i32) (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+(func $#> (param $tos i32) (result i32)
+  (i32.store (i32.sub (local.get $tos) (i32.const 8)) (global.get $po))
+  (i32.store (i32.sub (local.get $tos) (i32.const 4)) (i32.sub (i32.const 0x21000 (; = PICTURED_OUTPUT_BASE ;)) (global.get $po)))
+  (local.get $tos))
 (data (i32.const 135192) "\0c\10\02\00\02#>\00\12\00\00\00")
 (elem (i32.const 0x12) $#>)
 
-(func $#S (param $tos i32) (result i32) (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+(func $#S (param $tos i32) (result i32) 
+  (local $v i64)
+  (local $base i64)
+  (local $bbtos i32)
+  (local $m i64)
+  (local $po i32)
+  (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x100 (; = BASE_BASE ;)))))
+  (local.set $v (i64.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
+  (local.set $po (global.get $po))
+  (loop $loop
+    (local.set $m (i64.rem_u (local.get $v) (local.get $base)))
+    (local.set $v (i64.div_u (local.get $v) (local.get $base)))
+    (i32.store8 (local.tee $po (i32.sub (local.get $po) (i32.const 1)))
+      (call $numberToChar (i32.wrap_i64 (local.get $m))))
+    (br_if $loop (i64.ne (local.get $v) (i64.const 0))))
+  (i64.store (local.get $bbtos) (local.get $v))
+  (global.set $po (local.get $po))
+  (local.get $tos))
 (data (i32.const 135204) "\18\10\02\00\02#S\00\13\00\00\00")
 (elem (i32.const 0x13) $#S)
 
@@ -549,7 +583,8 @@
 (elem (i32.const 0x2f) $<)
 
 (func $<# (param $tos i32) (result i32)
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (global.set $po (i32.const 0x21000 (; = PICTURED_OUTPUT_BASE ;)))
+  (local.get $tos))
 (data (i32.const 135580) "\90\11\02\00\02<#\000\00\00\00")
 (elem (i32.const 0x30) $<#)
 
@@ -942,6 +977,7 @@
 (data (i32.const 136164) "\d4\13\02\00" "\2b" (; HIDDEN ;) "UNUSED1____" "X\00\00\00")
 (elem (i32.const 0x58) $UNUSED1)
 
+;; 6.1.1345
 (func $ENVIRONMENT? (param $tos i32) (result i32)
   (local $addr i32)
   (local $len i32)
@@ -1111,7 +1147,13 @@
 (elem (i32.const 0x5f) $HERE)
 
 (func $HOLD (param $tos i32) (result i32)
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (local $btos i32)
+  (local $npo i32)
+  (i32.store8 
+    (local.tee $npo (i32.sub (global.get $po) (i32.const 1)))
+    (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
+  (global.set $po (local.get $npo))
+  (local.get $btos))
 (data (i32.const 136300) "\5c\14\02\00\04HOLD\00\00\00`\00\00\00")
 (elem (i32.const 0x60) $HOLD)
 
@@ -1406,7 +1448,13 @@
 
 ;; 6.1.2210
 (func $SIGN (param $tos i32) (result i32)
-  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+  (local $btos i32)
+  (local $npo i32)
+  (if (i32.lt_s (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))) (i32.const 0))
+    (then 
+      (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1))) (i32.const 0x2D (; '-' ;)))
+      (global.set $po (local.get $npo))))
+  (local.get $btos))
 (data (i32.const 136716) "\00\16\02\00\04SIGN\00\00\00}\00\00\00")
 (elem (i32.const 0x7d) $SIGN)
 
@@ -1835,11 +1883,7 @@
   (if (i32.eqz (local.get $v))
     (then)
     (else (call $U._ (local.get $v) (local.get $base))))
-  (if (i32.ge_u (local.get $m) (i32.const 10))
-    (then
-      (call $shell_emit (i32.add (local.get $m) (i32.const 0x37))))
-    (else
-      (call $shell_emit (i32.add (local.get $m) (i32.const 0x30))))))
+  (call $shell_emit (call $numberToChar (local.get $m))))
 
 ;; 15.6.1.0220
 (func $.S (param $tos i32) (result i32)
@@ -2058,6 +2102,8 @@
 (global $here (mut i32) (i32.const 0x218c4))
 (global $nextTableIndex (mut i32) (i32.const 0xaa (; = NEXT_TABLE_INDEX ;)))
 
+;; Pictured output pointer
+(global $po (mut i32) (i32.const -1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Compiler functions
@@ -2688,6 +2734,12 @@
       (return (local.get $n))))
   (unreachable))
 
+  (func $numberToChar (param $v i32) (result i32)
+    (if (result i32) (i32.ge_u (local.get $v) (i32.const 10))
+      (then
+        (i32.add (local.get $v) (i32.const 0x37)))
+      (else
+        (i32.add (local.get $v) (i32.const 0x30)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API Functions

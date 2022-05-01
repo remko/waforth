@@ -818,57 +818,57 @@ TESTING <# # #S #> HOLD SIGN BASE >NUMBER HEX DECIMAL
       R> DROP 2DROP <FALSE>      \ LENGTHS MISMATCH
    THEN ;
 
-\ TODO : GP1  <# 41 HOLD 42 HOLD 0 0 #> S" BA" S= ;
-\ TODO T{ GP1 -> <TRUE> }T
-\ TODO 
-\ TODO : GP2  <# -1 SIGN 0 SIGN -1 SIGN 0 0 #> S" --" S= ;
-\ TODO T{ GP2 -> <TRUE> }T
-\ TODO 
-\ TODO : GP3  <# 1 0 # # #> S" 01" S= ;
-\ TODO T{ GP3 -> <TRUE> }T
-\ TODO 
-\ TODO : GP4  <# 1 0 #S #> S" 1" S= ;
-\ TODO T{ GP4 -> <TRUE> }T
+: GP1  <# 41 HOLD 42 HOLD 0 0 #> S" BA" S= ;
+T{ GP1 -> <TRUE> }T
+ 
+: GP2  <# -1 SIGN 0 SIGN -1 SIGN 0 0 #> S" --" S= ;
+T{ GP2 -> <TRUE> }T
+ 
+: GP3  <# 1 0 # # #> S" 01" S= ;
+T{ GP3 -> <TRUE> }T
+ 
+: GP4  <# 1 0 #S #> S" 1" S= ;
+T{ GP4 -> <TRUE> }T
 
 24 CONSTANT MAX-BASE         \ BASE 2 .. 36
 : COUNT-BITS
    0 0 INVERT BEGIN DUP WHILE >R 1+ R> 2* REPEAT DROP ;
 COUNT-BITS 2* CONSTANT #BITS-UD      \ NUMBER OF BITS IN UD
 
-\ TODO : GP5
-\ TODO    BASE @ <TRUE>
-\ TODO    MAX-BASE 1+ 2 DO         \ FOR EACH POSSIBLE BASE
-\ TODO       I BASE !            \ TBD: ASSUMES BASE WORKS
-\ TODO       I 0 <# #S #> S" 10" S= AND
-\ TODO    LOOP
-\ TODO    SWAP BASE ! ;
-\ TODO T{ GP5 -> <TRUE> }T
-\ TODO 
-\ TODO : GP6
-\ TODO    BASE @ >R  2 BASE !
-\ TODO    MAX-UINT MAX-UINT <# #S #>      \ MAXIMUM UD TO BINARY
-\ TODO    R> BASE !            \ S: C-ADDR U
-\ TODO    DUP #BITS-UD = SWAP
-\ TODO    0 DO               \ S: C-ADDR FLAG
-\ TODO       OVER C@ [CHAR] 1 = AND      \ ALL ONES
-\ TODO       >R CHAR+ R>
-\ TODO    LOOP SWAP DROP ;
-\ TODO T{ GP6 -> <TRUE> }T
-\ TODO 
-\ TODO : GP7
-\ TODO    BASE @ >R    MAX-BASE BASE !
-\ TODO    <TRUE>
-\ TODO    A 0 DO
-\ TODO       I 0 <# #S #>
-\ TODO       1 = SWAP C@ I 30 + = AND AND
-\ TODO    LOOP
-\ TODO    MAX-BASE A DO
-\ TODO       I 0 <# #S #>
-\ TODO       1 = SWAP C@ 41 I A - + = AND AND
-\ TODO    LOOP
-\ TODO    R> BASE ! ;
-\ TODO 
-\ TODO T{ GP7 -> <TRUE> }T
+: GP5
+   BASE @ <TRUE>
+   MAX-BASE 1+ 2 DO         \ FOR EACH POSSIBLE BASE
+      I BASE !            \ TBD: ASSUMES BASE WORKS
+      I 0 <# #S #> S" 10" S= AND
+   LOOP
+   SWAP BASE ! ;
+T{ GP5 -> <TRUE> }T
+
+: GP6
+   BASE @ >R  2 BASE !
+   MAX-UINT MAX-UINT <# #S #>      \ MAXIMUM UD TO BINARY
+   R> BASE !            \ S: C-ADDR U
+   DUP #BITS-UD = SWAP
+   0 DO               \ S: C-ADDR FLAG
+      OVER C@ [CHAR] 1 = AND      \ ALL ONES
+      >R CHAR+ R>
+   LOOP SWAP DROP ;
+T{ GP6 -> <TRUE> }T
+
+: GP7
+   BASE @ >R    MAX-BASE BASE !
+   <TRUE>
+   A 0 DO
+      I 0 <# #S #>
+      1 = SWAP C@ I 30 + = AND AND
+   LOOP
+   MAX-BASE A DO
+      I 0 <# #S #>
+      1 = SWAP C@ 41 I A - + = AND AND
+   LOOP
+   R> BASE ! ;
+
+T{ GP7 -> <TRUE> }T
 
 \ >NUMBER TESTS
 CREATE GN-BUF 0 C,
@@ -893,17 +893,17 @@ T{ 0 0 GN' G' 10 >NUMBER-BASED -> 0 0 GN-STRING }T
 T{ 0 0 GN' G' MAX-BASE >NUMBER-BASED -> 10 0 GN-CONSUMED }T
 T{ 0 0 GN' Z' MAX-BASE >NUMBER-BASED -> 23 0 GN-CONSUMED }T
 
-\ TODO : GN1   \ ( UD BASE -- UD' LEN ) UD SHOULD EQUAL UD' AND LEN SHOULD BE ZERO.
-\ TODO    BASE @ >R BASE !
-\ TODO    <# #S #>
-\ TODO    0 0 2SWAP >NUMBER SWAP DROP      \ RETURN LENGTH ONLY
-\ TODO    R> BASE ! ;
-\ TODO T{ 0 0 2 GN1 -> 0 0 0 }T
-\ TODO T{ MAX-UINT 0 2 GN1 -> MAX-UINT 0 0 }T
-\ TODO T{ MAX-UINT DUP 2 GN1 -> MAX-UINT DUP 0 }T
-\ TODO T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
-\ TODO T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
-\ TODO T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
+: GN1   \ ( UD BASE -- UD' LEN ) UD SHOULD EQUAL UD' AND LEN SHOULD BE ZERO.
+   BASE @ >R BASE !
+   <# #S #>
+   0 0 2SWAP >NUMBER SWAP DROP      \ RETURN LENGTH ONLY
+   R> BASE ! ;
+T{ 0 0 2 GN1 -> 0 0 0 }T
+T{ MAX-UINT 0 2 GN1 -> MAX-UINT 0 0 }T
+T{ MAX-UINT DUP 2 GN1 -> MAX-UINT DUP 0 }T
+T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
+T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
+T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
  
 : GN2   \ ( -- 16 10 )
    BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;

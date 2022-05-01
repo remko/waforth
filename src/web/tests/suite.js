@@ -1522,6 +1522,41 @@ function loadTests() {
       });
     });
 
+    describe("HOLD", () => {
+      it("should work", () => {
+        run("<# 65 HOLD 66 HOLD 0 0 #> TYPE");
+        expect(output.trim()).to.eql("BA");
+        expect(stackValues()).to.eql([]);
+      });
+    });
+
+    describe("SIGN", () => {
+      it("should support positive", () => {
+        run("<# 65 HOLD 123 SIGN 66 HOLD 0 0 #> TYPE");
+        expect(output.trim()).to.eql("BA");
+        expect(stackValues()).to.eql([]);
+      });
+
+      it("should support negative", () => {
+        run("<# 65 HOLD -123 SIGN 66 HOLD 0 0 #> TYPE");
+        expect(output.trim()).to.eql("B-A");
+        expect(stackValues()).to.eql([]);
+      });
+    });
+
+    describe("#", () => {
+      it("should work", () => {
+        run("<# 123 0 # #> TYPE");
+        expect(output.trim()).to.eql("3");
+        expect(stackValues()).to.eql([]);
+      });
+    });
+
+    it("should work", () => {
+      run("<# 12345 0 # # 46 HOLD #S #> TYPE");
+      expect(output.trim()).to.eql("123.45");
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);
