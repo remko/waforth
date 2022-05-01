@@ -176,8 +176,6 @@
 (data (i32.const 0x20084) "\0F" "not implemented")
 (data (i32.const 0x20090) "\11" "ADDRESS-UNIT-BITS")
 (data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
-(data (i32.const 0x200B2) "\04" "CORE")
-(data (i32.const 0x200B7) "\08" "CORE-EXT")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Built-in words
@@ -997,20 +995,8 @@
           (i32.store (local.get $btos) (i32.const -1))
           (return (local.get $tos)))
         (else
-          (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200B3) (i32.const 0x04) (; "CORE" ;))
-            (then
-              (i32.store (local.get $bbtos) (i32.const 0))
-              (i32.store (local.get $btos) (i32.const -1))
-              (return (local.get $tos)))
-            (else
-              (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200B8) (i32.const 0x08) (; "CORE-EXT" ;))
-                (then
-                  (i32.store (local.get $bbtos) (i32.const 0))
-                  (i32.store (local.get $btos) (i32.const -1))
-                  (return (local.get $tos)))
-                (else
-                  (i32.store (local.get $bbtos) (i32.const 0))
-                  (return (local.get $btos))))))))))
+          (i32.store (local.get $bbtos) (i32.const 0))
+          (return (local.get $btos))))))
   (unreachable))
 (data (i32.const 0x218ac) "\9c\18\02\00" "\0c" "ENVIRONMENT?000" "\a9\00\00\00")
 (elem (i32.const 0xa9) $ENVIRONMENT?)

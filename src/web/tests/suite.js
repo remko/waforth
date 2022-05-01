@@ -1509,12 +1509,6 @@ function loadTests() {
         expect(stackValues()).to.eql([255, -1]);
       });
 
-      it("should return CORE", () => {
-        run(': FOO S" CORE" ENVIRONMENT? ;');
-        run("FOO");
-        expect(stackValues()).to.eql([0, -1]);
-      });
-
       it("should work for unsupported queries", () => {
         run(': FOO S" UNSUPPORTED" ENVIRONMENT? ;');
         run("FOO");
