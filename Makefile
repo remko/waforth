@@ -40,6 +40,9 @@ src/waforth.bulkmem.wat: src/waforth.wat
 src/benchmarks/sieve-vanilla.wasm: src/benchmarks/sieve-vanilla.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
+src/benchmarks/sieve-c.js:
+	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ -sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
 scripts/word.wasm: scripts/word.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
