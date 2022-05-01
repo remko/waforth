@@ -48,14 +48,6 @@ const benchmarks = [
     },
   },
   {
-    name: "sieve-direct",
-    fn: () => {
-      outputBuffer = [];
-      forth.run(`${LIMIT} sieve_direct .`);
-      return outputBuffer.join("");
-    },
-  },
-  {
     name: "sieve-vanilla",
     fn: () => {
       return sieveVanilla(LIMIT);

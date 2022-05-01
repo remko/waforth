@@ -1557,12 +1557,6 @@ function loadTests() {
         run("100 sieve");
         expect(output.trim()).to.eql("97");
       });
-
-      it("should run direct sieve", () => {
-        run(sieve);
-        run("100 sieve_direct");
-        expect(stackValues()[0]).to.eql(97);
-      });
     });
 
     describe("standard test suite", () => {
@@ -1595,7 +1589,6 @@ function loadTests() {
         expect(output).to.include(
           "YOU SHOULD SEE TWO SEPARATE LINES:\nLINE 1\nLINE 2\n"
         );
-        // These 2 are wrong
         expect(output).to.include(
           "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -80000000 7FFFFFFF \n"
         );

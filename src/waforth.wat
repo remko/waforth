@@ -975,6 +975,12 @@
 (data (i32.const 136164) "\d4\13\02\00" "\2b" (; HIDDEN ;) "UNUSED1____" "X\00\00\00")
 (elem (i32.const 0x58) $UNUSED1)
 
+;; TODO: Remove
+(func $UNUSED2 (param $tos i32) (result i32)
+  (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
+(data (i32.const 137224) "\f8\17\02\00" "\2c" "UNUSED______\00\00\00" "\9f\00\00\00")
+(elem (i32.const 0x9f) $UNUSED2)
+
 ;; 6.1.1345
 (func $ENVIRONMENT? (param $tos i32) (result i32)
   (local $addr i32)
@@ -2760,73 +2766,3 @@
 (func (export "set_state") (param $latest i32) (param $here i32)
   (global.set $latest (local.get $latest))
   (global.set $here (local.get $here)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; A sieve with direct calls. Only here for benchmarking
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(func $sieve_prime (param $tos i32) (result i32)
-  (local.get $tos)
-  (call $HERE) (call $+) 
-  (call $C@) (call $0=))
-
-(func $sieve_composite (param $tos i32) (result i32)
-  (local.get $tos)
-  (call $HERE)
-  (call $+)
-  (local.set $tos)
-  (i32.store (local.get $tos) (i32.const 1))
-  (i32.add (local.get $tos) (i32.const 4))
-  (call $SWAP)
-  (call $C!))
-
-(func $sieve (param $tos i32) (result i32)
-  (local $i i32)
-  (local $end i32)
-  (local.get $tos)
-  (call $HERE) 
-  (call $OVER) 
-  (call $ERASE)
-  (call $push (i32.const 2))
-  (block $endLoop1  (param i32) (result i32) 
-    (loop $loop1  (param i32) (result i32) 
-      (call $2DUP)
-      (call $DUP) 
-      (call $*) 
-      (call $>)
-      (br_if $endLoop1 (i32.eqz (call $pop)))
-      (call $DUP) 
-      (call $sieve_prime)
-      (if (param i32) (result i32)  (i32.ne (call $pop) (i32.const 0))
-        (then
-          (call $2DUP) 
-          (call $DUP) 
-          (call $*)
-          (local.set $i (call $pop))
-          (local.set $end (call $pop))
-          (loop $loop2 (param i32) (result i32) 
-            (call $push (local.get $i))
-            (call $sieve_composite) 
-            (call $DUP)
-            (local.set $i (i32.add (call $pop) (local.get $i)))
-            (br_if $loop2 (i32.lt_s (local.get $i) (local.get $end))))))
-      (call $1+)
-      (br $loop1)))
-  (call $DROP) 
-  (call $push (i32.const 1))
-  (call $SWAP) 
-  (call $push (i32.const 2))
-  (local.set $i (call $pop))
-  (local.set $end (call $pop))
-  (loop $loop (param i32) (result i32) 
-    (call $push (local.get $i))
-    (call $sieve_prime) 
-    (if (param i32) (result i32) (i32.ne (call $pop) (i32.const 0))
-      (then
-        (call $DROP)
-        (call $push (local.get $i))))
-    (local.set $i (i32.add (i32.const 1) (local.get $i)))
-    (br_if $loop (i32.lt_s (local.get $i) (local.get $end)))))
-(data (i32.const 137224) "\f8\17\02\00" "\0c" "sieve_direct\00\00\00" "\9f\00\00\00")
-(elem (i32.const 0x9f) $sieve)
