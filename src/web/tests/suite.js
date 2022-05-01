@@ -1480,19 +1480,45 @@ function loadTests() {
       it("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([123, 0, 137403, 2]);
+        expect(stackValues()).to.eql([123, 0, 137427, 2]);
       });
 
       it("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([11, 0, 137401, 0]);
+        expect(stackValues()).to.eql([11, 0, 137425, 0]);
       });
 
       it("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([0, 0, 137400, 1]);
+        expect(stackValues()).to.eql([0, 0, 137424, 1]);
+      });
+    });
+
+    describe("ENVIRONMENT?", () => {
+      it("should return ADDRESS-UNIT-BITS", () => {
+        run(': FOO S" ADDRESS-UNIT-BITS" ENVIRONMENT? ;');
+        run("FOO");
+        expect(stackValues()).to.eql([8, -1]);
+      });
+
+      it("should return COUNTED-STRING", () => {
+        run(': FOO S" /COUNTED-STRING" ENVIRONMENT? ;');
+        run("FOO");
+        expect(stackValues()).to.eql([255, -1]);
+      });
+
+      it("should return CORE", () => {
+        run(': FOO S" CORE" ENVIRONMENT? ;');
+        run("FOO");
+        expect(stackValues()).to.eql([0, -1]);
+      });
+
+      it("should work for unsupported queries", () => {
+        run(': FOO S" UNSUPPORTED" ENVIRONMENT? ;');
+        run("FOO");
+        expect(stackValues()).to.eql([0]);
       });
     });
 

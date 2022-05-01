@@ -58,9 +58,9 @@
 ;;   TYPE_INDEX := 0x85
 ;;   ABORT_INDEX := 0x39
 ;;   CONSTANT_INDEX := 0x4c
-;;   NEXT_TABLE_INDEX := 0xa9   (; Next available table index for a compiled word ;)
+;;   NEXT_TABLE_INDEX := 0xaa   (; Next available table index for a compiled word ;)
 
-(table (export "table") 0xa9 (; = NEXT_TABLE_INDEX ;) funcref)
+(table (export "table") 0xaa (; = NEXT_TABLE_INDEX ;) funcref)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -173,7 +173,10 @@
 (data (i32.const 0x2004C) "\09" "missing \22")
 (data (i32.const 0x2005C) "\24" "word not supported in interpret mode")
 (data (i32.const 0x20084) "\0F" "not implemented")
-
+(data (i32.const 0x20090) "\11" "ADDRESS-UNIT-BITS")
+(data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
+(data (i32.const 0x200B2) "\04" "CORE")
+(data (i32.const 0x200B7) "\08" "CORE-EXT")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Built-in words
@@ -454,7 +457,6 @@
   (call $@))
 (data (i32.const 135468) " \11\02\00\022@\00(\00\00\00")
 (elem (i32.const 0x28) $2@)
-
 
 ;; 6.1.0370 
 (func $2DROP (param $tos i32) (result i32)
@@ -934,10 +936,48 @@
 (data (i32.const 136148) "\c4\13\02\00\04EMIT\00\00\00W\00\00\00")
 (elem (i32.const 0x57) $EMIT)
 
-(func $ENVIRONMENT (param $tos i32) (result i32)
+;; TODO: Remove
+(func $UNUSED1 (param $tos i32) (result i32)
   (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
-(data (i32.const 136164) "\d4\13\02\00\0bENVIRONMENTX\00\00\00")
-(elem (i32.const 0x58) $ENVIRONMENT)
+(data (i32.const 136164) "\d4\13\02\00" "\2b" (; HIDDEN ;) "UNUSED1____" "X\00\00\00")
+(elem (i32.const 0x58) $UNUSED1)
+
+(func $ENVIRONMENT? (param $tos i32) (result i32)
+  (local $addr i32)
+  (local $len i32)
+  (local $btos i32)
+  (local $bbtos i32)
+  (local.set $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
+  (local.set $len (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
+  (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091) (i32.const 0x11) (; "ADDRESS-UNIT-BITS" ;))
+    (then
+      (i32.store (local.get $bbtos) (i32.const 8))
+      (i32.store (local.get $btos) (i32.const -1))
+      (return (local.get $tos)))
+    (else 
+      (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200A3) (i32.const 0x0F) (; "/COUNTED-STRING" ;))
+        (then
+          (i32.store (local.get $bbtos) (i32.const 255))
+          (i32.store (local.get $btos) (i32.const -1))
+          (return (local.get $tos)))
+        (else
+          (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200B3) (i32.const 0x04) (; "CORE" ;))
+            (then
+              (i32.store (local.get $bbtos) (i32.const 0))
+              (i32.store (local.get $btos) (i32.const -1))
+              (return (local.get $tos)))
+            (else
+              (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200B8) (i32.const 0x08) (; "CORE-EXT" ;))
+                (then
+                  (i32.store (local.get $bbtos) (i32.const 0))
+                  (i32.store (local.get $btos) (i32.const -1))
+                  (return (local.get $tos)))
+                (else
+                  (i32.store (local.get $bbtos) (i32.const 0))
+                  (return (local.get $btos))))))))))
+  (unreachable))
+(data (i32.const 0x218ac) "\9c\18\02\00" "\0c" "ENVIRONMENT?000" "\a9\00\00\00")
+(elem (i32.const 0xa9) $ENVIRONMENT?)
 
 ;; 6.1.1360
 (func $EVALUATE (param $tos i32) (result i32)
@@ -2014,9 +2054,9 @@
 (global $sourceID (mut i32) (i32.const 0))
 
 ;; Dictionary pointers
-(global $latest (mut i32) (i32.const 0x2189c))
-(global $here (mut i32) (i32.const 0x218ac))
-(global $nextTableIndex (mut i32) (i32.const 0xa9 (; = NEXT_TABLE_INDEX ;)))
+(global $latest (mut i32) (i32.const 0x218ac))
+(global $here (mut i32) (i32.const 0x218c4))
+(global $nextTableIndex (mut i32) (i32.const 0xaa (; = NEXT_TABLE_INDEX ;)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
