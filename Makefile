@@ -25,28 +25,22 @@ wasm: src/waforth.assembled.wat scripts/word.wasm.hex
 process: src/waforth.vanilla.wat
 	cp $< src/waforth.wat
 
-src/waforth.wasm: src/waforth.wat
-	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
-
 src/waforth.vanilla.wat: src/waforth.wat
 	./scripts/process.js $< $@
-
-src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
-	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
 
 src/waforth.bulkmem.wat: src/waforth.wat
 	./scripts/process.js --enable-bulk-memory $< $@
 
-src/benchmarks/sieve-vanilla.wasm: src/benchmarks/sieve-vanilla.wat
-	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
-
-src/benchmarks/sieve-c.js:
+src/web/benchmarks/sieve/sieve-c.js:
 	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ -sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
-scripts/word.wasm: scripts/word.wat
+src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
+	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
+
+%.wasm: %.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
-scripts/word.wasm.hex: scripts/word.wasm
+%.wasm.hex: %.wasm
 	hexdump -v -e '16/1 "_%02X" "\n"' $< | sed 's/_/\\/g; s/\\u    //g; s/.*/    "&"/' > $@
 
 clean:
