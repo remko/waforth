@@ -1005,49 +1005,33 @@
 ;; 6.1.1550
 (func $FIND (param $tos i32) (result i32)
   (local $entryP i32)
-  (local $entryNameP i32)
   (local $entryLF i32)
-  (local $wordP i32)
   (local $wordStart i32)
   (local $wordLength i32)
-  (local $wordEnd i32)
-
-  (local.set $wordLength 
-              (i32.load8_u (local.tee $wordStart (i32.load (i32.sub (local.get $tos) 
-                                                                (i32.const 4))))))
+  (local.set $wordLength (i32.load8_u (local.tee $wordStart (i32.load (i32.sub (local.get $tos) (i32.const 4))))))
   (local.set $wordStart (i32.add (local.get $wordStart) (i32.const 1)))
-  (local.set $wordEnd (i32.add (local.get $wordStart) (local.get $wordLength)))
-
   (local.set $entryP (global.get $latest))
-  (local.get $tos)
-  (loop $loop (param i32) (result i32)
-    (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
-    (block $endCompare (param i32) (result i32)
-      (if (param i32) (result i32) (i32.and 
-            (i32.eq (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))) (i32.const 0))
-            (i32.eq (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))
-                    (local.get $wordLength)))
-        (then
-          (local.set $wordP (local.get $wordStart))
-          (local.set $entryNameP (i32.add (local.get $entryP) (i32.const 5)))
-          (loop $compareLoop (param i32) (result i32)
-            (br_if $endCompare (i32.ne (i32.load8_s (local.get $entryNameP))
-                                        (i32.load8_s (local.get $wordP))))
-            (local.set $entryNameP (i32.add (local.get $entryNameP) (i32.const 1)))
-            (local.set $wordP (i32.add (local.get $wordP) (i32.const 1)))
-            (br_if $compareLoop (i32.ne (local.get $wordP)
-                                            (local.get $wordEnd))))
-          (i32.store (i32.sub (local.get $tos) (i32.const 4))
-                      (local.get $entryP))
-          (if (param i32) (result i32) (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))
-            (then
-              (call $push (i32.const -1)))
-            (else
-              (call $push (i32.const 1))))
-          (return))))
+  (loop $loop
+    (if 
+        (i32.and 
+          (i32.eqz
+            (i32.and 
+              (local.tee $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
+              (i32.const 0x20 (; = F_HIDDEN ;))))
+          (call $stringEqual 
+            (local.get $wordStart) (local.get $wordLength)
+            (i32.add (local.get $entryP) (i32.const 5)) (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))))
+      (then
+        (i32.store (i32.sub (local.get $tos) (i32.const 4)) (local.get $entryP))
+        (call $push (local.get $tos)
+          (select 
+            (i32.const -1)
+            (i32.const 1)
+            (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))))
+        (return)))
     (local.set $entryP (i32.load (local.get $entryP)))
     (br_if $loop (i32.ne (local.get $entryP) (i32.const 0))))
-  (call $push (i32.const 0)))
+  (call $push (local.get $tos) (i32.const 0)))
 (data (i32.const 136252) ",\14\02\00\04FIND\00\00\00]\00\00\00")
 (elem (i32.const 0x5d) $FIND)
 
@@ -2509,6 +2493,24 @@
 (func $pop (export "pop") (param $tos i32) (result i32) (result i32)
   (local.tee $tos (i32.sub (local.get $tos) (i32.const 4)))
   (i32.load (local.get $tos)))
+
+;; Returns 1 if equal, 0 if not
+(func $stringEqual (param $addr1 i32) (param $len1 i32) (param $addr2 i32) (param $len2 i32) (result i32)
+  (local $end1 i32)
+  (local $end2 i32)
+  (if (i32.ne (local.get $len1) (local.get $len2))
+    (return (i32.const 0)))
+  (local.set $end1 (i32.add (local.get $addr1) (local.get $len1)))
+  (local.set $end2 (i32.add (local.get $addr2) (local.get $len2)))
+  (loop $loop
+    (if (i32.eq (local.get $addr1) (local.get $end1)) 
+      (return (i32.const 1)))
+    (if (i32.ne (i32.load8_s (local.get $addr1)) (i32.load8_s (local.get $addr2)))
+      (return (i32.const 0)))
+    (local.set $addr1 (i32.add (local.get $addr1) (i32.const 1)))
+    (local.set $addr2 (i32.add (local.get $addr2)(i32.const 1)))
+    (br $loop))
+  (unreachable))
 
 (func $fail (param $tos i32) (param $str i32) (result i32)
   (local.get $tos)
