@@ -178,6 +178,8 @@
  (data (i32.const 0x20084) "\0F" "not implemented")
  (data (i32.const 0x20090) "\11" "ADDRESS-UNIT-BITS")
  (data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
+ (data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
+ (data (i32.const 0x200B2) "\11" "stack empty")
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  ;; Built-in words
@@ -2755,7 +2757,14 @@
    (local.tee $tos (global.get $tos))
    (call $REFILL)
    (drop (call $pop))
-   (if (i32.ge_s (local.tee $result (call $interpret)) (i32.const 0))
+   (local.set $result (call $interpret))
+   (global.set $tos)
+
+   ;; Check for stack underflow
+   (if (i32.lt_s (global.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
+     (drop (call $fail (global.get $tos) (i32.const 0x200B2 (; stack empty ;)))))
+       
+   (if (i32.ge_s (local.get $result) (i32.const 0))
      (then
        ;; Write ok
        (call $shell_emit (i32.const 111))
@@ -2768,7 +2777,6 @@
        (call $shell_emit (i32.const 111))
        (call $shell_emit (i32.const 114))))
    (call $shell_emit (i32.const 10))
-   (global.set $tos)
    (local.get $result))
 
  ;; Used for experiments
