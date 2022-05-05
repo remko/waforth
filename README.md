@@ -25,7 +25,7 @@ Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
 [Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
 core word tests.
 
-![WAForth Console](https://mko.re/waforth/console.gif "WAForth Console")
+![WAForth Console](doc/console.gif "WAForth Console")
 
 
 ## Using WAForth in an application
