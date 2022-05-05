@@ -17,7 +17,7 @@ let buildConfig = {
     ".wasm": "binary",
   },
   sourcemap: true,
-  plugins: [wasmTextPlugin({ debug: false })],
+  plugins: [wasmTextPlugin({ debug: true })],
 };
 
 esbuild.build(buildConfig).then(
