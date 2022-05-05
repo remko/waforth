@@ -1,3 +1,8 @@
+/**
+ * Simple example to show how to embed WAForth in JavaScript, and call JavaScript
+ * from within Forth code.
+ */
+
 import "./prompt.css";
 import WAForth from "../../WAForth";
 
@@ -33,6 +38,7 @@ import WAForth from "../../WAForth";
 ;
 `);
 
+  // Ask for a number (via Forth) when the user clicks the button
   btn.addEventListener("click", () => {
     forth.interpret("ASK-NUMBER");
   });
