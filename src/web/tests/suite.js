@@ -11,7 +11,7 @@ function loadTests() {
     beforeEach(() => {
       forth = new WAForth();
       forth.onEmit = (c) => {
-        output = output + String.fromCharCode(c);
+        output = output + c;
         // console.log(output);
       };
       const x = forth.load().then(

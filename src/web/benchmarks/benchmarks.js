@@ -16,7 +16,7 @@ const setup = [];
 const forth = new WAForth();
 let outputBuffer = [];
 forth.onEmit = (c) => {
-  outputBuffer.push(String.fromCharCode(c));
+  outputBuffer.push(c);
 };
 setup.push(
   forth.load().then(() => {

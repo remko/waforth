@@ -27,9 +27,9 @@ function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
 }
 
 /**
- * Small JavaScript shell around the WAForth WebAssembly module.
+ * JavaScript shell around the WAForth WebAssembly module.
  *
- * To users, provides the functions to interact with the WebAssembly module.
+ * Provides higher-level functions to interact with the WAForth WebAssembly module.
  *
  * To the WebAssembly module, provides the infrastructure to dynamically load WebAssembly modules and
  * the I/O primitives with the UI.
@@ -37,9 +37,15 @@ function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
 class WAForth {
   core?: WebAssembly.Instance;
   buffer?: number[];
-  onEmit?: (c: number) => void;
   fns: Record<string, (v: Stack) => void>;
   stack?: Stack;
+
+  /**
+   * Callback that is called when a character needs to be emitted.
+   *
+   * `c` is the ASCII code of the character to be emitted.
+   */
+  onEmit?: (c: string) => void;
 
   constructor() {
     this.fns = {};
@@ -56,7 +62,11 @@ class WAForth {
         // I/O
         ////////////////////////////////////////
 
-        emit: this.onEmit ?? (() => {}),
+        emit: (c: number) => {
+          if (this.onEmit) {
+            this.onEmit(String.fromCharCode(c));
+          }
+        },
 
         getc: () => {
           if (buffer.length === 0) {
@@ -194,9 +204,8 @@ class WAForth {
   }
 }
 
-interface Stack {
+export interface Stack {
   push(n: number): void;
-
   pop(): number;
   popString(): string;
 }

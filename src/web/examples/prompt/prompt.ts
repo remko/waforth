@@ -9,8 +9,7 @@ import WAForth from "../../WAForth";
 
   // Initialize WAForth
   const forth = new WAForth();
-  forth.onEmit = (c) =>
-    log.appendChild(document.createTextNode(String.fromCharCode(c)));
+  forth.onEmit = (c) => log.appendChild(document.createTextNode(c));
   await forth.load();
 
   // Bind "prompt" call to a function that pops up a JavaScript prompt, and pushes the entered number back on the stack

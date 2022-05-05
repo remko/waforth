@@ -96,7 +96,7 @@ function clearConsole() {
 }
 
 forth.onEmit = (c) => {
-  output(String.fromCharCode(c), false);
+  output(c, false);
 };
 
 clearConsole();
