@@ -88,6 +88,8 @@ const INDEX_TEMPLATE = `<!doctype html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href="/waforth/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/waforth/favicon.ico" type="image/x-icon" />
     <link href="/waforth/dist/$BASE.css" rel="stylesheet" />
     <title></title>
   </head>
@@ -153,4 +155,15 @@ if (watch) {
   buildConfig = withWatcher(buildConfig, handleBuildFinished, 8081);
 }
 
-esbuild.build(buildConfig).then(handleBuildFinished, () => process.exit(1));
+(async () => {
+  await fs.promises.mkdir("public/waforth", { recursive: true });
+  await fs.promises.copyFile(
+    "public/favicon.ico",
+    "public/waforth/favicon.ico"
+  );
+  try {
+    handleBuildFinished(await esbuild.build(buildConfig));
+  } catch (e) {
+    process.exit(1);
+  }
+})();
