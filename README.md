@@ -2,6 +2,9 @@
 
 # [WAForth](https://mko.re/waforth): Forth Interpreter+Compiler for WebAssembly
 
+[![Build](https://github.com/remko/waforth/actions/workflows/build.yml/badge.svg)](https://github.com/remko/waforth/actions/workflows/build.yml)
+
+
 WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in a demo
 [here](https://mko.re/waforth/).
