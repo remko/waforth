@@ -4,8 +4,8 @@ import WAForth from "../../WAForth";
 (async () => {
   // Create the UI
   document.body.innerHTML = `<button>Go!</button><pre></pre>`;
-  const btn = document.querySelector("button");
-  const log = document.querySelector("pre");
+  const btn = document.querySelector("button")!;
+  const log = document.querySelector("pre")!;
 
   // Initialize WAForth
   const forth = new WAForth();
@@ -17,7 +17,7 @@ import WAForth from "../../WAForth";
   forth.bind("prompt", (stack) => {
     const message = stack.popString();
     const result = window.prompt(message);
-    stack.push(parseInt(result));
+    stack.push(parseInt(result ?? ""));
   });
 
   // Load Forth code to bind the "prompt" call to a word, and call the word
