@@ -20,5 +20,6 @@ jobs:
           sudo mv /tmp/wabt-1.0.27/bin/* /usr/local/bin
       - run: yarnpkg --pure-lockfile
       - run: yarnpkg build
+      - run: yarnpkg prepare
       - run: yarnpkg lint
       - run: yarnpkg test --coverage
