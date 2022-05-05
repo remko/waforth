@@ -7,11 +7,11 @@ const process = require("process");
 
 function encodeLE(n, align) {
   return (
-    "\\u00" +
+    "\\" +
     _.padStart(n.toString(16), align * 2, "0")
       .match(/.{2}/g)
       .reverse()
-      .join("\\u00")
+      .join("\\")
   );
 }
 
@@ -25,7 +25,7 @@ const nextTableIndex = parseInt(process.argv[7]);
 const dictionaryEntry = [
   encodeLE(latest, 4),
   encodeLE(name.length | flags, 1),
-  _.padEnd(name, 4 * Math.floor((name.length + 4) / 4) - 1, "0"),
+  _.padEnd(name, 6 * Math.floor((name.length + 4) / 4) - 1, "\\00"),
   encodeLE(nextTableIndex, 4),
 ];
 console.log(
@@ -41,8 +41,6 @@ console.log(
 console.log("latest: 0x" + here.toString(16));
 console.log(
   "here: 0x" +
-    (here + dictionaryEntry.join("").replace(/\\u..../g, "_").length).toString(
-      16
-    )
+    (here + dictionaryEntry.join("").replace(/\\../g, "_").length).toString(16)
 );
 console.log("!nextTableIndex: 0x" + (nextTableIndex + 1).toString(16));

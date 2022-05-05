@@ -61,6 +61,7 @@ let buildConfig = {
     path.join(__dirname, "src", "web", "shell", "shell"),
     path.join(__dirname, "src", "web", "tests", "tests"),
     path.join(__dirname, "src", "web", "benchmarks", "benchmarks"),
+    path.join(__dirname, "src", "web", "examples", "prompt", "prompt"),
   ],
   entryNames: dev ? "[name]" : "[name]-c$[hash]",
   assetNames: "[name]-c$[hash]",
@@ -99,6 +100,7 @@ async function handleBuildFinished(result) {
   let index = INDEX_TEMPLATE.replace(/\$BASE/g, "shell");
   let testIndex = INDEX_TEMPLATE.replace(/\$BASE/g, "tests");
   let benchmarksIndex = INDEX_TEMPLATE.replace(/\$BASE/g, "benchmarks");
+  let promptIndex = INDEX_TEMPLATE.replace(/\$BASE/g, "prompt");
   // console.log(JSON.stringify(result.metafile.outputs, undefined, 2));
   for (const [out] of Object.entries(result.metafile.outputs)) {
     const outfile = path.basename(out);
@@ -107,6 +109,7 @@ async function handleBuildFinished(result) {
     index = index.replace(`/${sourcefile}`, `/${outfile}`);
     testIndex = testIndex.replace(`/${sourcefile}`, `/${outfile}`);
     benchmarksIndex = benchmarksIndex.replace(`/${sourcefile}`, `/${outfile}`);
+    promptIndex = promptIndex.replace(`/${sourcefile}`, `/${outfile}`);
   }
   await fs.promises.writeFile("public/waforth/index.html", index);
   await fs.promises.mkdir("public/waforth/tests", { recursive: true });
@@ -115,6 +118,13 @@ async function handleBuildFinished(result) {
   await fs.promises.writeFile(
     "public/waforth/benchmarks/index.html",
     benchmarksIndex
+  );
+  await fs.promises.mkdir("public/waforth/examples/prompt", {
+    recursive: true,
+  });
+  await fs.promises.writeFile(
+    "public/waforth/examples/prompt/index.html",
+    promptIndex
   );
 }
 

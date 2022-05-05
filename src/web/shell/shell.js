@@ -51,7 +51,7 @@ function startConsole() {
     // console.log("keydown", ev);
     if (ev.key === "Enter") {
       output(" ", true);
-      forth.run(inputbuffer.join(""));
+      forth.interpret(inputbuffer.join(""));
       inputbuffer = [];
     } else if (ev.key === "Backspace") {
       if (inputbuffer.length > 0) {
@@ -80,7 +80,7 @@ function startConsole() {
     for (const command of commands) {
       output(command, true);
       output(" ", true);
-      forth.run(inputbuffer.join("") + command);
+      forth.interpret(inputbuffer.join("") + command);
       inputbuffer = [];
     }
     if (newInputBuffer.length > 0) {
@@ -102,14 +102,15 @@ forth.onEmit = (c) => {
 clearConsole();
 
 output("Loading core ... ", false);
-forth.start().then(
+forth.load().then(
   () => {
     output("ok\nLoading sieve ... ", false);
-    forth.run(sieve);
+    forth.interpret(sieve);
     clearConsole();
     startConsole();
   },
-  () => {
+  (e) => {
+    console.error(e);
     const errorEl = document.createElement("span");
     errorEl.className = "error";
     errorEl.innerText = "error";

@@ -22,8 +22,60 @@ Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
 [Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
 core word tests.
 
+![WAForth Console](https://mko.re/waforth/console.gif "WAForth Console")
 
-## Install Dependencies
+
+## Using WAForth in an application
+
+You can embed WAForth in any JavaScript application. 
+
+A simple example to illustrate starting WAForth, and binding JavaScript functions:
+
+```typescript
+import WAForth from "waforth";
+
+(async () => {
+  // Create the UI
+  document.body.innerHTML = `<button>Go!</button><pre></pre>`;
+  const btn = document.querySelector("button");
+  const log = document.querySelector("pre");
+
+  // Initialize WAForth
+  const forth = new WAForth();
+  forth.onEmit = (c) =>
+    log.appendChild(document.createTextNode(String.fromCharCode(c)));
+  await forth.load();
+
+  // Bind "prompt" call to a function that pops up a JavaScript prompt, and pushes the entered number back on the stack
+  forth.bind("prompt", (stack) => {
+    const message = stack.popString();
+    const result = window.prompt(message);
+    stack.push(parseInt(result));
+  });
+
+  // Load Forth code to bind the "prompt" call to a word, and call the word
+  forth.interpret(`
+( Call "prompt" with the given string )
+: PROMPT ( c-addr u -- n )
+  S" prompt" SCALL 
+;
+
+( Prompt the user for a number, and write it to output )
+: ASK-NUMBER ( -- )
+  S" Please enter a number" PROMPT
+  ." The number was" SPACE .
+;
+`);
+
+  btn.addEventListener("click", () => {
+    forth.interpret("ASK-NUMBER");
+  });
+})();
+```
+
+## Development
+
+### Install Dependencies
 
 The build uses the [WebAssembly Binary
 Toolkit](https://github.com/WebAssembly/wabt) for converting raw WebAssembly
@@ -34,7 +86,7 @@ managing the dependencies of the shell.
     yarn
 
 
-## Building & Running
+### Building & Running
 
 To build everything:
     
@@ -44,7 +96,7 @@ To run the development server:
 
     make dev
 
-## Testing
+### Testing
 
 The tests are served from `/waforth/tests` by the development server.
 
@@ -116,11 +168,10 @@ The shell is [a JavaScript
 class](https://github.com/remko/waforth/blob/master/src/shell/WAForth.js) that
 wraps the WebAssembly module, and loads it in the browser.  It provides the I/O
 primitives to the WebAssembly module to read and write characters to a
-terminal, and externally provides a `run()` function to execute a fragment of
+terminal, and externally provides a `interpret()` function to execute a fragment of
 Forth code.
 
 To tie everything together into an interactive system, there's a small
 console-based interface around this shell to type Forth code, which you can see
 in action [here](https://mko.re/waforth/).
 
-![WAForth Console](https://mko.re/waforth/console.gif "WAForth Console")

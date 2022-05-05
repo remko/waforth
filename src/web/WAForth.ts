@@ -7,7 +7,7 @@ const isSafari =
 // eslint-disable-next-line no-unused-vars
 const arrayToBase64 =
   typeof Buffer === "undefined"
-    ? function arrayToBase64(bytes) {
+    ? function arrayToBase64(bytes: Uint8Array) {
         var binary = "";
         var len = bytes.byteLength;
         for (var i = 0; i < len; i++) {
@@ -15,9 +15,16 @@ const arrayToBase64 =
         }
         return window.btoa(binary);
       }
-    : function arrayToBase64(s) {
+    : function arrayToBase64(s: Uint8Array) {
         return Buffer.from(s).toString("base64");
       };
+
+function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
+  return String.fromCharCode.apply(
+    null,
+    new Uint8Array(memory.buffer, addr, len) as any
+  );
+}
 
 /**
  * Small JavaScript shell around the WAForth WebAssembly module.
@@ -28,20 +35,28 @@ const arrayToBase64 =
  * the I/O primitives with the UI.
  * */
 class WAForth {
-  constructor() {}
+  core?: WebAssembly.Instance;
+  buffer?: number[];
+  onEmit?: (c: number) => void;
+  fns: Record<string, (v: Stack) => void>;
+  stack?: Stack;
 
-  start() {
-    let table;
-    let memory;
+  constructor() {
+    this.fns = {};
+  }
+
+  async load() {
+    let table: WebAssembly.Table;
+    let memory: WebAssembly.Memory;
     const buffer = (this.buffer = []);
 
-    return WebAssembly.instantiate(wasmModule, {
+    const instance = await WebAssembly.instantiate(wasmModule, {
       shell: {
         ////////////////////////////////////////
         // I/O
         ////////////////////////////////////////
 
-        emit: this.onEmit,
+        emit: this.onEmit ?? (() => {}),
 
         getc: () => {
           if (buffer.length === 0) {
@@ -50,20 +65,20 @@ class WAForth {
           return buffer.pop();
         },
 
-        debug: (d) => {
+        debug: (d: number) => {
           console.log("DEBUG: ", d, String.fromCharCode(d));
         },
 
         key: () => {
-          let c;
+          let c: string | null = null;
           while (c == null || c == "") {
             c = window.prompt("Enter character");
           }
           return c.charCodeAt(0);
         },
 
-        accept: (p, n) => {
-          const input = (window.prompt("Enter text") || "").substr(0, n);
+        accept: (p: number, n: number) => {
+          const input = (window.prompt("Enter text") || "").substring(0, n);
           const target = new Uint8Array(memory.buffer, p, input.length);
           for (let i = 0; i < input.length; ++i) {
             target[i] = input.charCodeAt(i);
@@ -76,9 +91,9 @@ class WAForth {
         // Loader
         ////////////////////////////////////////
 
-        load: (offset, length, index) => {
+        load: (offset: number, length: number, index: number) => {
           let data = new Uint8Array(
-            this.core.exports.memory.buffer,
+            (this.core!.exports.memory as WebAssembly.Memory).buffer,
             offset,
             length
           );
@@ -105,30 +120,85 @@ class WAForth {
             throw e;
           }
         },
+
+        ////////////////////////////////////////
+        // Generic call
+        ////////////////////////////////////////
+
+        call: () => {
+          const len = pop();
+          const addr = pop();
+          const fname = loadString(memory, addr, len);
+          const fn = this.fns[fname];
+          if (!fn) {
+            console.error("Unbound SCALL: %s", fname);
+          } else {
+            fn(this.stack!);
+          }
+        },
       },
-    }).then((instance) => {
-      this.core = instance.instance;
-      table = this.core.exports.table;
-      memory = this.core.exports.memory;
     });
+    this.core = instance.instance;
+
+    const pop = (): number => {
+      return (this.core!.exports.pop as any)();
+    };
+
+    const popString = (): string => {
+      const len = pop();
+      const addr = pop();
+      return loadString(memory, addr, len);
+    };
+
+    const push = (n: number): void => {
+      (this.core!.exports.push as any)(n);
+    };
+
+    this.stack = {
+      pop,
+      popString,
+      push,
+    };
+    table = this.core.exports.table as WebAssembly.Table;
+    memory = this.core.exports.memory as WebAssembly.Memory;
   }
 
-  read(s) {
+  read(s: string) {
     const data = new TextEncoder().encode(s);
     for (let i = data.length - 1; i >= 0; --i) {
-      this.buffer.push(data[i]);
+      this.buffer!.push(data[i]);
     }
   }
 
-  run(s) {
+  /**
+   * Read data `s` into the input buffer, and interpret.
+   */
+  interpret(s: string) {
     this.read(s);
     try {
-      return this.core.exports.interpret();
+      return (this.core!.exports.interpret as any)();
     } catch (e) {
       // Exceptions thrown from the core means QUIT or ABORT is called, or an error
       // has occurred. Assume what has been done has been done, and ignore here.
     }
   }
+
+  /**
+   * Bind `name` to SCALL in Forth.
+   *
+   * When an SCALL is done with `name` on the top of the stack, `fn` will be called (with the name popped off the stack).
+   * Use `stack` to pop parameters off the stack, and push results back on the stack.
+   */
+  bind(name: string, fn: (stack: Stack) => void) {
+    this.fns[name] = fn;
+  }
+}
+
+interface Stack {
+  push(n: number): void;
+
+  pop(): number;
+  popString(): string;
 }
 
 export default WAForth;

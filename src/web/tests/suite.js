@@ -14,7 +14,7 @@ function loadTests() {
         output = output + String.fromCharCode(c);
         // console.log(output);
       };
-      const x = forth.start().then(
+      const x = forth.load().then(
         () => {
           core = forth.core.exports;
 
@@ -82,7 +82,7 @@ function loadTests() {
     function run(ss, expectErrors = false) {
       ss.split("\n").forEach((s) => {
         // console.log("Running: ", s);
-        const r = forth.run(s);
+        const r = forth.interpret(s);
         if (expectErrors) {
           expect(r).to.be.undefined;
           output = output.substr(0, output.length);
@@ -1087,6 +1087,7 @@ function loadTests() {
       it("should fetch", () => {
         const ptr = here();
         memory[ptr / 4] = 123456;
+        console.log("SET", ptr.toString(), memory[ptr / 8]);
         run(ptr.toString());
         run("@ 5");
         expect(stackValues()[0]).to.eql(123456);
@@ -1480,19 +1481,19 @@ function loadTests() {
       it("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([123, 0, 137427, 2]);
+        expect(stackValues()).to.eql([123, 0, 137443, 2]);
       });
 
       it("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([11, 0, 137425, 0]);
+        expect(stackValues()).to.eql([11, 0, 137441, 0]);
       });
 
       it("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([0, 0, 137424, 1]);
+        expect(stackValues()).to.eql([0, 0, 137440, 1]);
       });
     });
 

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "strict": true,
+    "incremental": true,
+    "typeRoots": ["./src/web/types"],
+    "types": ["node"]
+  },
+  "include": ["src/web"],
+  "exclude": ["node_modules", "dist", "build"]
+}

@@ -5,6 +5,7 @@ src/waforth.bulkmem.wat
 src/waforth.vanilla.wat
 src/web/benchmarks/sieve/sieve-c.js
 build/
+dist/
 *.wasm
 *.wasm.hex
 *.tmp

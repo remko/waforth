@@ -19,8 +19,8 @@ forth.onEmit = (c) => {
   outputBuffer.push(String.fromCharCode(c));
 };
 setup.push(
-  forth.start().then(() => {
-    forth.run(sieve);
+  forth.load().then(() => {
+    forth.interpret(sieve);
   })
 );
 
@@ -44,7 +44,7 @@ const benchmarks = [
     name: "sieve",
     fn: () => {
       outputBuffer = [];
-      forth.run(`${LIMIT} sieve`);
+      forth.interpret(`${LIMIT} sieve`);
       return outputBuffer.join("");
     },
   },
