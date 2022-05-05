@@ -36,9 +36,9 @@ function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
  * */
 class WAForth {
   core?: WebAssembly.Instance;
-  buffer?: number[];
-  fns: Record<string, (v: Stack) => void>;
-  stack?: Stack;
+  #buffer?: number[];
+  #fns: Record<string, (v: Stack) => void>;
+  #stack?: Stack;
 
   /**
    * Callback that is called when a character needs to be emitted.
@@ -48,13 +48,18 @@ class WAForth {
   onEmit?: (c: string) => void;
 
   constructor() {
-    this.fns = {};
+    this.#fns = {};
   }
 
+  /**
+   * Initialize WAForth.
+   *
+   * Needs to be called before interpret().
+   */
   async load() {
     let table: WebAssembly.Table;
     let memory: WebAssembly.Memory;
-    const buffer = (this.buffer = []);
+    const buffer = (this.#buffer = []);
 
     const instance = await WebAssembly.instantiate(wasmModule, {
       shell: {
@@ -139,11 +144,11 @@ class WAForth {
           const len = pop();
           const addr = pop();
           const fname = loadString(memory, addr, len);
-          const fn = this.fns[fname];
+          const fn = this.#fns[fname];
           if (!fn) {
             console.error("Unbound SCALL: %s", fname);
           } else {
-            fn(this.stack!);
+            fn(this.#stack!);
           }
         },
       },
@@ -164,7 +169,7 @@ class WAForth {
       (this.core!.exports.push as any)(n);
     };
 
-    this.stack = {
+    this.#stack = {
       pop,
       popString,
       push,
@@ -176,7 +181,7 @@ class WAForth {
   read(s: string) {
     const data = new TextEncoder().encode(s);
     for (let i = data.length - 1; i >= 0; --i) {
-      this.buffer!.push(data[i]);
+      this.#buffer!.push(data[i]);
     }
   }
 
@@ -200,7 +205,7 @@ class WAForth {
    * Use `stack` to pop parameters off the stack, and push results back on the stack.
    */
   bind(name: string, fn: (stack: Stack) => void) {
-    this.fns[name] = fn;
+    this.#fns[name] = fn;
   }
 }
 
