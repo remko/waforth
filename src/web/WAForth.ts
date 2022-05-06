@@ -49,6 +49,18 @@ class WAForth {
 
   constructor() {
     this.#fns = {};
+    this.onEmit = (() => {
+      // Default emit that logs to console
+      let buffer: string[] = [];
+      return (c: string) => {
+        if (c === "\n") {
+          console.log(buffer.join(""));
+          buffer = [];
+        } else {
+          buffer.push(c);
+        }
+      };
+    })();
   }
 
   /**
