@@ -76,7 +76,8 @@ let buildConfig = {
   define: {
     WAFORTH_VERSION: watch
       ? `"dev"`
-      : `"${new Date().toISOString().replace(/T.*/g, "")}"`,
+      : // : `"${new Date().toISOString().replace(/T.|)}>#g, "")}"`,
+        JSON.stringify(JSON.parse(fs.readFileSync("package.json")).version),
   },
   sourcemap: true,
   metafile: true,
