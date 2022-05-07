@@ -2249,7 +2249,7 @@
     (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1)))
     (call $emitEnd))
 
-  (func $compileDo
+  (func $compileDo (param $tos i32) (result i32)
     ;; 1: $diff_i = end index - current index
     ;; 2: $end_i
     (global.set $currentLocal (i32.add (global.get $currentLocal) (i32.const 2)))
@@ -2258,8 +2258,8 @@
         (global.set $lastLocal (global.get $currentLocal))))
 
     ;; Save branch nesting
-    (i32.store (global.get $tors) (global.get $branchNesting))
-    (global.set $tors (i32.add (global.get $tors) (i32.const 4)))
+    (i32.store (local.get $tos) (global.get $branchNesting))
+    (local.set $tos (i32.add (local.get $tos) (i32.const 4)))
     (global.set $branchNesting (i32.const 0))
 
     ;; $1 = current index (temporary)
@@ -2280,9 +2280,10 @@
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
 
     (call $emitBlock)
-    (call $emitLoop))
+    (call $emitLoop)
+    (local.get $tos))
 
-  (func $compileLoop 
+  (func $compileLoop (param $tos i32) (result i32)
     ;; $diff = $diff + 1
     (call $emitConst (i32.const 1))
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
@@ -2300,9 +2301,9 @@
     (call $emitNotEqual)
     (call $emitBrIf (i32.const 0))
 
-    (call $compileLoopEnd))
+    (call $compileLoopEnd (local.get $tos)))
 
-  (func $compilePlusLoop 
+  (func $compilePlusLoop (param $tos i32) (result i32)
     ;; temporarily store old diff 
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitSetLocal (global.get $firstTemporaryLocal))
@@ -2326,19 +2327,19 @@
     (call $emitGreaterEqualSigned)
     (call $emitBrIf (i32.const 0))
     
-    (call $compileLoopEnd))
+    (call $compileLoopEnd (local.get $tos)))
 
   ;; Assumes increment is on the operand stack
-  (func $compileLoopEnd
-    (local $btors i32)
+  (func $compileLoopEnd (param $tos i32) (result i32)
+    (local $btos i32)
     (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
     (call $emitEnd)
     (call $emitEnd)
     (global.set $currentLocal (i32.sub (global.get $currentLocal) (i32.const 2)))
 
     ;; Restore branch nesting
-    (global.set $branchNesting (i32.load (local.tee $btors (i32.sub (global.get $tors) (i32.const 4)))))
-    (global.set $tors (local.get $btors)))
+    (global.set $branchNesting (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
+    (local.get $btos))
 
   (func $compileLeave
     (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
