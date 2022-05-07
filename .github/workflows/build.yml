@@ -3,23 +3,14 @@ name: Build
 on:
   push:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: 'yarn'
-      # We depend on a more recent version, not available in current Ubuntu (20.04). Should be available in 22.04
-      # - run: sudo apt-get install wabt
-      - run: |
-          curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.27/wabt-1.0.27-ubuntu.tar.gz | tar xvz -C /tmp
-          sudo mv /tmp/wabt-1.0.27/bin/* /usr/local/bin
-      - run: yarnpkg --pure-lockfile
+      - uses: ./.github/actions/setup
       - run: yarnpkg build
-      - run: yarnpkg prepare
       - run: yarnpkg lint
       - run: yarnpkg test --coverage
