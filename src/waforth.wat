@@ -2346,7 +2346,7 @@
 
   (func $compileBegin
     (call $emitLoop)
-    (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 2))))
+    (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 1))))
 
   (func $compileWhile
     (call $compileIf))
@@ -2362,7 +2362,7 @@
     (call $emitEqualsZero)
     (call $emitBrIf (i32.const 0))
     (call $emitEnd)
-    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 2))))
+    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1))))
 
   (func $compileRecurse
     ;; call 0
