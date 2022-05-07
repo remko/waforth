@@ -20,10 +20,10 @@ and the I/O primitives to read and write a character to a screen.
 The WebAssembly module containing the interpreter, dynamic compiler, and 
 all built-in words comes down to 13k (6k gzipped), with an extra 7k (3k gzipped) for the JavaScript wrapper and web UI.
 
-WAForth is still in an experimental stage. It implements most of the [ANS Core
-Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1), and passes most of the
+WAForth implements all of the [ANS Core
+Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1) (and passes
 [Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
-core word tests.
+core word tests), and several [ANS Core Extension Words](http://lars.nocrew.org/dpans/dpans6.htm#6.2)
 
 ![WAForth Console](doc/console.gif "WAForth Console")
 

@@ -826,23 +826,6 @@ function loadTests() {
         expect(stackValues()[8]).to.eql(7);
         expect(stackValues()[9]).to.eql(5);
       });
-
-      it.skip("should work with multiple whiles + else", () => {
-        run(
-          `: FOO BEGIN DUP 2 > WHILE DUP 5 < WHILE DUP 1+ REPEAT 123 ELSE 345 THEN 7 ;`
-        );
-        run("1 FOO 5");
-        expect(stackValues()[0]).to.eql(1);
-        expect(stackValues()[1]).to.eql(2);
-        expect(stackValues()[2]).to.eql(2);
-        expect(stackValues()[3]).to.eql(4);
-        expect(stackValues()[4]).to.eql(4);
-        expect(stackValues()[5]).to.eql(8);
-        expect(stackValues()[6]).to.eql(8);
-        expect(stackValues()[7]).to.eql(16);
-        expect(stackValues()[8]).to.eql(7);
-        expect(stackValues()[9]).to.eql(5);
-      });
     });
 
     describe("BEGIN / UNTIL", () => {

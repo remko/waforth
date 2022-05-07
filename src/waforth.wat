@@ -2132,7 +2132,7 @@
     ;; 1 temporary local for computations
     (global.set $currentLocal (global.get $firstTemporaryLocal))
     (global.set $lastLocal (global.get $currentLocal))
-    (global.set $branchNesting (i32.const -1))
+    (global.set $branchNesting (i32.const 0))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
   (func $endColon
@@ -2245,9 +2245,10 @@
     (call $emitIf)
     (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 1))))
 
-  (func $compileThen 
+  (func $compileThen (param $tos i32) (result i32)
     (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1)))
-    (call $emitEnd))
+    (call $emitEnd)
+    (call $compileEndDests (local.get $tos)))
 
   (func $compileDo (param $tos i32) (result i32)
     ;; 1: $diff_i = end index - current index
@@ -2345,25 +2346,46 @@
     (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;)))
     (call $emitBr (i32.add (global.get $branchNesting) (i32.const 1))))
 
-  (func $compileBegin
+  (func $compileBegin (param $tos i32) (result i32)
     (call $emitLoop)
-    (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 1))))
+    (global.set $branchNesting (i32.add (global.get $branchNesting) (i32.const 1)))
+    (i32.store (local.get $tos) (i32.or (global.get $branchNesting) (i32.const 0x80000000 (; dest bit ;))))
+    (i32.add (local.get $tos) (i32.const 4)))
 
   (func $compileWhile
     (call $compileIf))
 
-  (func $compileRepeat
-    (call $emitBr (i32.const 1)) ;; Jump across while to repeat
+  (func $compileRepeat (param $tos i32) (result i32)
+    (call $emitBr 
+      (i32.sub 
+        (global.get $branchNesting)
+        (i32.and 
+          (i32.load (i32.sub (local.get $tos) (i32.const 4)))
+          (i32.const 0x7FFFFFFF))))
     (call $emitEnd)
-    (call $emitEnd)
-    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1))))
+    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1)))
+    (call $compileEndDests (local.get $tos)))
 
-  (func $compileUntil
+  (func $compileUntil (param $tos i32) (result i32)
     (call $compilePop)
     (call $emitEqualsZero)
     (call $emitBrIf (i32.const 0))
-    (call $emitEnd)
-    (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1))))
+    (call $compileEndDests (local.get $tos)))
+
+  (func $compileEndDests (param $tos i32) (result i32)
+    (local $btos i32)
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop 
+          (i32.or
+            (i32.le_u (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
+            (i32.ne 
+              (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
+              (i32.or (global.get $branchNesting) (i32.const 0x80000000 (; dest bit ;))))))
+        (call $emitEnd)
+        (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1)))
+        (local.set $tos (local.get $btos))))
+    (local.get $tos))
 
   (func $compileRecurse
     ;; call 0
