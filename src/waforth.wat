@@ -1042,7 +1042,7 @@
     (local $body i32)
     (local.get $tos)
     (local.set $body (call $body (local.tee $xt (call $pop))))
-    (if (param i32) (result i32) (i32.and (i32.load (i32.add (local.get $xt) (i32.const 4)))
+    (if (param i32) (result i32) (i32.and (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
                   (i32.const 0x40 (; = F_DATA ;)))
       (then
         (call_indirect (type $dataWord) (i32.add (local.get $body) (i32.const 4))
