@@ -59,7 +59,7 @@ shared function table is large enough for the module to register itself.
 ## The Shell
 
 The shell is [a JavaScript
-class](https://github.com/remko/waforth/blob/master/src/shell/WAForth.js) that
+class](https://github.com/remko/waforth/blob/master/src/web/waforth.ts) that
 wraps the WebAssembly module, and loads it in the browser.  It provides the I/O
 primitives to the WebAssembly module to read and write characters to a
 terminal, and externally provides a `interpret()` function to execute a fragment of

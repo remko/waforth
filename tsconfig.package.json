@@ -9,6 +9,6 @@
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/web/WAForth.ts", "src/web/types"],
+  "include": ["src/web/waforth.ts", "src/web/types"],
   "exclude": ["node_modules", "dist", "build"]
 }

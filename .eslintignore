@@ -1,3 +1,4 @@
 public/waforth/dist
 build/
 dist/
+src/web/benchmarks/sieve/sieve-c.js

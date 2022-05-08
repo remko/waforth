@@ -1,6 +1,6 @@
 /* global WAFORTH_VERSION */
 
-import WAForth from "../WAForth";
+import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import "./shell.css";
 

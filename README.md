@@ -36,7 +36,7 @@ document](doc/Design.md).
 
 You can embed WAForth in any JavaScript application. 
 
-A simple example to illustrate starting WAForth, and binding JavaScript functions:
+A [simple example](https://github.com/remko/waforth/blob/master/src/web/examples/prompt/prompt.ts) to illustrate starting WAForth, and binding JavaScript functions:
 
 ```typescript
 import WAForth from "waforth";

@@ -20,7 +20,7 @@
     "react-dom": "^18.0.0",
     "typescript": "^4.6.4"
   },
-  "types": "dist/WAForth.d.ts",
+  "types": "dist/waforth.d.ts",
   "main": "dist/index.js",
   "files": [
     "dist"

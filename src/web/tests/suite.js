@@ -1,4 +1,4 @@
-import WAForth from "../WAForth";
+import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import standardTestSuiteTester from "../../standard-testsuite/tester.f";
 import standardCoreWordsTestSuite from "../../standard-testsuite/core.f";

@@ -4,7 +4,7 @@
  */
 
 import "./prompt.css";
-import WAForth from "../../WAForth";
+import WAForth from "waforth";
 
 (async () => {
   // Create the UI

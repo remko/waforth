@@ -5,8 +5,9 @@
     "strict": true,
     "target": "es2015",
     "typeRoots": ["./src/web/types"],
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": "./src/web"
   },
-  "include": ["src/web"],
+  "include": ["./src/web"],
   "exclude": ["node_modules", "dist", "build"]
 }

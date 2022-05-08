@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import WAForth from "../WAForth";
+import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import sieveWasmModule from "./sieve/sieve.wat";
 import sieveJS from "./sieve/sieve.js";

@@ -81,7 +81,20 @@ let buildConfig = {
   },
   sourcemap: true,
   metafile: true,
-  plugins: [wasmTextPlugin({ debug: true }), forthPlugin()],
+  plugins: [
+    wasmTextPlugin({ debug: true }),
+    forthPlugin(),
+
+    // Resolve 'waforth' to the main entrypoint (for examples)
+    {
+      name: "waforth",
+      setup: (build) => {
+        build.onResolve({ filter: /^waforth$/ }, () => {
+          return { path: path.join(__dirname, "src", "web", "waforth.ts") };
+        });
+      },
+    },
+  ],
 };
 
 const INDEX_TEMPLATE = `<!doctype html>

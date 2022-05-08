@@ -9,7 +9,7 @@ const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
 let buildConfig = {
   bundle: true,
   logLevel: "info",
-  entryPoints: [path.join(__dirname, "src", "web", "WAForth")],
+  entryPoints: [path.join(__dirname, "src", "web", "waforth")],
   outfile: path.join(__dirname, "dist", "index.js"),
   minify: true,
   format: "cjs",
