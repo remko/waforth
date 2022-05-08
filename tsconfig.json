@@ -6,7 +6,8 @@
     "target": "es2015",
     "typeRoots": ["./src/web/types"],
     "types": ["node"],
-    "baseUrl": "./src/web"
+    "baseUrl": "./src/web",
+    "allowSyntheticDefaultImports": true
   },
   "include": ["./src/web"],
   "exclude": ["node_modules", "dist", "build"]

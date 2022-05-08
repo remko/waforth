@@ -7,7 +7,7 @@
 
 WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in action
-[here](https://mko.re/waforth/).
+[in an interactive Forth console](https://mko.re/waforth/), and in [a Logo-like Turtle graphics language](https://mko.re/thurtle/).
 
 It is [entirely written in (raw)
 WebAssembly](https://github.com/remko/waforth/blob/master/src/waforth.wat), and

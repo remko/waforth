@@ -1,0 +1,52 @@
+.root {
+  height: 100vh;
+}
+
+.main {
+  height: calc(100% - 40px);
+}
+
+textarea {
+  flex: 1;
+}
+
+.navbar {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.world {
+  border: thin solid rgb(171, 208, 166);
+  border-radius: 0.5em;
+  background-color: rgb(221, 248, 221);
+  width: 100%;
+  max-height: 350px;
+}
+
+.world path {
+  stroke: black;
+  fill: white;
+  fill-opacity: 0;
+}
+
+textarea.program {
+  font-family: monospace;
+  font-size: 0.8em;
+}
+
+.output {
+  font-size: 0.8em;
+  overflow: scroll;
+}
+
+label {
+  font-weight: 500;
+}
+
+.left-pane {
+  flex: 1;
+}
+
+.right-pane {
+  flex: 2;
+}

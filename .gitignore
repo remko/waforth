@@ -1,6 +1,7 @@
 .DS_Store
 node_modules/
 public/waforth/
+public/thurtle/
 src/waforth.bulkmem.wat
 src/waforth.vanilla.wat
 src/web/benchmarks/sieve/sieve-c.js

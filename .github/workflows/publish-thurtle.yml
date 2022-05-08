@@ -1,0 +1,25 @@
+name: Publish Thurtle
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup
+      - run: sudo apt-get install awscli
+      - run: yarnpkg build
+      - name: aws s3 sync
+        run: |
+          aws configure set region eu-central-1
+          aws configure set aws_access_key_id ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws configure set aws_secret_access_key ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws s3 sync public/thurtle/ s3://${{secrets.AWS_SITE_BUCKET}}/thurtle/
+          aws s3 sync public/waforth/dist/ s3://${{secrets.AWS_SITE_BUCKET}}/waforth/dist/ --exclude "*" --include "thurtle-*" --include "logo-*.svg" --include "turtle-*.svg"
+

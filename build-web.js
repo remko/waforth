@@ -30,9 +30,7 @@ function withWatcher(config, handleBuildFinished = () => {}, port = 8880) {
         if (error) {
           console.error(error);
         } else {
-          // Doing this first, because this may do some ES5 transformations
           await handleBuildFinished(result);
-
           watchClients.forEach((res) => res.write("data: update\n\n"));
           watchClients.length = 0;
         }
@@ -62,16 +60,20 @@ let buildConfig = {
     path.join(__dirname, "src", "web", "tests", "tests"),
     path.join(__dirname, "src", "web", "benchmarks", "benchmarks"),
     path.join(__dirname, "src", "web", "examples", "prompt", "prompt"),
+    path.join(__dirname, "src", "web", "thurtle", "thurtle"),
   ],
   entryNames: dev ? "[name]" : "[name]-c$[hash]",
   assetNames: "[name]-c$[hash]",
   // target: "es6",
   outdir: path.join(__dirname, "public/waforth/dist"),
+  publicPath: "/waforth/dist",
   external: ["fs", "stream", "util", "events"],
   minify: !dev,
   loader: {
     ".wasm": "binary",
     ".js": "jsx",
+    ".fs": "text",
+    ".svg": "file",
   },
   define: {
     WAFORTH_VERSION: watch
@@ -118,9 +120,19 @@ async function handleBuildFinished(result) {
     ["tests", "public/waforth/tests"],
     ["benchmarks", "public/waforth/benchmarks"],
     ["prompt", "public/waforth/examples/prompt"],
+    ["thurtle", "public/thurtle", true],
   ];
-  for (const [base, outpath] of indexes) {
+  for (const [base, outpath, bs] of indexes) {
     let index = INDEX_TEMPLATE.replace(/\$BASE/g, base);
+    if (bs) {
+      index = index.replace(
+        "<body>",
+        `<body>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+`
+      );
+    }
     for (const [out] of Object.entries(result.metafile.outputs)) {
       const outfile = path.basename(out);
       const sourcefile = outfile.replace(/-c\$[^.]+\./, ".");
@@ -145,7 +157,14 @@ if (watch) {
     }
     try {
       const data = await fs.promises.readFile(f);
-      res.writeHead(200);
+      res.writeHead(
+        200,
+        req.url.endsWith(".svg")
+          ? {
+              "Content-Type": "image/svg+xml",
+            }
+          : undefined
+      );
       res.end(data);
     } catch (err) {
       res.writeHead(404);
