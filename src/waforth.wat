@@ -78,9 +78,6 @@
   ;;   MEMORY_SIZE_PAGES := 1600    (MEMORY_SIZE / 65536)
   ;;
   ;; Memory layout:
-  ;;   BASE_BASE          :=   0x100
-  ;;   STATE_BASE         :=   0x104
-  ;;   IN_BASE            :=   0x108
   ;;   WORD_BASE          :=   0x200
   ;;   WORD_BASE_PLUS_1   :=   0x201
   ;;   WORD_BASE_PLUS_2   :=   0x202
@@ -93,10 +90,6 @@
   ;;   PICTURED_OUTPUT_BASE := 0x21000 (filled backward)
   ;;   DICTIONARY_BASE    := 0x21000
   (memory (export "memory") 1600 (; = MEMORY_SIZE_PAGES ;))
-
-  (data (i32.const 0x100 (; = BASE_BASE ;)) "\0A\00\00\00")
-  (data (i32.const 0x104 (; = STATE_BASE ;)) "\00\00\00\00")
-  (data (i32.const 0x108 (; = IN_BASE ;)) "\00\00\00\00")
 
   ;; The header of a WebAssembly module for a compiled word.
   ;; The body of the compiled word is directly appended to the end
@@ -227,7 +220,7 @@
     (local $bbtos i32)
     (local $m i64)
     (local $npo i32)
-    (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x100 (; = BASE_BASE ;)))))
+    (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x218e4 (; = body(BASE) ;)))))
     (local.set $v (i64.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.set $m (i64.rem_u (local.get $v) (local.get $base)))
     (local.set $v (i64.div_u (local.get $v) (local.get $base)))
@@ -254,7 +247,7 @@
     (local $bbtos i32)
     (local $m i64)
     (local $po i32)
-    (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x100 (; = BASE_BASE ;)))))
+    (local.set $base (i64.extend_i32_u (i32.load (i32.const 0x218e4 (; = body(BASE) ;)))))
     (local.set $v (i64.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.set $po (global.get $po))
     (loop $loop
@@ -631,11 +624,8 @@
   (elem (i32.const 0x33) $>BODY)
 
   ;; 6.1.0560
-  (func $>IN (param $tos i32) (result i32)
-    (i32.store (local.get $tos) (i32.const 0x108 (; = IN_BASE ;)))
-    (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 135632) "\c0\11\02\00\03>IN4\00\00\00")
-  (elem (i32.const 0x34) $>IN)
+  (data (i32.const 0x218fc) "\e8\18\02\00" "\43" (; DATA ;) ">IN" "\03\00\00\00" "\00\00\00\00")
+  (data (i32.const 135632) "\c0\11\02\00" "\23" (; HIDDEN;) "UNU" "4\00\00\00")
 
   ;; 6.1.0570
   (func $>NUMBER (param $tos i32) (result i32) 
@@ -770,11 +760,8 @@
   (elem (i32.const 0x40) $AND)
 
   ;; 6.1.0750 
-  (func $BASE (param $tos i32) (result i32)
-    (i32.store (local.get $tos) (i32.const 0x100 (; = BASE_BASE ;)))
-    (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 135820) "\80\12\02\00\04BASE\00\00\00A\00\00\00")
-  (elem (i32.const 0x41) $BASE)
+  (data (i32.const 0x218d4) "\c4\18\02\00" "\44" "BASE\00\00\00" "\03\00\00\00" (; pack(PUSH_DATA_ADDRESS_INDEX) ;) "\0a\00\00\00" (; pack(10) ;))
+  (data (i32.const 135820) "\80\12\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "A\00\00\00")
 
   ;; 6.1.0760 
   (func $BEGIN (param $tos i32) (result i32)
@@ -920,7 +907,7 @@
 
   ;; 6.1.1170
   (func $DECIMAL (param $tos i32) (result i32)
-    (i32.store (i32.const 0x100 (; = BASE_BASE ;)) (i32.const 10))
+    (i32.store (i32.const 0x218e4 (; = body(BASE) ;)) (i32.const 10))
     (local.get $tos))
   (data (i32.const 136044) "\5c\13\02\00\07DECIMALP\00\00\00")
   (elem (i32.const 0x50) $DECIMAL)
@@ -1030,20 +1017,20 @@
 
     ;; Save input state
     (local.set $prevSourceID (global.get $sourceID))
-    (local.set $prevIn (i32.load (i32.const 0x108 (; = IN_BASE ;))))
+    (local.set $prevIn (i32.load (i32.const 0x21908 (; body(>IN) ;))))
     (local.set $prevInputBufferSize (global.get $inputBufferSize))
     (local.set $prevInputBufferBase (global.get $inputBufferBase))
 
     (global.set $sourceID (i32.const -1))
     (global.set $inputBufferBase (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (global.set $inputBufferSize (i32.load (i32.sub (local.get $tos) (i32.const 4))))
-    (i32.store (i32.const 0x108 (; = IN_BASE ;)) (i32.const 0))
+    (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.const 0))
 
     (drop (call $interpret (local.get $bbtos)))
 
     ;; Restore input state
     (global.set $sourceID (local.get $prevSourceID))
-    (i32.store (i32.const 0x108 (; = IN_BASE ;)) (local.get $prevIn))
+    (i32.store (i32.const 0x21908 (; body(>IN) ;)) (local.get $prevIn))
     (global.set $inputBufferBase (local.get $prevInputBufferBase))
     (global.set $inputBufferSize (local.get $prevInputBufferSize)))
   (data (i32.const 136184) "\e4\13\02\00\08EVALUATE\00\00\00Y\00\00\00")
@@ -1514,11 +1501,8 @@
   (elem (i32.const 0x81) $SPACES)
 
   ;; 6.1.2250
-  (func $STATE (param $tos i32) (result i32)
-    (i32.store (local.get $tos) (i32.const 0x104 (; = STATE_BASE ;)))
-    (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 136796) "L\16\02\00\05STATE\00\00\82\00\00\00")
-  (elem (i32.const 0x82) $STATE)
+  (data (i32.const 0x218e8) "\d4\18\02\00" "\45" (; DATA ;) "STATE\00\00" "\03\00\00\00" (; pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; pack(0) ;))
+  (data (i32.const 136796) "L\16\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "\82\00\00\00")
 
   ;; 6.1.2260
   (func $SWAP (param $tos i32) (result i32)
@@ -1563,7 +1547,7 @@
   ;; 6.1.2320
   (func $U. (param $tos i32) (result i32)
     (local.get $tos)
-    (call $U._ (call $pop) (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+    (call $U._ (call $pop) (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
     (call $shell_emit (i32.const 0x20)))
   (data (i32.const 136860) "\8c\16\02\00\02U.\00\86\00\00\00")
   (elem (i32.const 0x86) $U.)
@@ -1665,7 +1649,7 @@
   (func $left-bracket (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (i32.store (i32.const 0x104 (; = STATE_BASE ;)) (i32.const 0)))
+    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 0)))
   (data (i32.const 137008) "$\17\02\00\81[\00\00\90\00\00\00")
   (elem (i32.const 0x90) $left-bracket) ;; immediate
 
@@ -1689,7 +1673,7 @@
 
   ;; 6.1.2540
   (func $right-bracket (param $tos i32) (result i32)
-    (i32.store (i32.const 0x104 (; = STATE_BASE ;)) (i32.const 1))
+    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 1))
     (local.get $tos))
   (data (i32.const 137048) "H\17\02\00\01]\00\00\93\00\00\00")
   (elem (i32.const 0x93) $right-bracket)
@@ -1749,7 +1733,7 @@
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
       (else 
-        (i32.store (i32.const 0x108 (; = IN_BASE ;)) (i32.const 0))
+        (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.const 0))
         (call $push (i32.const -1)))))
   (data (i32.const 137104) "\80\17\02\00\06REFILL\00\97\00\00\00")
   (elem (i32.const 0x97) $REFILL)
@@ -1818,7 +1802,7 @@
   (elem (i32.const 0x9e) $LATEST)
 
   (func $HEX (param $tos i32) (result i32)
-    (i32.store (i32.const 0x100 (; = BASE_BASE ;)) (i32.const 16))
+    (i32.store (i32.const 0x218e4 (; = body(BASE) ;)) (i32.const 16))
     (local.get $tos))
   (data (i32.const 0x21820) "\08\18\02\00\03HEX\a0\00\00\00")
   (elem (i32.const 0xa0) $HEX)
@@ -1855,7 +1839,7 @@
     (local $base i32)
     (local.get $tos)
     (local.set $v (call $pop))
-    (local.set $base (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+    (local.set $base (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
     (block $endLoop
       (loop $loop
         (br_if $endLoop (i32.eqz (local.get $v)))
@@ -1878,7 +1862,7 @@
       (then
         (call $shell_emit (i32.const 0x2d))
         (local.set $v (i32.sub (i32.const 0) (local.get $v)))))
-    (call $U._ (local.get $v) (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+    (call $U._ (local.get $v) (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
     (call $shell_emit (i32.const 0x20)))
   (data (i32.const 0x21884) "\74\18\02\00" "\01" ".00" "\a6\00\00\00")
   (elem (i32.const 0xa6) $.)
@@ -1899,7 +1883,7 @@
     (block $endLoop
       (loop $loop
         (br_if $endLoop (i32.ge_u (local.get $p) (local.get $tos)))
-        (call $U._ (i32.load (local.get $p)) (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+        (call $U._ (i32.load (local.get $p)) (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
         (call $shell_emit (i32.const 0x20))
         (local.set $p (i32.add (local.get $p) (i32.const 4)))
         (br $loop)))
@@ -1967,7 +1951,7 @@
             (if (param i32 i32) (result i32) (i32.eqz (call $readNumber))
               (then ;; It's a number. Are we compiling?
                 (local.set $number)
-                (if (param i32) (result i32) (i32.load (i32.const 0x104 (; = STATE_BASE ;)))
+                (if (param i32) (result i32) (i32.load (i32.const 0x218f8 (; = body(STATE) ;)))
                   (then
                     ;; We're compiling. Pop it off the stack and 
                     ;; add it to the compiled list
@@ -1980,7 +1964,7 @@
                 (call $fail (i32.const 0x20000))))) ;; undefined word
           (else ;; Found the word. 
             ;; Are we compiling or is it immediate?
-            (if (param i32) (result i32) (i32.or (i32.eqz (i32.load (i32.const 0x104 (; = STATE_BASE ;))))
+            (if (param i32) (result i32) (i32.or (i32.eqz (i32.load (i32.const 0x218f8 (; body(STATE) ;))))
                         (i32.eq (local.get $FINDResult) (i32.const 1)))
               (then
                 (call $push (local.get $FINDToken))
@@ -1991,7 +1975,7 @@
           (br $loop)))
     ;; 'WORD' left the address on the stack
     (drop (call $pop))
-    (i32.load (i32.const 0x104 (; = STATE_BASE ;))))
+    (i32.load (i32.const 0x218f8 (; = body(STATE) ;))))
 
   (func $readWord (param $tos i32) (param $delimiter i32) (result i32)
     (local $char i32)
@@ -2053,7 +2037,7 @@
     (local $n i32)  
     (local.set $p (local.get $addr))
     (local.set $end (i32.add (local.get $p) (local.get $length)))  
-    (local.set $base (i32.load (i32.const 0x100 (; = BASE_BASE ;))))
+    (local.set $base (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
 
     ;; Read first character
     (if (i32.eq (local.tee $char (i32.load8_u (local.get $p))) (i32.const 0x2d (; '-' ;)))
@@ -2111,8 +2095,8 @@
   (global $sourceID (mut i32) (i32.const 0))
 
   ;; Dictionary pointers
-  (global $latest (mut i32) (i32.const 0x218c4))
-  (global $here (mut i32) (i32.const 0x218d4))
+  (global $latest (mut i32) (i32.const 0x218fc))
+  (global $here (mut i32) (i32.const 0x2190c))
   (global $nextTableIndex (mut i32) (i32.const 0xab (; = NEXT_TABLE_INDEX ;)))
 
   ;; Pictured output pointer
@@ -2651,7 +2635,7 @@
 
   (func $ensureCompiling (param $tos i32) (result i32)
     (local.get $tos) 
-    (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x104 (; = STATE_BASE ;))))
+    (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x218f8 (; = body(STATE) ;))))
       (call $fail (i32.const 0x2005C)))) ;; word not interpretable
 
   ;; Toggle the hidden flag
@@ -2759,13 +2743,13 @@
   (func $readChar (result i32)
     (local $n i32)
     (local $in i32)
-    (if (i32.ge_u (local.tee $in (i32.load (i32.const 0x108 (; = IN_BASE ;))))
+    (if (i32.ge_u (local.tee $in (i32.load (i32.const 0x21908 (; body(>IN) ;))))
                   (global.get $inputBufferSize))
       (then
         (return (i32.const -1)))
       (else
         (local.set $n (i32.load8_s (i32.add (global.get $inputBufferBase) (local.get $in))))
-        (i32.store (i32.const 0x108 (; = IN_BASE ;)) (i32.add (local.get $in) (i32.const 1)))
+        (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.add (local.get $in) (i32.const 1)))
         (return (local.get $n))))
     (unreachable))
 

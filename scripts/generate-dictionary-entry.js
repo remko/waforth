@@ -25,7 +25,13 @@ const nextTableIndex = parseInt(process.argv[7]);
 const dictionaryEntry = [
   encodeLE(latest, 4),
   encodeLE(name.length | flags, 1),
-  _.padEnd(name, 6 * Math.floor((name.length + 4) / 4) - 1, "\\00"),
+  _.padEnd(
+    name +
+      _.repeat(
+        "\\00",
+        4 * Math.floor((name.length + 4) / 4) - (name.length + 1)
+      )
+  ),
   encodeLE(nextTableIndex, 4),
 ];
 console.log(

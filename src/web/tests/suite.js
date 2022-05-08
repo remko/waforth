@@ -1070,7 +1070,6 @@ function loadTests() {
       it("should fetch", () => {
         const ptr = here();
         memory[ptr / 4] = 123456;
-        console.log("SET", ptr.toString(), memory[ptr / 8]);
         run(ptr.toString());
         run("@ 5");
         expect(stackValues()[0]).to.eql(123456);
@@ -1464,19 +1463,19 @@ function loadTests() {
       it("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([123, 0, 137443, 2]);
+        expect(stackValues()).to.eql([123, 0, 137499, 2]);
       });
 
       it("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([11, 0, 137441, 0]);
+        expect(stackValues()).to.eql([11, 0, 137497, 0]);
       });
 
       it("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([0, 0, 137440, 1]);
+        expect(stackValues()).to.eql([0, 0, 137496, 1]);
       });
     });
 
