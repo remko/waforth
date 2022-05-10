@@ -9,7 +9,7 @@ const rootEl = document.createElement("div");
 rootEl.className = "root";
 rootEl.innerHTML = `<nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">
+      <a class="navbar-brand" href="/thurtle">
         <img
           data-hook="logo"
           width="30"
@@ -101,7 +101,7 @@ rootEl.innerHTML = `<nav class="navbar navbar-light bg-light">
             <li><code>RIGHT ( n -- )</code>: Turn right by <code>n</code> degrees.</li>
             <li><code>PENUP ( -- )</code>: Disable drawing while moving.</li>
             <li><code>PENDOWN ( -- )</code>: Enable drawing while moving.</li>
-            <li><code>SETPENSIZE ( n -- )</code>: Set the width of the drawed strokes (default: 5).</li>
+            <li><code>SETPENSIZE ( n -- )</code>: Set the width of the drawed strokes to <code>n</code> (default: 5).</li>
             <li><code>HIDETURTLE ( -- )</code>: Hide the turtle.</li>
             <li><code>SHOWTURTLE ( -- )</code>: Show the turtle.</li>
           </ul>
