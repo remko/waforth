@@ -107,7 +107,7 @@ const INDEX_TEMPLATE = `<!doctype html>
     <link rel="shortcut icon" href="/waforth/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/waforth/favicon.ico" type="image/x-icon" />
     <link href="/waforth/dist/$BASE.css" rel="stylesheet" />
-    <title></title>
+    <title>$TITLE</title>
   </head>
   <body>
     <script type="text/javascript" src="/waforth/dist/$BASE.js"></script>
@@ -116,14 +116,17 @@ const INDEX_TEMPLATE = `<!doctype html>
 `;
 async function handleBuildFinished(result) {
   const indexes = [
-    ["shell", "public/waforth"],
-    ["tests", "public/waforth/tests"],
-    ["benchmarks", "public/waforth/benchmarks"],
-    ["prompt", "public/waforth/examples/prompt"],
-    ["thurtle", "public/thurtle", true],
+    ["WAForth", "shell", "public/waforth"],
+    ["WAForth Tests", "tests", "public/waforth/tests"],
+    ["WAForh Benchmarks", "benchmarks", "public/waforth/benchmarks"],
+    ["WAForth Prompt Example", "prompt", "public/waforth/examples/prompt"],
+    ["Thurtle", "thurtle", "public/thurtle", true],
   ];
-  for (const [base, outpath, bs] of indexes) {
-    let index = INDEX_TEMPLATE.replace(/\$BASE/g, base);
+  for (const [title, base, outpath, bs] of indexes) {
+    let index = INDEX_TEMPLATE.replace(/\$BASE/g, base).replace(
+      /\$TITLE/g,
+      title
+    );
     if (bs) {
       index = index.replace(
         "<body>",

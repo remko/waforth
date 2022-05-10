@@ -4,7 +4,6 @@ import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import "./shell.css";
 
-document.title = "WAForth";
 const version =
   typeof WAFORTH_VERSION !== "undefined" ? WAFORTH_VERSION : "dev";
 
