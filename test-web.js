@@ -5,7 +5,6 @@ const esbuild = require("esbuild");
 const path = require("path");
 const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
 const Mocha = require("mocha");
-const { forthPlugin } = require("./scripts/esbuild/forth");
 
 let watch = false;
 for (const arg of process.argv.slice(2)) {
@@ -33,9 +32,10 @@ let buildConfig = {
   minify: false,
   loader: {
     ".wasm": "binary",
+    ".f": "text",
   },
   sourcemap: true,
-  plugins: [wasmTextPlugin({ debug: true }), forthPlugin()],
+  plugins: [wasmTextPlugin({ debug: true })],
   ...(watch
     ? {
         watch: {

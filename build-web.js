@@ -6,7 +6,6 @@ const path = require("path");
 const fs = require("fs");
 const { createServer } = require("http");
 const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
-const { forthPlugin } = require("./scripts/esbuild/forth");
 
 function withWatcher(config, handleBuildFinished = () => {}, port = 8880) {
   const watchClients = [];
@@ -73,6 +72,7 @@ let buildConfig = {
     ".wasm": "binary",
     ".js": "jsx",
     ".fs": "text",
+    ".f": "text",
     ".svg": "file",
   },
   define: {
@@ -85,7 +85,6 @@ let buildConfig = {
   metafile: true,
   plugins: [
     wasmTextPlugin({ debug: true }),
-    forthPlugin(),
 
     // Resolve 'waforth' to the main entrypoint (for examples)
     {
