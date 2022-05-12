@@ -190,6 +190,9 @@ class WAForth {
     memory = this.core.exports.memory as WebAssembly.Memory;
   }
 
+  /**
+   * Read data `s` into the input buffer without interpreting it.
+   */
   read(s: string) {
     const data = new TextEncoder().encode(s);
     for (let i = data.length - 1; i >= 0; --i) {
