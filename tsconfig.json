@@ -4,6 +4,8 @@
     "noImplicitAny": true,
     "strict": true,
     "target": "es2015",
+    "jsx": "react",
+    "jsxFactory": "jsx.createElement",
     "typeRoots": ["./src/web/types"],
     "types": ["node"],
     "baseUrl": "./src/web",
