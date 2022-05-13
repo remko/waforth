@@ -38,7 +38,6 @@ class WAForth {
   core?: WebAssembly.Instance;
   #buffer?: number[];
   #fns: Record<string, (v: Stack) => void>;
-  #stack?: Stack;
 
   /**
    * Callback that is called when a character needs to be emitted.
@@ -153,42 +152,40 @@ class WAForth {
         ////////////////////////////////////////
 
         call: () => {
-          const len = pop();
-          const addr = pop();
+          const len = this.pop();
+          const addr = this.pop();
           const fname = loadString(memory, addr, len);
           const fn = this.#fns[fname];
           if (!fn) {
             console.error("Unbound SCALL: %s", fname);
           } else {
-            fn(this.#stack!);
+            fn(this);
           }
         },
       },
     });
     this.core = instance.instance;
-
-    const pop = (): number => {
-      return (this.core!.exports.pop as any)();
-    };
-
-    const popString = (): string => {
-      const len = pop();
-      const addr = pop();
-      return loadString(memory, addr, len);
-    };
-
-    const push = (n: number): void => {
-      (this.core!.exports.push as any)(n);
-    };
-
-    this.#stack = {
-      pop,
-      popString,
-      push,
-    };
     table = this.core.exports.table as WebAssembly.Table;
     memory = this.core.exports.memory as WebAssembly.Memory;
   }
+
+  pop(): number {
+    return (this.core!.exports.pop as any)();
+  }
+
+  popString(): string {
+    const len = this.pop();
+    const addr = this.pop();
+    return loadString(
+      this.core!.exports.memory as WebAssembly.Memory,
+      addr,
+      len
+    );
+  }
+
+  push = (n: number): void => {
+    (this.core!.exports.push as any)(n);
+  };
 
   /**
    * Read data `s` into the input buffer without interpreting it.
