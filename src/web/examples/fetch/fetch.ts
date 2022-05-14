@@ -13,34 +13,34 @@ import WAForth from "waforth";
   await forth.load();
 
   // Bind "age" call to a function that fetches the age of the given person, and calls the continuation callback
-  forth.bind("age", async (stack) => {
-    const name = stack.popString();
-    const result = await (
-      await fetch("https://api.agify.io/?name=" + encodeURIComponent(name))
-    ).json();
-
-    // After this point, use the `forth` object directly, since we're no longer in the callback.
-    forth.push(parseInt(result.age));
-    forth.interpret("AGE-CB");
+  forth.bind("?ip", async () => {
+    const cbxt = forth.pop();
+    try {
+      const result = await (
+        await fetch("https://api.ipify.org?format=json")
+      ).json();
+      forth.pushString(result.ip);
+      forth.push(cbxt);
+      forth.interpret("EXECUTE");
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   // Load Forth code to bind the "age" call, and define the continuation callback
   forth.interpret(`
-: AGE ( c-addr u -- )
-  S" age" SCALL 
+: ?IP-CB ( c-addr n -- )
+  ." Your IP address is " TYPE CR
 ;
 
-: AGE-CB ( d -- )
-  ." Your age is " .
-;
-
-: GUESS-AGE ( -- )
-  S" Remko" AGE
+: ?IP ( -- )
+  ['] ?IP-CB
+  S" ?ip" SCALL 
 ;
 `);
 
   // Ask for a number (via Forth) when the user clicks the button
   btn.addEventListener("click", () => {
-    forth.interpret("GUESS-AGE");
+    forth.interpret("?IP");
   });
 })();

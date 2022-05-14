@@ -34,7 +34,7 @@ import WAForth from "waforth";
 ( Prompt the user for a number, and write it to output )
 : ASK-NUMBER ( -- )
   S" Please enter a number" PROMPT
-  ." The number was" SPACE .
+  ." The number was " . CR
 ;
 `);
 

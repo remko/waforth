@@ -2767,7 +2767,7 @@
   (func (export "tos") (result i32)
     (global.get $tos))
   
-  (func (export "here" (result i32))
+  (func (export "here") (result i32)
     (global.get $here))
 
   (func (export "interpret") (result i32)
