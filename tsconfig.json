@@ -6,6 +6,7 @@
     "target": "es2015",
     "jsx": "react",
     "jsxFactory": "jsx.createElement",
+    "jsxFragmentFactory": "jsx.createFragment",
     "typeRoots": ["./src/web/types"],
     "types": ["node"],
     "baseUrl": "./src/web",

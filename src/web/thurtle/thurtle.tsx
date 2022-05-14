@@ -6,6 +6,15 @@ import logo from "../../../doc/logo.svg";
 import thurtleFS from "./thurtle.fs";
 import examples from "./examples";
 
+function About() {
+  return (
+    <>
+      Interactive, Logo-like Turtle graphics language, using Forth (powered by{" "}
+      <a href="https://github.com/remko/waforth">WAForth</a>)
+    </>
+  );
+}
+
 const rootEl = (
   <div class="root">
     <nav class="navbar navbar-light bg-light">
@@ -19,6 +28,10 @@ const rootEl = (
           />
           Thurtle
         </a>
+
+        <span class="navbar-text d-none d-md-block">
+          <About />
+        </span>
 
         <a role="button" data-bs-toggle="modal" data-bs-target="#helpModal">
           <svg
@@ -38,11 +51,9 @@ const rootEl = (
       </div>
     </nav>
     <div class="main d-flex flex-column p-2">
-      <div class="container mt-2 text-muted">
+      <div class="container mt-2 text-muted d-md-none">
         <p>
-          Interactive, Logo-like Turtle graphics language, using Forth (powered
-          by
-          <a href="https://github.com/remko/waforth">WAForth</a>).
+          <About />
         </p>
       </div>
       <div class="d-flex flex-row flex-grow-1">
