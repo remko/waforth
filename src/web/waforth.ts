@@ -4,6 +4,8 @@ const isSafari =
   typeof navigator != "undefined" &&
   /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+const PAD_OFFSET = 400;
+
 // eslint-disable-next-line no-unused-vars
 const arrayToBase64 =
   typeof Buffer === "undefined"
@@ -24,6 +26,14 @@ function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
     null,
     new Uint8Array(memory.buffer, addr, len) as any
   );
+}
+
+function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
+  const len = s.length;
+  const a = new Uint8Array(memory.buffer, addr, len);
+  for (let i = 0; i < len; ++i) {
+    a[i] = s.charCodeAt(i);
+  }
 }
 
 /**
@@ -169,6 +179,14 @@ class WAForth {
     memory = this.core.exports.memory as WebAssembly.Memory;
   }
 
+  memory(): WebAssembly.Memory {
+    return this.core!.exports.memory as WebAssembly.Memory;
+  }
+
+  here(): number {
+    return (this.core!.exports.here as any)() as number;
+  }
+
   pop(): number {
     return (this.core!.exports.pop as any)();
   }
@@ -176,16 +194,20 @@ class WAForth {
   popString(): string {
     const len = this.pop();
     const addr = this.pop();
-    return loadString(
-      this.core!.exports.memory as WebAssembly.Memory,
-      addr,
-      len
-    );
+    return loadString(this.memory(), addr, len);
   }
 
-  push = (n: number): void => {
+  push(n: number): void {
     (this.core!.exports.push as any)(n);
-  };
+  }
+
+  pushString(s: string, offset = 0): number {
+    const addr = this.here() + PAD_OFFSET;
+    saveString(s, this.memory(), addr);
+    this.push(addr);
+    this.push(s.length);
+    return addr + PAD_OFFSET;
+  }
 
   /**
    * Read data `s` into the input buffer without interpreting it.
