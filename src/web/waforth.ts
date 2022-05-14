@@ -47,7 +47,7 @@ function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
 class WAForth {
   core?: WebAssembly.Instance;
   #buffer?: number[];
-  #fns: Record<string, (v: Stack) => void>;
+  #fns: Record<string, (f: WAForth) => void>;
 
   /**
    * Callback that is called when a character needs to be emitted.
@@ -238,22 +238,22 @@ class WAForth {
    * When an SCALL is done with `name` on the top of the stack, `fn` will be called (with the name popped off the stack).
    * Use `stack` to pop parameters off the stack, and push results back on the stack.
    */
-  bind(name: string, fn: (stack: Stack) => void) {
+  bind(name: string, fn: (f: WAForth) => void) {
     this.#fns[name] = fn;
   }
 
   /**
-   * Bind `name` to SCALL in Forth.
+   * Bind async `name` to SCALL in Forth.
    *
    * When an SCALL is done with `name` on the top of the stack, `fn` will be called (with the name popped off the stack).
    * Expects an execution token on the top of the stack, which will be called when the async callback is finished.
    * The execution parameter will be called with the success flag set.
    */
-  bindAsync(name: string, fn: () => Promise<void>) {
+  bindAsync(name: string, fn: (f: WAForth) => Promise<void>) {
     this.#fns[name] = async () => {
       const cbxt = this.pop();
       try {
-        await fn();
+        await fn(this);
         this.push(-1);
       } catch (e) {
         console.error(e);
@@ -264,12 +264,6 @@ class WAForth {
       }
     };
   }
-}
-
-export interface Stack {
-  push(n: number): void;
-  pop(): number;
-  popString(): string;
 }
 
 export default WAForth;
