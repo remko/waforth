@@ -23,7 +23,7 @@ import WAForth from "waforth";
   // Load Forth code to bind the "ip?" call, and define the continuation callback
   forth.interpret(`
 ( IP? callback. Called after IP address was received )
-: IP?-CB ( f c-addr n -- )
+: IP?-CB ( flag c-addr n -- )
   IF 
     ." Your IP address is " TYPE CR
   ELSE

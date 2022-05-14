@@ -82,6 +82,39 @@ import WAForth from "waforth";
 })();
 ```
 
+### Asynchronous bindings
+
+For asynchronous bindings, use `bindAsync` instead of `bind`.
+
+`bindAsync` expects an execution token on the stack, which is
+to be called with a success flag after the bound function is called. This is illustrated in [the fetch example](https://github.com/remko/waforth/blob/master/src/web/examples/fetch/fetch.ts):
+
+```typescript
+forth.bindAsync("ip?", async () => {
+  const result = await (
+    await fetch("https://api.ipify.org?format=json")
+  ).json();
+  forth.pushString(result.ip);
+});
+
+forth.interpret(`
+( IP? callback. Called after IP address was received )
+: IP?-CB ( flag c-addr n -- )
+  IF 
+    ." Your IP address is " TYPE CR
+  ELSE
+    ." Unable to fetch IP address" CR
+  THEN
+;
+
+( Fetch the IP address, and print it to console )
+: IP? ( -- )
+  ['] IP?-CB
+  S" ip?" SCALL 
+;
+`);
+```
+
 ## Goals
 
 Here are some of the goals (and non-goals) of WAForth:
