@@ -99,7 +99,7 @@ forth.bindAsync("ip?", async () => {
 
 forth.interpret(`
 ( IP? callback. Called after IP address was received )
-: IP?-CB ( flag c-addr n -- )
+: IP?-CB ( true c-addr n | false -- )
   IF 
     ." Your IP address is " TYPE CR
   ELSE
