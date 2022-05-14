@@ -12,35 +12,34 @@ import WAForth from "waforth";
   forth.onEmit = (c) => log.appendChild(document.createTextNode(c));
   await forth.load();
 
-  // Bind "age" call to a function that fetches the age of the given person, and calls the continuation callback
-  forth.bind("?ip", async () => {
-    const cbxt = forth.pop();
-    try {
-      const result = await (
-        await fetch("https://api.ipify.org?format=json")
-      ).json();
-      forth.pushString(result.ip);
-      forth.push(cbxt);
-      forth.interpret("EXECUTE");
-    } catch (e) {
-      console.error(e);
-    }
+  // Bind async "ip?" call to a function that fetches your IP address
+  forth.bindAsync("ip?", async () => {
+    const result = await (
+      await fetch("https://api.ipify.org?format=json")
+    ).json();
+    forth.pushString(result.ip);
   });
 
-  // Load Forth code to bind the "age" call, and define the continuation callback
+  // Load Forth code to bind the "ip?" call, and define the continuation callback
   forth.interpret(`
-: ?IP-CB ( c-addr n -- )
-  ." Your IP address is " TYPE CR
+( IP? callback. Called after IP address was received )
+: IP?-CB ( f c-addr n -- )
+  IF 
+    ." Your IP address is " TYPE CR
+  ELSE
+    ." Unable to fetch IP address" CR
+  THEN
 ;
 
-: ?IP ( -- )
-  ['] ?IP-CB
-  S" ?ip" SCALL 
+( Fetch the IP address, and print it to console )
+: IP? ( -- )
+  ['] IP?-CB
+  S" ip?" SCALL 
 ;
 `);
 
   // Ask for a number (via Forth) when the user clicks the button
   btn.addEventListener("click", () => {
-    forth.interpret("?IP");
+    forth.interpret("IP?");
   });
 })();

@@ -241,6 +241,29 @@ class WAForth {
   bind(name: string, fn: (stack: Stack) => void) {
     this.#fns[name] = fn;
   }
+
+  /**
+   * Bind `name` to SCALL in Forth.
+   *
+   * When an SCALL is done with `name` on the top of the stack, `fn` will be called (with the name popped off the stack).
+   * Expects an execution token on the top of the stack, which will be called when the async callback is finished.
+   * The execution parameter will be called with the success flag set.
+   */
+  bindAsync(name: string, fn: () => Promise<void>) {
+    this.#fns[name] = async () => {
+      const cbxt = this.pop();
+      try {
+        await fn();
+        this.push(-1);
+      } catch (e) {
+        console.error(e);
+        this.push(0);
+      } finally {
+        this.push(cbxt);
+        this.interpret("EXECUTE");
+      }
+    };
+  }
 }
 
 export interface Stack {
