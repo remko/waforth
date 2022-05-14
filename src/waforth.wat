@@ -1830,7 +1830,8 @@
   (func $TUCK (param $tos i32) (result i32)
     (local.get $tos)
     (call $SWAP) (call $OVER))
-  (data (i32.const 0x21858) "\4c\18\02\00" "\03" "NIP" "\a4\00\00\00")
+  (data (i32.const 0x21858) "\4c\18\02\00" "\23" (; HIDDEN ;) "UND" "\a4\00\00\00")
+  (data (i32.const 0x2190c) "\fc\18\02\00" "\04" "TUCK\00\00\00" "\a4\00\00\00")
   (elem (i32.const 0xa4) $TUCK)
 
   (func $UWIDTH (param $tos i32) (result i32)
@@ -2095,8 +2096,8 @@
   (global $sourceID (mut i32) (i32.const 0))
 
   ;; Dictionary pointers
-  (global $latest (mut i32) (i32.const 0x218fc))
-  (global $here (mut i32) (i32.const 0x2190c))
+  (global $latest (mut i32) (i32.const 0x2190c))
+  (global $here (mut i32) (i32.const 0x2191c))
   (global $nextTableIndex (mut i32) (i32.const 0xab (; = NEXT_TABLE_INDEX ;)))
 
   ;; Pictured output pointer

@@ -1463,19 +1463,19 @@ function loadTests() {
       it("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([123, 0, 137499, 2]);
+        expect(stackValues()).to.eql([123, 0, 137515, 2]);
       });
 
       it("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([11, 0, 137497, 0]);
+        expect(stackValues()).to.eql([11, 0, 137513, 0]);
       });
 
       it("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([0, 0, 137496, 1]);
+        expect(stackValues()).to.eql([0, 0, 137512, 1]);
       });
     });
 
