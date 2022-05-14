@@ -58,9 +58,9 @@ LOOP
 ;
 
 : FLOWER ( n -- )
-  12 0 DO
+  24 0 DO
     DUP SQUARE
-    30 RIGHT
+    15 RIGHT
   LOOP
 ;
 
