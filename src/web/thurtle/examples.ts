@@ -71,13 +71,41 @@ LOOP
     name: "Spiral (Recursive)",
     program: `
 : SPIRAL ( n -- )
-  DUP 1 < IF EXIT THEN 
+  DUP 1 < IF DROP EXIT THEN 
   DUP FORWARD
   20 RIGHT
   95 100 */ RECURSE
 ;
 
 140 SPIRAL
+`,
+  },
+  {
+    name: "Square Spiral",
+    program: `
+: SPIRAL ( n1 n2 -- )
+  OVER 1 < IF 2DROP EXIT THEN 
+  OVER FORWARD
+  DUP RIGHT
+  SWAP 95 100 */ SWAP
+  RECURSE
+;
+
+350 90 SPIRAL
+`,
+  },
+  {
+    name: "Crooked Square Spiral",
+    program: `
+: SPIRAL ( n1 n2 -- )
+  OVER 1 < IF 2DROP EXIT THEN 
+  OVER FORWARD
+  DUP RIGHT
+  SWAP 95 100 */ SWAP
+  RECURSE
+;
+
+350 91 SPIRAL
 `,
   },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
