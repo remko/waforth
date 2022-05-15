@@ -65,10 +65,10 @@ export default [
     name: "Flower",
     program: `
 : SQUARE ( n -- )
-4 0 DO
-  DUP FORWARD
-  90 RIGHT
-LOOP
+  4 0 DO
+    DUP FORWARD
+    90 RIGHT
+  LOOP
 ;
 
 : FLOWER ( n -- )
@@ -95,31 +95,32 @@ LOOP
 `,
   },
   {
-    name: "Square Spiral",
+    name: "Outward Square Spiral",
     program: `
 : SPIRAL ( n1 n2 -- )
-  OVER 1 < IF 2DROP EXIT THEN 
+  OVER 800 > IF 2DROP EXIT THEN 
   OVER FORWARD
   DUP RIGHT
-  SWAP 95 100 */ SWAP
+  SWAP 10 + SWAP
   RECURSE
 ;
 
-450 90 SPIRAL
+1 90 SPIRAL
 `,
   },
   {
-    name: "Crooked Square Spiral",
+    name: "Crooked Outward Square Spiral",
     program: `
-: SPIRAL ( n1 n2 -- )
-  OVER 1 < IF 2DROP EXIT THEN 
-  OVER FORWARD
-  DUP RIGHT
-  SWAP 95 100 */ SWAP
+91 CONSTANT ANGLE
+
+: SPIRAL ( n -- )
+  DUP 800 > IF DROP EXIT THEN 
+  DUP FORWARD
+  ANGLE RIGHT
+  10 +
   RECURSE
 ;
 
-450 91 SPIRAL
-`,
+1 SPIRAL`,
   },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));

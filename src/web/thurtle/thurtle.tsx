@@ -326,4 +326,4 @@ document.addEventListener("keydown", (ev) => {
 
 reset();
 
-loadExample(examples[1].name);
+loadExample(examples[4].name);
