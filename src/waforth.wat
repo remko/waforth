@@ -87,8 +87,10 @@
   ;;   RETURN_STACK_BASE  :=  0x2000
   ;;   STACK_BASE         := 0x10000
   ;;   STRINGS_BASE       := 0x20000
-  ;;   PICTURED_OUTPUT_BASE := 0x21000 (filled backward)
   ;;   DICTIONARY_BASE    := 0x21000
+  ;;
+  ;;   PICTURED_OUTPUT_OFFSET := 0x200 (offset from HERE; filled backward)
+  ;;
   (memory (export "memory") 1600 (; = MEMORY_SIZE_PAGES ;))
 
   ;; The header of a WebAssembly module for a compiled word.
@@ -235,7 +237,7 @@
   ;; 6.1.0040
   (func $#> (param $tos i32) (result i32)
     (i32.store (i32.sub (local.get $tos) (i32.const 8)) (global.get $po))
-    (i32.store (i32.sub (local.get $tos) (i32.const 4)) (i32.sub (i32.const 0x21000 (; = PICTURED_OUTPUT_BASE ;)) (global.get $po)))
+    (i32.store (i32.sub (local.get $tos) (i32.const 4)) (i32.sub (i32.add (global.get $here) (i32.const 0x200 (; = PICTURED_OUTPUT_OFFSET ;))) (global.get $po)))
     (local.get $tos))
   (data (i32.const 135192) "\0c\10\02\00\02#>\00\12\00\00\00")
   (elem (i32.const 0x12) $#>)
@@ -585,7 +587,7 @@
 
   ;; 6.1.0490
   (func $<# (param $tos i32) (result i32)
-    (global.set $po (i32.const 0x21000 (; = PICTURED_OUTPUT_BASE ;)))
+    (global.set $po (i32.add (global.get $here) (i32.const 0x200 (; = PICTURED_OUTPUT_OFFSET ;))))
     (local.get $tos))
   (data (i32.const 135580) "\90\11\02\00\02<#\000\00\00\00")
   (elem (i32.const 0x30) $<#)
