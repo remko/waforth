@@ -174,7 +174,6 @@
   (data (i32.const 0x20084) "\0F" "not implemented")
   (data (i32.const 0x20090) "\11" "ADDRESS-UNIT-BITS")
   (data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
-  (data (i32.const 0x200A2) "\0F" "/COUNTED-STRING")
   (data (i32.const 0x200B2) "\11" "stack empty")
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
