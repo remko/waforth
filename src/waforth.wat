@@ -281,7 +281,7 @@
       (if (param i32) (result i32) (i32.lt_s (local.tee $c (call $readChar)) (i32.const 0)) 
         (call $fail (i32.const 0x2003C))) ;; missing ')'
       (br_if $loop (i32.ne (local.get $c) (i32.const 41)))))
-  (data (i32.const 135228) "0\10\02\00" "\81" (; immediate ;) "(\00\00\15\00\00\00")
+  (data (i32.const 135228) "0\10\02\00" "\81" (; immediate ;) "(\00\00" "\15\00\00\00")
   (elem (i32.const 0x15) $paren)
 
   ;; 6.1.0090
@@ -759,7 +759,7 @@
   (elem (i32.const 0x40) $AND)
 
   ;; 6.1.0750 
-  (data (i32.const 0x218d4) "\c4\18\02\00" "\44" "BASE\00\00\00" "\03\00\00\00" (; pack(PUSH_DATA_ADDRESS_INDEX) ;) "\0a\00\00\00" (; pack(10) ;))
+  (data (i32.const 0x218d4) "\c4\18\02\00" "\44" "BASE\00\00\00" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\0a\00\00\00" (; = pack(10) ;))
   (data (i32.const 135820) "\80\12\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "A\00\00\00")
 
   ;; 6.1.0760 
@@ -1502,7 +1502,7 @@
   (elem (i32.const 0x81) $SPACES)
 
   ;; 6.1.2250
-  (data (i32.const 0x218e8) "\d4\18\02\00" "\45" (; DATA ;) "STATE\00\00" "\03\00\00\00" (; pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; pack(0) ;))
+  (data (i32.const 0x218e8) "\d4\18\02\00" "\45" (; DATA ;) "STATE\00\00" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; = pack(0) ;))
   (data (i32.const 136796) "L\16\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "\82\00\00\00")
 
   ;; 6.1.2260
