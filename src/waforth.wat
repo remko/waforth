@@ -78,9 +78,6 @@
   ;;   MEMORY_SIZE_PAGES := 1600    (MEMORY_SIZE / 65536)
   ;;
   ;; Memory layout:
-  ;;   WORD_BASE          :=   0x200
-  ;;   WORD_BASE_PLUS_1   :=   0x201
-  ;;   WORD_BASE_PLUS_2   :=   0x202
   ;;   INPUT_BUFFER_BASE  :=   0x300
   ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
   ;;   MODULE_HEADER_BASE :=  0x1000 
@@ -90,6 +87,7 @@
   ;;   DICTIONARY_BASE    := 0x21000
   ;;
   ;;   PICTURED_OUTPUT_OFFSET := 0x200 (offset from HERE; filled backward)
+  ;;   WORD_OFFSET := 0x200 (offset from HERE)
   ;;
   (memory (export "memory") 1600 (; = MEMORY_SIZE_PAGES ;))
 
@@ -268,7 +266,7 @@
   (func $' (param $tos i32) (result i32)
     (local.get $tos)
     (call $readWord (i32.const 0x20))
-    (if (param i32) (result i32) (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))) 
+    (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase))) 
       (then 
         (call $fail (i32.const 0x20028)))) ;; incomplete input
     (call $FIND)
@@ -827,11 +825,11 @@
   ;; 6.1.0895
   (func $CHAR (param $tos i32) (result i32)
     (call $readWord (local.get $tos) (i32.const 0x20))
-    (if (param i32) (result i32) (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;))))
+    (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
       (call $fail (i32.const 0x20028))) ;; incomplete input
     (local.tee $tos)
     (i32.store (i32.sub (local.get $tos) (i32.const 4))
-                (i32.load8_u (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))))
+                (i32.load8_u (i32.add (call $wordBase) (i32.const 1)))))
   (data (i32.const 135932) "\ec\12\02\00\04CHAR\00\00\00I\00\00\00")
   (elem (i32.const 0x49) $CHAR)
 
@@ -880,6 +878,7 @@
   ;; 6.1.1000
   (func $CREATE (param $tos i32) (result i32)
     (local $length i32)
+    (local $here i32)
 
     (i32.store (global.get $here) (global.get $latest))
     (global.set $latest (global.get $here))
@@ -887,15 +886,16 @@
 
     (local.get $tos)
     (call $readWord (i32.const 0x20))
-    (if (param i32) (result i32) (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))) 
+    (if (param i32) (result i32) (i32.eqz (local.tee $length (i32.load8_u (call $wordBase))))
       (call $fail (i32.const 0x20028))) ;; incomplete input
     (drop (call $pop))
-    (i32.store8 (global.get $here) (local.tee $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
-    (global.set $here (i32.add (global.get $here) (i32.const 1)))
+    (i32.store8 (global.get $here) (local.get $length))
 
-    (call $memcopy (global.get $here) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length))
+    (call $memcopy 
+      (local.tee $here (i32.add (global.get $here) (i32.const 1)))
+      (i32.add (call $wordBase) (i32.const 1)) (local.get $length))
 
-    (global.set $here (i32.add (global.get $here) (local.get $length)))
+    (global.set $here (i32.add (local.get $here) (local.get $length)))
 
     (call $ALIGN)
 
@@ -1327,7 +1327,7 @@
     (local.get $tos)
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
-    (if (param i32) (result i32) (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;))))
+    (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
       (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $FIND)
     (local.set $FINDResult (call $pop))
@@ -1746,7 +1746,7 @@
     (local $xt i32)
     (local.get $tos)
     (call $readWord (i32.const 0x20))
-    (if (param i32) (result i32) (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))) 
+    (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
       (call $fail (i32.const 0x20028))) ;; incomplete input
     (call $FIND)
     (if (param i32) (result i32) (i32.eqz (call $pop)) 
@@ -1945,7 +1945,7 @@
     (block $endLoop (param i32) (result i32) 
       (loop $loop (param i32) (result i32) 
         (call $readWord (i32.const 0x20))
-        (br_if $endLoop (i32.eqz (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
+        (br_if $endLoop (i32.eqz (i32.load8_u (call $wordBase))))
         (call $FIND)
         (local.set $FINDResult (call $pop))
         (local.set $FINDToken (call $pop))
@@ -1983,6 +1983,7 @@
   (func $readWord (param $tos i32) (param $delimiter i32) (result i32)
     (local $char i32)
     (local $stringPtr i32)
+    (local $wordBase i32)
 
     ;; Skip leading delimiters
     (block $endSkipBlanks
@@ -1992,13 +1993,13 @@
         (br_if $skipBlanks (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
         (br $endSkipBlanks)))
 
-    (local.set $stringPtr (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)))
+    (local.set $stringPtr (i32.add (local.tee $wordBase (call $wordBase)) (i32.const 1)))
     (if (i32.ne (local.get $char) (i32.const -1)) 
       (if (i32.ne (local.get $char) (i32.const 0x0a))
         (then 
           ;; Search for delimiter
-          (i32.store8 (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $char))
-          (local.set $stringPtr (i32.const 0x202 (; = WORD_BASE_PLUS_2 ;)))
+          (i32.store8 (i32.add (local.get $wordBase) (i32.const 1)) (local.get $char))
+          (local.set $stringPtr (i32.add (local.get $wordBase) (i32.const 2)))
           (block $endReadChars
             (loop $readChars
               (local.set $char (call $readChar))
@@ -2010,20 +2011,20 @@
               (br $readChars))))))
 
       ;; Write word length
-      (i32.store8 (i32.const 0x200 (; = WORD_BASE ;)) 
-        (i32.sub (local.get $stringPtr) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;))))
+      (i32.store8 (local.get $wordBase)
+        (i32.sub (local.get $stringPtr) (i32.add (local.get $wordBase) (i32.const 1))))
       
       (local.get $tos)
-      (call $push (i32.const 0x200 (; = WORD_BASE ;))))
+      (call $push (local.get $wordBase)))
 
 
   (func $readNumber (result i32 i32)
     (local $length i32)
     (local $restcount i32)
     (local $value i32)
-    (if (i32.eqz (local.tee $length (i32.load8_u (i32.const 0x200 (; = WORD_BASE ;)))))
+    (if (i32.eqz (local.tee $length (i32.load8_u (call $wordBase))))
       (return (i32.const -1) (i32.const -1)))
-    (call $number (i64.const 0) (i32.const 0x201 (; = WORD_BASE_PLUS_1 ;)) (local.get $length) )
+    (call $number (i64.const 0) (i32.add (call $wordBase) (i32.const 1)) (local.get $length))
     (local.set $restcount)
     (drop)
     (i32.wrap_i64)
@@ -2762,6 +2763,9 @@
           (i32.add (local.get $v) (i32.const 0x37)))
         (else
           (i32.add (local.get $v) (i32.const 0x30)))))
+  
+  (func $wordBase (result i32)
+    (i32.add (global.get $here) (i32.const 0x200 (; = WORD_OFFSET ;))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; API Functions
