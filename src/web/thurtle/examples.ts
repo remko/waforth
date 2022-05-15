@@ -31,6 +31,20 @@ export default [
 `,
   },
   {
+    name: "Pentagram",
+    program: `
+: PENTAGRAM ( n -- )
+  18 RIGHT
+  5 0 DO
+    DUP FORWARD
+    144 RIGHT
+  LOOP
+;
+  
+450 PENTAGRAM
+`,
+  },
+  {
     name: "Seeker",
     program: `
 : SEEKER ( n -- )
@@ -91,7 +105,7 @@ LOOP
   RECURSE
 ;
 
-350 90 SPIRAL
+450 90 SPIRAL
 `,
   },
   {
@@ -105,7 +119,7 @@ LOOP
   RECURSE
 ;
 
-350 91 SPIRAL
+450 91 SPIRAL
 `,
   },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
