@@ -155,6 +155,14 @@ const rootEl = (
                   degrees.
                 </li>
                 <li>
+                  <code>SETXY ( n1 n2 -- )</code>: Move to position{" "}
+                  <code>n1,n2</code>.
+                </li>
+                <li>
+                  <code>SETHEADING ( n -- )</code>: Set heading <code>n</code>{" "}
+                  degrees clockwise from Y axis.
+                </li>
+                <li>
                   <code>PENUP ( -- )</code>: Disable drawing while moving.
                 </li>
                 <li>
@@ -243,6 +251,11 @@ function rotate(deg: number) {
   updateTurtle();
 }
 
+function setRotation(deg: number) {
+  rotation = deg;
+  updateTurtle();
+}
+
 function forward(d: number) {
   const dx = d * Math.cos((rotation * Math.PI) / 180.0);
   const dy = d * Math.sin((rotation * Math.PI) / 180.0);
@@ -255,6 +268,19 @@ function forward(d: number) {
 
   position.x += dx;
   position.y += dy;
+  updateTurtle();
+}
+
+function setXY(x: number, y: number) {
+  pathEl.setAttribute(
+    "d",
+    pathEl.getAttribute("d")! +
+      " " +
+      [pen === PenState.Down ? "l" : "M", x, y].join(" ")
+  );
+
+  position.x = x;
+  position.y = y;
   updateTurtle();
 }
 
@@ -305,6 +331,14 @@ async function run() {
     });
     forth.bind("setpensize", (stack) => {
       setPenSize(stack.pop());
+    });
+    forth.bind("setxy", (stack) => {
+      const y = stack.pop();
+      const x = stack.pop();
+      setXY(x, -y);
+    });
+    forth.bind("setheading", (stack) => {
+      setRotation(-90 - stack.pop());
     });
     forth.interpret(thurtleFS);
     forth.onEmit = (c) => outputEl.appendChild(document.createTextNode(c));

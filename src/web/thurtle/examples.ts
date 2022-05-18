@@ -87,10 +87,11 @@ export default [
 : SPIRAL ( n -- )
   DUP 1 < IF DROP EXIT THEN 
   DUP FORWARD
-  20 RIGHT
-  95 100 */ RECURSE
+  15 RIGHT
+  98 100 */ RECURSE
 ;
 
+PENUP -500 -180 SETXY PENDOWN
 140 SPIRAL
 `,
   },
