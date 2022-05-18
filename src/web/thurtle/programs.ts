@@ -1,11 +1,13 @@
-export type Example = {
+export type Program = {
   name: string;
   program: string;
+  isExample: boolean;
 };
 
-export default [
+const examples: Program[] = [
   {
     name: "Square",
+    isExample: true,
     program: `
 200 FORWARD
 90 RIGHT
@@ -19,6 +21,7 @@ export default [
   },
   {
     name: "Square (w/ LOOP)",
+    isExample: true,
     program: `
 : SQUARE ( n -- )
   4 0 DO
@@ -32,6 +35,7 @@ export default [
   },
   {
     name: "Pentagram",
+    isExample: true,
     program: `
 : PENTAGRAM ( n -- )
   18 RIGHT
@@ -46,6 +50,7 @@ export default [
   },
   {
     name: "Seeker",
+    isExample: true,
     program: `
 : SEEKER ( n -- )
   4 0 DO
@@ -63,6 +68,7 @@ export default [
   },
   {
     name: "Flower",
+    isExample: true,
     program: `
 : SQUARE ( n -- )
   4 0 DO
@@ -83,6 +89,7 @@ export default [
   },
   {
     name: "Spiral (Recursive)",
+    isExample: true,
     program: `
 : SPIRAL ( n -- )
   DUP 1 < IF DROP EXIT THEN 
@@ -97,6 +104,7 @@ PENUP -500 -180 SETXY PENDOWN
   },
   {
     name: "Outward Square Spiral",
+    isExample: true,
     program: `
 : SPIRAL ( n1 n2 -- )
   OVER 800 > IF 2DROP EXIT THEN 
@@ -111,6 +119,7 @@ PENUP -500 -180 SETXY PENDOWN
   },
   {
     name: "Crooked Outward Square Spiral",
+    isExample: true,
     program: `
 91 CONSTANT ANGLE
 
@@ -125,3 +134,56 @@ PENUP -500 -180 SETXY PENDOWN
 1 SPIRAL`,
   },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
+
+// Load programs
+let programs = examples.slice();
+try {
+  const prgs = window.localStorage.getItem("thurtle:programs");
+  if (prgs != null) {
+    programs.push(...JSON.parse(prgs));
+  }
+} catch (e) {
+  // ignore
+}
+
+export function listPrograms(): Program[] {
+  return programs;
+}
+
+export function getProgram(name: string): Program | undefined {
+  return listPrograms().find((e) => e.name === name);
+}
+
+function savePrograms() {
+  try {
+    window.localStorage.setItem(
+      "thurtle:programs",
+      JSON.stringify(programs.filter((p) => !p.isExample))
+    );
+  } catch (e) {
+    console.error(e);
+    window.alert("Unable to save");
+  }
+}
+
+export function saveProgram(name: string, program: string): boolean {
+  const prg = getProgram(name);
+  let isNew = false;
+  if (prg != null) {
+    prg.program = program;
+  } else {
+    isNew = true;
+    programs.push({
+      name,
+      isExample: false,
+      program,
+    });
+  }
+  savePrograms();
+  return isNew;
+}
+
+export function deleteProgram(name: string) {
+  programs = programs.filter((p) => p.name != name);
+  savePrograms();
+}

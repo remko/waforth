@@ -4,7 +4,12 @@ import "./thurtle.css";
 import turtle from "./turtle.svg";
 import logo from "../../../doc/logo.svg";
 import thurtleFS from "./thurtle.fs";
-import examples from "./examples";
+import {
+  deleteProgram,
+  getProgram,
+  listPrograms,
+  saveProgram,
+} from "./programs";
 import Editor from "./Editor";
 
 function About() {
@@ -77,7 +82,66 @@ const rootEl = (
     <div class="main d-flex flex-column p-2">
       <div class="d-flex flex-row flex-grow-1">
         <div class="left-pane d-flex flex-column">
-          <select class="form-select mb-2" data-hook="examples"></select>
+          <div class="d-flex flex-row">
+            <select class="form-select mb-2" data-hook="examples"></select>
+            <div>
+              <div class="btn-group ms-2">
+                <button
+                  type="button"
+                  class="btn btn-light"
+                  data-hook="save-btn"
+                  onclick={save}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-hdd"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      xmlns="http://www.w3.org/2000/svg"
+                      d="M4.5 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM3 10.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"
+                    />
+                    <path
+                      xmlns="http://www.w3.org/2000/svg"
+                      d="M16 11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V9.51c0-.418.105-.83.305-1.197l2.472-4.531A1.5 1.5 0 0 1 4.094 3h7.812a1.5 1.5 0 0 1 1.317.782l2.472 4.53c.2.368.305.78.305 1.198V11zM3.655 4.26 1.592 8.043C1.724 8.014 1.86 8 2 8h12c.14 0 .276.014.408.042L12.345 4.26a.5.5 0 0 0-.439-.26H4.094a.5.5 0 0 0-.44.26zM1 10v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      onclick={(ev) => save(ev, true)}
+                    >
+                      Save as
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      data-hook="delete-action"
+                      onclick={del}
+                    >
+                      Delete
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
           {editor.el}
           <button data-hook="run" class="btn btn-primary mt-2">
             Run
@@ -205,12 +269,15 @@ const patshEl = document.getElementById("paths")!;
 const runButtonEl = rootEl.querySelector(
   "button[data-hook=run]"
 )! as HTMLButtonElement;
-const examplesEl = rootEl.querySelector(
+const programsEl = rootEl.querySelector(
   "[data-hook=examples]"
 )! as HTMLSelectElement;
 const outputEl = rootEl.querySelector(
   "pre[data-hook=output]"
 ) as HTMLPreElement;
+const deleteActionEl = rootEl.querySelector(
+  "[data-hook=delete-action]"
+) as HTMLAnchorElement;
 
 enum PenState {
   Up = 0,
@@ -301,17 +368,74 @@ function setVisible(b: boolean) {
   updateTurtle();
 }
 
-function loadExample(name: string) {
-  editor.setValue(examples.find((e) => e.name === name)!.program);
-  examplesEl.value = name;
+//////////////////////////////////////////////////////////////////////////////////////////
+// Programs
+//////////////////////////////////////////////////////////////////////////////////////////
+
+const DEFAULT_PROGRAM = "Flower";
+
+function loadProgram(name: string) {
+  const program = getProgram(name)!;
+  editor.setValue(program.program);
+  if (program.isExample) {
+    deleteActionEl.classList.add("disabled");
+  } else {
+    deleteActionEl.classList.remove("disabled");
+  }
+  programsEl.value = name;
 }
 
-for (const ex of examples) {
-  examplesEl.appendChild(<option value={ex.name}>{ex.name}</option>);
+function loadPrograms() {
+  programsEl.innerText = "";
+  for (const ex of listPrograms().filter((p) => !p.isExample)) {
+    programsEl.appendChild(<option value={ex.name}>{ex.name}</option>);
+  }
+  programsEl.appendChild(<option disabled={true}>Examples</option>);
+  for (const ex of listPrograms().filter((p) => p.isExample)) {
+    programsEl.appendChild(<option value={ex.name}>{ex.name}</option>);
+  }
 }
-examplesEl.addEventListener("change", (ev) => {
-  loadExample((ev.target! as HTMLSelectElement).value);
+
+function save(ev: MouseEvent, forceSaveAs?: boolean) {
+  ev.preventDefault();
+  let name = programsEl.value;
+  const program = getProgram(name);
+  if (program?.isExample || forceSaveAs) {
+    let title = program?.isExample ? name + " (Copy)" : name;
+    const newName = window.prompt("Program name", title);
+    if (newName == null) {
+      return;
+    }
+    if (getProgram(newName)?.isExample) {
+      window.alert(`Cannot save as example '${name}'`);
+      return;
+    }
+    name = newName;
+  }
+  if (saveProgram(name, editor.getValue())) {
+    loadPrograms();
+    loadProgram(name);
+  }
+}
+
+function del(ev: MouseEvent) {
+  ev.preventDefault();
+  if (
+    !window.confirm(`Are you sure you want to delete '${programsEl.value}'?`)
+  ) {
+    return;
+  }
+  deleteProgram(programsEl.value);
+  loadPrograms();
+  loadProgram(DEFAULT_PROGRAM);
+}
+
+programsEl.addEventListener("change", (ev) => {
+  loadProgram((ev.target! as HTMLSelectElement).value);
 });
+loadPrograms();
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 async function run() {
   try {
@@ -363,4 +487,4 @@ document.addEventListener("keydown", (ev) => {
 
 reset();
 
-loadExample(examples[4].name);
+loadProgram(DEFAULT_PROGRAM);
