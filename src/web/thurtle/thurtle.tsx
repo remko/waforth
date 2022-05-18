@@ -5,15 +5,18 @@ import turtle from "./turtle.svg";
 import logo from "../../../doc/logo.svg";
 import thurtleFS from "./thurtle.fs";
 import examples from "./examples";
+import Editor from "./Editor";
 
 function About() {
   return (
     <>
-      Interactive, Logo-like Turtle graphics language, using Forth (powered by{" "}
+      Logo-like Forth Turtle graphics (powered by{" "}
       <a href="https://github.com/remko/waforth">WAForth</a>)
     </>
   );
 }
+
+const editor = new Editor();
 
 const rootEl = (
   <div class="root">
@@ -29,7 +32,7 @@ const rootEl = (
           Thurtle
         </a>
 
-        <span class="navbar-text d-none d-md-block">
+        <span class="navbar-text d-none d-sm-block">
           <About />
         </span>
 
@@ -72,15 +75,10 @@ const rootEl = (
       </div>
     </nav>
     <div class="main d-flex flex-column p-2">
-      <div class="container mt-2 text-muted d-md-none">
-        <p>
-          <About />
-        </p>
-      </div>
       <div class="d-flex flex-row flex-grow-1">
         <div class="left-pane d-flex flex-column">
           <select class="form-select mb-2" data-hook="examples"></select>
-          <textarea autofocus class="form-control program"></textarea>
+          {editor.el}
           <button data-hook="run" class="btn btn-primary mt-2">
             Run
           </button>
@@ -108,13 +106,17 @@ const rootEl = (
           <form>
             <div class="form-group mt-3">
               <label>Output</label>
-              <pre class="output"></pre>
+              <pre class="output" data-hook="output"></pre>
             </div>
           </form>
         </div>
       </div>
+      <div class="container mt-2 text-muted d-sm-none">
+        <p>
+          <About />
+        </p>
+      </div>
     </div>
-
     <div
       class="modal fade"
       id="helpModal"
@@ -206,8 +208,9 @@ const runButtonEl = rootEl.querySelector(
 const examplesEl = rootEl.querySelector(
   "[data-hook=examples]"
 )! as HTMLSelectElement;
-const programEl = rootEl.querySelector("textarea") as HTMLTextAreaElement;
-const outputEl = rootEl.querySelector("pre") as HTMLPreElement;
+const outputEl = rootEl.querySelector(
+  "pre[data-hook=output]"
+) as HTMLPreElement;
 
 enum PenState {
   Up = 0,
@@ -299,7 +302,7 @@ function setVisible(b: boolean) {
 }
 
 function loadExample(name: string) {
-  programEl.value = examples.find((e) => e.name === name)!.program;
+  editor.setValue(examples.find((e) => e.name === name)!.program);
   examplesEl.value = name;
 }
 
@@ -342,8 +345,8 @@ async function run() {
     });
     forth.interpret(thurtleFS);
     forth.onEmit = (c) => outputEl.appendChild(document.createTextNode(c));
-    forth.interpret(programEl.value);
-    programEl.focus();
+    forth.interpret(editor.getValue());
+    editor.focus();
   } catch (e) {
     console.error(e);
   } finally {

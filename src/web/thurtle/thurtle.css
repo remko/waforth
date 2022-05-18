@@ -6,7 +6,7 @@
   height: calc(100% - 40px);
 }
 
-textarea {
+.editor {
   flex: 1;
 }
 
@@ -27,11 +27,6 @@ textarea {
   stroke: black;
   fill: white;
   fill-opacity: 0;
-}
-
-textarea.program {
-  font-family: monospace;
-  font-size: 0.8em;
 }
 
 .output {
