@@ -133,6 +133,76 @@ PENUP -500 -180 SETXY PENDOWN
 
 1 SPIRAL`,
   },
+  {
+    name: "Snowflake",
+    isExample: true,
+    program: `
+850 CONSTANT LENGTH
+4   CONSTANT DEPTH
+
+: SIDE ( length depth -- )
+  DUP 0= IF 
+    DROP FORWARD EXIT 
+  THEN
+  SWAP 3 / SWAP 1-
+  2DUP RECURSE
+  60 LEFT 2DUP RECURSE
+  120 RIGHT 2DUP RECURSE
+  60 LEFT RECURSE
+;
+
+: SNOWFLAKE ( -- )
+  PENUP 
+  LENGTH 4 / NEGATE 
+  LENGTH 2/ NEGATE
+  SETXY
+  PENDOWN
+  3 0 DO 
+    LENGTH DEPTH SIDE
+    120 RIGHT
+  LOOP
+;
+
+SNOWFLAKE
+`,
+  },
+  {
+    name: "Plant",
+    isExample: true,
+    program: `
+300 CONSTANT SIZE
+0   CONSTANT ANGLE
+5   CONSTANT BRANCHES
+
+VARIABLE RND
+HERE RND !
+
+: RANDOM ( -- n )
+  RND @ 31421 * 6927 + 65536 MOD
+  DUP RND !
+;
+
+: CHOOSE ( n1 -- n2 )
+  RANDOM 65536 */MOD SWAP DROP 
+; 
+
+: PLANT ( size angle -- )
+  OVER 10 < IF 2DROP EXIT THEN
+  DUP RIGHT
+  OVER FORWARD
+  BRANCHES 0 DO
+    OVER 2/
+    160 CHOOSE 80 -
+    RECURSE
+  LOOP
+  SWAP BACKWARD
+  LEFT
+;
+  
+PENUP 0 SIZE NEGATE SETXY PENDOWN
+SIZE ANGLE PLANT
+`,
+  },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
 
 // Load programs

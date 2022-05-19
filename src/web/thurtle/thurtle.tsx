@@ -372,7 +372,7 @@ function setVisible(b: boolean) {
 // Programs
 //////////////////////////////////////////////////////////////////////////////////////////
 
-const DEFAULT_PROGRAM = "Flower";
+const DEFAULT_PROGRAM = "Snowflake";
 
 function loadProgram(name: string) {
   const program = getProgram(name)!;
