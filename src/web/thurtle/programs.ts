@@ -170,24 +170,23 @@ SNOWFLAKE
     name: "Plant",
     isExample: true,
     program: `
-300 CONSTANT SIZE
-0   CONSTANT ANGLE
-5   CONSTANT BRANCHES
+450 CONSTANT SIZE
+6   CONSTANT BRANCHES
 
 VARIABLE RND
 HERE RND !
 
 : RANDOM ( -- n )
-  RND @ 31421 * 6927 + 65536 MOD
+  RND @ 75 * 74 + 65537 MOD
   DUP RND !
 ;
 
 : CHOOSE ( n1 -- n2 )
-  RANDOM 65536 */MOD SWAP DROP 
+  RANDOM 65537 */MOD SWAP DROP 
 ; 
 
 : PLANT ( size angle -- )
-  OVER 10 < IF 2DROP EXIT THEN
+  OVER 20 < IF 2DROP EXIT THEN
   DUP RIGHT
   OVER FORWARD
   BRANCHES 0 DO
@@ -200,7 +199,7 @@ HERE RND !
 ;
   
 PENUP 0 SIZE NEGATE SETXY PENDOWN
-SIZE ANGLE PLANT
+SIZE 0 PLANT
 `,
   },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
