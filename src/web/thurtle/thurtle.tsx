@@ -369,7 +369,7 @@ function draw() {
 // Programs
 //////////////////////////////////////////////////////////////////////////////////////////
 
-const DEFAULT_PROGRAM = "Snowflake";
+const DEFAULT_PROGRAM = "Plant";
 
 function loadProgram(name: string) {
   const program = getProgram(name)!;
