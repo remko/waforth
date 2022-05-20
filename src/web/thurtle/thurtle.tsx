@@ -11,6 +11,7 @@ import {
   saveProgram,
 } from "./programs";
 import Editor from "./Editor";
+import path from "path";
 
 function About() {
   return (
@@ -284,74 +285,46 @@ enum PenState {
   Down = 1,
 }
 
+type Path = {
+  strokeWidth?: number;
+  d: string[];
+};
+
 let rotation = 0;
 let position = { x: 0, y: 0 };
 let pen = PenState.Down;
 let visible = true;
-
-function newPathEl() {
-  pathEl = (
-    <path xmlns="http://www.w3.org/2000/svg" stroke-width="5" d="M 0 0" />
-  );
-  patshEl.appendChild(pathEl);
-}
+let paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
 
 function reset() {
   position.x = position.y = 0;
   rotation = 270;
   pen = PenState.Down;
-  patshEl.innerHTML = "";
-  newPathEl();
-  outputEl.innerHTML = "";
-  updateTurtle();
-}
-
-function updateTurtle() {
-  turtleEl.style.display = visible ? "block" : "none";
-  turtleEl.setAttribute(
-    "transform",
-    `rotate(${rotation} ${position.x} ${position.y}) translate(${
-      position.x - 25
-    } ${position.y - 25})`
-  );
+  paths = [{ d: [`M ${position.x} ${position.y}`] }];
 }
 
 function rotate(deg: number) {
   rotation = rotation + deg;
-  updateTurtle();
 }
 
 function setRotation(deg: number) {
   rotation = deg;
-  updateTurtle();
 }
 
 function forward(d: number) {
   const dx = d * Math.cos((rotation * Math.PI) / 180.0);
   const dy = d * Math.sin((rotation * Math.PI) / 180.0);
-  pathEl.setAttribute(
-    "d",
-    pathEl.getAttribute("d")! +
-      " " +
-      [pen === PenState.Down ? "l" : "m", dx, dy].join(" ")
+  paths[paths.length - 1].d.push(
+    [pen === PenState.Down ? "l" : "m", dx, dy].join(" ")
   );
-
-  position.x += dx;
-  position.y += dy;
-  updateTurtle();
 }
 
 function setXY(x: number, y: number) {
-  pathEl.setAttribute(
-    "d",
-    pathEl.getAttribute("d")! +
-      " " +
-      [pen === PenState.Down ? "l" : "M", x, y].join(" ")
+  paths[paths.length - 1].d.push(
+    [pen === PenState.Down ? "l" : "M", x, y].join(" ")
   );
-
   position.x = x;
   position.y = y;
-  updateTurtle();
 }
 
 function setPen(s: PenState) {
@@ -359,13 +332,37 @@ function setPen(s: PenState) {
 }
 
 function setPenSize(s: number) {
-  newPathEl();
-  pathEl.setAttribute("stroke-width", s + "");
+  paths.push({ d: [`M ${position.x} ${position.y}`], strokeWidth: s });
 }
 
 function setVisible(b: boolean) {
   visible = b;
-  updateTurtle();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Drawing
+//////////////////////////////////////////////////////////////////////////////////////////
+
+function draw() {
+  patshEl.innerHTML = "";
+  for (const path of paths) {
+    const pathEl = (
+      <path
+        xmlns="http://www.w3.org/2000/svg"
+        d={path.d.join(" ")}
+        stroke-width={(path.strokeWidth ?? 5) + ""}
+      />
+    );
+    patshEl.appendChild(pathEl);
+  }
+
+  turtleEl.style.display = visible ? "block" : "none";
+  turtleEl.setAttribute(
+    "transform",
+    `rotate(${rotation} ${position.x} ${position.y}) translate(${
+      position.x - 25
+    } ${position.y - 25})`
+  );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -471,6 +468,8 @@ async function run() {
     forth.onEmit = (c) => outputEl.appendChild(document.createTextNode(c));
     forth.interpret(editor.getValue());
     editor.focus();
+
+    draw();
   } catch (e) {
     console.error(e);
   } finally {
@@ -486,5 +485,6 @@ document.addEventListener("keydown", (ev) => {
 });
 
 reset();
+draw();
 
 loadProgram(DEFAULT_PROGRAM);
