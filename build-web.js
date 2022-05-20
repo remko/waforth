@@ -151,7 +151,8 @@ async function handleBuildFinished(result) {
 if (watch) {
   // Simple static file server
   createServer(async function (req, res) {
-    let f = path.join(__dirname, "public", req.url);
+    const url = req.url.replace(/\?.*/g, "");
+    let f = path.join(__dirname, "public", url);
     try {
       if ((await fs.promises.lstat(f)).isDirectory()) {
         f = path.join(f, "index.html");
@@ -163,7 +164,7 @@ if (watch) {
       const data = await fs.promises.readFile(f);
       res.writeHead(
         200,
-        req.url.endsWith(".svg")
+        url.endsWith(".svg")
           ? {
               "Content-Type": "image/svg+xml",
             }

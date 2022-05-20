@@ -11,7 +11,9 @@ import {
   saveProgram,
 } from "./programs";
 import Editor from "./Editor";
-import path from "path";
+import { saveAs } from "file-saver";
+
+declare let bootstrap: any;
 
 function About() {
   return (
@@ -83,14 +85,35 @@ const rootEl = (
     <div class="main d-flex flex-column p-2">
       <div class="d-flex flex-row flex-grow-1">
         <div class="left-pane d-flex flex-column">
-          <div class="d-flex flex-row">
-            <select class="form-select mb-2" data-hook="examples"></select>
-            <div>
-              <div class="btn-group ms-2">
+          <div class="d-flex flex-row flex-wrap flex-md-nowrap py-2">
+            <select class="form-select" data-hook="examples"></select>
+            <div class="ms-auto me-auto ms-md-2 me-md-0 mt-1 mt-md-0">
+              <div class="btn-group w-xs-100">
+                <button
+                  class="btn btn-primary"
+                  aria-label="Run"
+                  data-hook="run"
+                  onclick={run}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-play-fill"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      xmlns="http://www.w3.org/2000/svg"
+                      d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"
+                    />
+                  </svg>
+                </button>
                 <button
                   type="button"
-                  class="btn btn-light"
+                  class="btn btn-light border"
                   data-hook="save-btn"
+                  aria-label="Save"
                   onclick={save}
                 >
                   <svg
@@ -113,7 +136,7 @@ const rootEl = (
                 </button>
                 <button
                   type="button"
-                  class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                  class="btn btn-light dropdown-toggle dropdown-toggle-split border"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
@@ -139,39 +162,54 @@ const rootEl = (
                       Delete
                     </a>
                   </li>
+                  <li class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick={share}>
+                      Share
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick={downloadSVG}>
+                      Download as SVG
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick={downloadPNG}>
+                      Download as PNG
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
           {editor.el}
-          <button data-hook="run" class="btn btn-primary mt-2">
-            Run
-          </button>
         </div>
         <div class="d-flex flex-column ms-3 right-pane">
           <svg
             class="world"
-            viewBox="0 0 1000 1000"
+            viewBox="-500 -500 1000 1000"
             xmlns="http://www.w3.org/2000/svg"
+            data-hook="world"
           >
             <g
+              fill-opacity="0"
+              stroke="#000"
               xmlns="http://www.w3.org/2000/svg"
-              transform="translate(500 500)"
-            >
-              <g xmlns="http://www.w3.org/2000/svg" id="paths"></g>
-              <image
-                xmlns="http://www.w3.org/2000/svg"
-                id="turtle"
-                width="50"
-                height="50"
-                href={turtle}
-              />
-            </g>
+              id="paths"
+            ></g>
+            <image
+              xmlns="http://www.w3.org/2000/svg"
+              id="turtle"
+              data-hook="turtle"
+              width="50"
+              height="50"
+              href={turtle}
+            />
           </svg>
           <form>
             <div class="form-group mt-3">
               <label>Output</label>
-              <pre class="output" data-hook="output"></pre>
+              <pre class="mb-0 output" data-hook="output"></pre>
             </div>
           </form>
         </div>
@@ -260,6 +298,55 @@ const rootEl = (
         </div>
       </div>
     </div>
+    <div class="modal" tabIndex={-1} data-hook="share-modal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              Share '<span data-hook="title"></span>'
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Share URL</p>
+            <input
+              data-hook="url"
+              onClick={selectShareURL}
+              type="text"
+              readOnly={true}
+              class="form-control"
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-hook="saving-modal" class="modal" tabIndex={-1} role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <p>Saving as PNG ...</p>
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 );
 document.body.appendChild(rootEl);
@@ -279,6 +366,18 @@ const outputEl = rootEl.querySelector(
 const deleteActionEl = rootEl.querySelector(
   "[data-hook=delete-action]"
 ) as HTMLAnchorElement;
+const shareModalEl = rootEl.querySelector("[data-hook=share-modal]");
+const shareModal = new bootstrap.Modal(shareModalEl);
+const shareModalTitleEl = rootEl.querySelector(
+  "[data-hook=share-modal] [data-hook=title]"
+) as HTMLSpanElement;
+const savingModal = new bootstrap.Modal(
+  rootEl.querySelector("[data-hook=saving-modal]")
+);
+const shareModalURLEl = rootEl.querySelector(
+  "[data-hook=share-modal] [data-hook=url]"
+) as HTMLInputElement;
+const worldEl = rootEl.querySelector("[data-hook=world]") as SVGSVGElement;
 
 enum PenState {
   Up = 0,
@@ -292,12 +391,14 @@ type Path = {
 
 let rotation = 0;
 let position = { x: 0, y: 0 };
+let boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 let pen = PenState.Down;
 let visible = true;
 let paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
 
 function reset() {
   position.x = position.y = 0;
+  boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   rotation = 270;
   pen = PenState.Down;
   paths = [{ d: [`M ${position.x} ${position.y}`] }];
@@ -317,14 +418,14 @@ function forward(d: number) {
   paths[paths.length - 1].d.push(
     [pen === PenState.Down ? "l" : "m", dx, dy].join(" ")
   );
+  updatePosition(position.x + dx, position.y + dy);
 }
 
 function setXY(x: number, y: number) {
   paths[paths.length - 1].d.push(
     [pen === PenState.Down ? "l" : "M", x, y].join(" ")
   );
-  position.x = x;
-  position.y = y;
+  updatePosition(x, y);
 }
 
 function setPen(s: PenState) {
@@ -339,9 +440,28 @@ function setVisible(b: boolean) {
   visible = b;
 }
 
+function updatePosition(x: number, y: number) {
+  position.x = x;
+  position.y = y;
+  if (x < boundingBox.minX) {
+    boundingBox.minX = x;
+  }
+  if (x > boundingBox.maxX) {
+    boundingBox.maxX = x;
+  }
+  if (y < boundingBox.minY) {
+    boundingBox.minY = y;
+  }
+  if (y > boundingBox.maxY) {
+    boundingBox.maxY = y;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Drawing
 //////////////////////////////////////////////////////////////////////////////////////////
+
+const padding = 0.05;
 
 function draw() {
   patshEl.innerHTML = "";
@@ -363,6 +483,24 @@ function draw() {
       position.x - 25
     } ${position.y - 25})`
   );
+
+  const width = boundingBox.maxX - boundingBox.minX;
+  const height = boundingBox.maxY - boundingBox.minY;
+  if (width == 0 || height == 0) {
+    worldEl.setAttribute("viewBox", "-500 -500 1000 1000");
+  } else {
+    const paddingX = width * padding;
+    const paddingY = height * padding;
+    worldEl.setAttribute(
+      "viewBox",
+      [
+        Math.floor(boundingBox.minX - paddingX),
+        Math.floor(boundingBox.minY - paddingY),
+        Math.ceil(width + 2 * paddingX),
+        Math.ceil(height + 2 * paddingY),
+      ].join(" ")
+    );
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -427,10 +565,86 @@ function del(ev: MouseEvent) {
   loadProgram(DEFAULT_PROGRAM);
 }
 
+async function getSVG(): Promise<{
+  data: string;
+  width: number;
+  height: number;
+}> {
+  await run();
+  const n = worldEl.cloneNode(true) as SVGSVGElement;
+  n.querySelector("[data-hook=turtle]")?.remove();
+  const viewBox = n.getAttribute("viewBox")!.split(" ");
+  n.setAttribute("width", parseInt(viewBox[2]) + "");
+  n.setAttribute("height", parseInt(viewBox[3]) + "");
+  return {
+    width: parseInt(n.getAttribute("width")!),
+    height: parseInt(n.getAttribute("height")!),
+    data: n.outerHTML,
+  };
+}
+
+async function downloadSVG(ev: MouseEvent) {
+  ev.preventDefault();
+  const blob = new Blob([(await getSVG()).data], { type: "image/svg+xml" });
+  saveAs(blob, programsEl.value + ".svg");
+}
+
+async function downloadPNG(ev: MouseEvent) {
+  ev.preventDefault();
+  savingModal.show();
+  const svg = await getSVG();
+  const img = document.createElement("img");
+  img.style.display = "none";
+  document.body.appendChild(img);
+  try {
+    const dataURL = await new Promise<string>((resolve, reject) => {
+      img.onerror = (e) => {
+        reject(e);
+      };
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = svg.width;
+        canvas.height = svg.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(svg.data);
+    });
+    const blob = await (await fetch(dataURL)).blob();
+    saveAs(blob, programsEl.value + ".png");
+  } catch (e) {
+    console.error(e);
+  } finally {
+    img.remove();
+    savingModal.hide();
+  }
+}
+
+function share(ev: MouseEvent) {
+  ev.preventDefault();
+  shareModalTitleEl.innerText = programsEl.value;
+  shareModalURLEl.value = `${window.location.protocol}//${
+    window.location.host
+  }${window.location.pathname}?pn=${encodeURIComponent(
+    programsEl.value
+  )}&p=${encodeURIComponent(btoa(editor.getValue()))}&ar=1`;
+  shareModal.show();
+}
+
+function selectShareURL() {
+  shareModalURLEl.focus();
+  shareModalURLEl.setSelectionRange(0, 9999);
+  shareModalURLEl.scrollLeft = 0;
+}
+
+shareModalEl.addEventListener("shown.bs.modal", () => {
+  selectShareURL();
+});
+
 programsEl.addEventListener("change", (ev) => {
   loadProgram((ev.target! as HTMLSelectElement).value);
 });
-loadPrograms();
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -465,7 +679,12 @@ async function run() {
       setRotation(-90 - stack.pop());
     });
     forth.interpret(thurtleFS);
-    forth.onEmit = (c) => outputEl.appendChild(document.createTextNode(c));
+    forth.onEmit = (c) => {
+      outputEl.appendChild(document.createTextNode(c));
+      if (c === "\n") {
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+    };
     forth.interpret(editor.getValue());
     editor.focus();
 
@@ -477,14 +696,44 @@ async function run() {
   }
 }
 
-runButtonEl.addEventListener("click", () => run());
 document.addEventListener("keydown", (ev) => {
   if (ev.key == "Enter" && (ev.metaKey || ev.ctrlKey)) {
     run();
   }
 });
 
-reset();
-draw();
+////////////////////////////////////////////////////////////////////
 
-loadProgram(DEFAULT_PROGRAM);
+function parseQS(sqs = window.location.search) {
+  const qs: Record<string, string> = {};
+  const sqss = sqs
+    .substring(sqs.indexOf("?") + 1)
+    .replace(/\+/, " ")
+    .split("&");
+  for (const p of sqss) {
+    const j = p.indexOf("=");
+    if (j > 0) {
+      qs[decodeURIComponent(p.substring(0, j))] = decodeURIComponent(
+        p.substring(j + 1)
+      );
+    }
+  }
+  return qs;
+}
+
+const qs = parseQS();
+if (qs.p) {
+  saveProgram(qs.pn ?? "", atob(qs.p), true);
+  loadPrograms();
+  loadProgram(qs.pn);
+} else {
+  loadPrograms();
+  loadProgram(qs.pn ?? DEFAULT_PROGRAM);
+}
+
+if (qs.ar) {
+  run();
+} else {
+  reset();
+  draw();
+}

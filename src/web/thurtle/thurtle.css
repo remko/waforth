@@ -31,7 +31,10 @@
 
 .output {
   font-size: 0.8em;
-  overflow: scroll;
+  overflow: auto;
+  max-height: calc(
+    100vh - 450px
+  ); /* hack because i can't figure out how to auto scale this */
 }
 
 label {

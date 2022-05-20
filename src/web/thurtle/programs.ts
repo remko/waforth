@@ -2,6 +2,7 @@ export type Program = {
   name: string;
   program: string;
   isExample: boolean;
+  isEphemeral?: boolean;
 };
 
 const examples: Program[] = [
@@ -98,7 +99,6 @@ const examples: Program[] = [
   98 100 */ RECURSE
 ;
 
-PENUP -500 -180 SETXY PENDOWN
 140 SPIRAL
 `,
   },
@@ -152,11 +152,6 @@ PENUP -500 -180 SETXY PENDOWN
 ;
 
 : SNOWFLAKE ( -- )
-  PENUP 
-  LENGTH 4 / NEGATE 
-  LENGTH 2/ NEGATE
-  SETXY
-  PENDOWN
   3 0 DO 
     LENGTH DEPTH SIDE
     120 RIGHT
@@ -173,6 +168,7 @@ SNOWFLAKE
     program: `
 450 CONSTANT SIZE
 7   CONSTANT BRANCHES
+160 CONSTANT SPREAD
 
 VARIABLE RND
 HERE RND !
@@ -192,14 +188,13 @@ HERE RND !
   OVER FORWARD
   BRANCHES 0 DO
     OVER 2/
-    160 CHOOSE 80 -
+    SPREAD CHOOSE SPREAD 2/ -
     RECURSE
   LOOP
-  SWAP BACKWARD
+  PENUP SWAP BACKWARD PENDOWN
   LEFT
 ;
   
-PENUP 0 SIZE NEGATE SETXY PENDOWN
 1 SETPENSIZE
 SIZE 0 PLANT
 `,
@@ -226,10 +221,11 @@ export function getProgram(name: string): Program | undefined {
 }
 
 function savePrograms() {
+  console.log("SavePrograms", programs);
   try {
     window.localStorage.setItem(
       "thurtle:programs",
-      JSON.stringify(programs.filter((p) => !p.isExample))
+      JSON.stringify(programs.filter((p) => !p.isExample && !p.isEphemeral))
     );
   } catch (e) {
     console.error(e);
@@ -237,17 +233,23 @@ function savePrograms() {
   }
 }
 
-export function saveProgram(name: string, program: string): boolean {
+export function saveProgram(
+  name: string,
+  program: string,
+  ephemeral = false
+): boolean {
   const prg = getProgram(name);
   let isNew = false;
   if (prg != null) {
     prg.program = program;
+    prg.isEphemeral = ephemeral;
   } else {
     isNew = true;
     programs.push({
       name,
       isExample: false,
       program,
+      isEphemeral: ephemeral,
     });
   }
   savePrograms();
