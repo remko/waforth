@@ -29,6 +29,7 @@ const examples: Program[] = [
     DUP FORWARD
     90 RIGHT
   LOOP
+  DROP
 ;
 
 250 SQUARE
@@ -44,6 +45,7 @@ const examples: Program[] = [
     DUP FORWARD
     144 RIGHT
   LOOP
+  DROP
 ;
   
 450 PENTAGRAM
@@ -62,6 +64,7 @@ const examples: Program[] = [
     DUP FORWARD
     90 RIGHT
   LOOP
+  DROP
 ;
 
 100 SEEKER
@@ -76,6 +79,7 @@ const examples: Program[] = [
     DUP FORWARD
     90 RIGHT
   LOOP
+  DROP
 ;
 
 : FLOWER ( n -- )
@@ -83,6 +87,7 @@ const examples: Program[] = [
     DUP SQUARE
     15 RIGHT
   LOOP
+  DROP
 ;
 
 250 FLOWER
