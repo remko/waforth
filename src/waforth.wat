@@ -1347,6 +1347,7 @@
     (global.set $tos (local.get $tos))
     (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
     (global.set $sourceID (i32.const 0))
+    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 0))
     (unreachable))
   (data (i32.const 136592) "|\15\02\00" "\04" "QUIT\00\00\00" "t\00\00\00")
   (elem (i32.const 0x74) $QUIT)
