@@ -30,10 +30,16 @@
 }
 
 .output {
-  font-size: 0.8em;
+  font-size: 0.75em;
   overflow: auto;
+  min-height: calc(
+    100vh - 438px
+  ); /* hack because i can't figure out how to auto scale this */
   max-height: calc(
-    100vh - 450px
+    100vh - 438px
+  ); /* hack because i can't figure out how to auto scale this */
+  height: calc(
+    100vh - 438px
   ); /* hack because i can't figure out how to auto scale this */
 }
 

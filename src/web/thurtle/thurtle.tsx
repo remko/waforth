@@ -85,7 +85,7 @@ const rootEl = (
     <div class="main d-flex flex-column p-2">
       <div class="d-flex flex-row flex-grow-1">
         <div class="left-pane d-flex flex-column">
-          <div class="d-flex flex-row flex-wrap flex-md-nowrap py-2">
+          <div class="d-flex flex-row flex-wrap flex-md-nowrap pb-2">
             <select class="form-select" data-hook="examples"></select>
             <div class="ms-auto me-auto ms-md-2 me-md-0 mt-1 mt-md-0">
               <div class="btn-group w-xs-100">
@@ -184,7 +184,7 @@ const rootEl = (
           </div>
           {editor.el}
         </div>
-        <div class="d-flex flex-column ms-3 right-pane">
+        <div class="d-flex flex-column ms-2 right-pane">
           <svg
             class="world"
             viewBox="-500 -500 1000 1000"
@@ -207,9 +207,12 @@ const rootEl = (
             />
           </svg>
           <form>
-            <div class="form-group mt-3">
+            <div class="form-group mt-2">
               <label>Output</label>
-              <pre class="mb-0 output" data-hook="output"></pre>
+              <pre
+                class="mb-0 border rounded px-2 py-1 output"
+                data-hook="output"
+              ></pre>
             </div>
           </form>
         </div>
