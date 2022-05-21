@@ -7,11 +7,8 @@
 /////////////////////////////////////////////////////////////////////////
 
 import * as jsx from "./jsx";
-import WAForth from "waforth";
 import "./thurtle.css";
-import turtle from "./turtle.svg";
 import logo from "../../../doc/logo.svg";
-import thurtleFS from "./thurtle.fs";
 import {
   deleteProgram,
   getProgram,
@@ -20,6 +17,7 @@ import {
 } from "./programs";
 import Editor from "./Editor";
 import { saveAs } from "file-saver";
+import draw from "./draw";
 
 declare let bootstrap: any;
 
@@ -214,25 +212,9 @@ const rootEl = (
         <div class="d-flex flex-column ms-2 right-pane">
           <svg
             class="world"
-            viewBox="-500 -500 1000 1000"
             xmlns="http://www.w3.org/2000/svg"
             data-hook="world"
-          >
-            <g
-              fill-opacity="0"
-              stroke="#000"
-              xmlns="http://www.w3.org/2000/svg"
-              id="paths"
-            ></g>
-            <image
-              xmlns="http://www.w3.org/2000/svg"
-              id="turtle"
-              data-hook="turtle"
-              width="50"
-              height="50"
-              href={turtle}
-            />
-          </svg>
+          />
           <form>
             <div class="form-group mt-2">
               <label>Output</label>
@@ -383,9 +365,6 @@ const rootEl = (
 );
 document.body.appendChild(rootEl);
 
-const turtleEl = document.getElementById("turtle")!;
-let pathEl: SVGPathElement;
-const patshEl = document.getElementById("paths")!;
 const runButtonEl = rootEl.querySelector(
   "button[data-hook=run]"
 )! as HTMLButtonElement;
@@ -410,130 +389,6 @@ const shareModalURLEl = rootEl.querySelector(
   "[data-hook=share-modal] [data-hook=url]"
 ) as HTMLInputElement;
 const worldEl = rootEl.querySelector("[data-hook=world]") as SVGSVGElement;
-
-enum PenState {
-  Up = 0,
-  Down = 1,
-}
-
-type Path = {
-  strokeWidth?: number;
-  d: string[];
-};
-
-let rotation = 0;
-let position = { x: 0, y: 0 };
-let boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-let pen = PenState.Down;
-let visible = true;
-let paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
-
-function reset() {
-  position.x = position.y = 0;
-  boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-  rotation = 270;
-  pen = PenState.Down;
-  paths = [{ d: [`M ${position.x} ${position.y}`] }];
-}
-
-function rotate(deg: number) {
-  rotation = rotation + deg;
-}
-
-function setRotation(deg: number) {
-  rotation = deg;
-}
-
-function forward(d: number) {
-  const dx = d * Math.cos((rotation * Math.PI) / 180.0);
-  const dy = d * Math.sin((rotation * Math.PI) / 180.0);
-  paths[paths.length - 1].d.push(
-    [pen === PenState.Down ? "l" : "m", dx, dy].join(" ")
-  );
-  updatePosition(position.x + dx, position.y + dy);
-}
-
-function setXY(x: number, y: number) {
-  paths[paths.length - 1].d.push(
-    [pen === PenState.Down ? "l" : "M", x, y].join(" ")
-  );
-  updatePosition(x, y);
-}
-
-function setPen(s: PenState) {
-  pen = s;
-}
-
-function setPenSize(s: number) {
-  paths.push({ d: [`M ${position.x} ${position.y}`], strokeWidth: s });
-}
-
-function setVisible(b: boolean) {
-  visible = b;
-}
-
-function updatePosition(x: number, y: number) {
-  position.x = x;
-  position.y = y;
-  if (x < boundingBox.minX) {
-    boundingBox.minX = x;
-  }
-  if (x > boundingBox.maxX) {
-    boundingBox.maxX = x;
-  }
-  if (y < boundingBox.minY) {
-    boundingBox.minY = y;
-  }
-  if (y > boundingBox.maxY) {
-    boundingBox.maxY = y;
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Drawing
-//////////////////////////////////////////////////////////////////////////////////////////
-
-const padding = 0.05;
-
-function draw() {
-  patshEl.innerHTML = "";
-  for (const path of paths) {
-    const pathEl = (
-      <path
-        xmlns="http://www.w3.org/2000/svg"
-        d={path.d.join(" ")}
-        stroke-width={(path.strokeWidth ?? 5) + ""}
-      />
-    );
-    patshEl.appendChild(pathEl);
-  }
-
-  turtleEl.style.display = visible ? "block" : "none";
-  turtleEl.setAttribute(
-    "transform",
-    `rotate(${rotation} ${position.x} ${position.y}) translate(${
-      position.x - 25
-    } ${position.y - 25})`
-  );
-
-  const width = boundingBox.maxX - boundingBox.minX;
-  const height = boundingBox.maxY - boundingBox.minY;
-  if (width == 0 || height == 0) {
-    worldEl.setAttribute("viewBox", "-500 -500 1000 1000");
-  } else {
-    const paddingX = width * padding;
-    const paddingY = height * padding;
-    worldEl.setAttribute(
-      "viewBox",
-      [
-        Math.floor(boundingBox.minX - paddingX),
-        Math.floor(boundingBox.minY - paddingY),
-        Math.ceil(width + 2 * paddingX),
-        Math.ceil(height + 2 * paddingY),
-      ].join(" ")
-    );
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Programs
@@ -602,16 +457,15 @@ async function getSVG(): Promise<{
   width: number;
   height: number;
 }> {
-  await run();
-  const n = worldEl.cloneNode(true) as SVGSVGElement;
-  n.querySelector("[data-hook=turtle]")?.remove();
-  const viewBox = n.getAttribute("viewBox")!.split(" ");
-  n.setAttribute("width", parseInt(viewBox[2]) + "");
-  n.setAttribute("height", parseInt(viewBox[3]) + "");
+  const svgEl = <svg xmlns="http://www.w3.org/2000/svg" />;
+  await draw({ program: editor.getValue(), drawEl: svgEl, showTurtle: false });
+  const viewBox = svgEl.getAttribute("viewBox")!.split(" ");
+  svgEl.setAttribute("width", parseInt(viewBox[2]) + "");
+  svgEl.setAttribute("height", parseInt(viewBox[3]) + "");
   return {
-    width: parseInt(n.getAttribute("width")!),
-    height: parseInt(n.getAttribute("height")!),
-    data: n.outerHTML,
+    width: parseInt(svgEl.getAttribute("width")!),
+    height: parseInt(svgEl.getAttribute("height")!),
+    data: svgEl.outerHTML,
   };
 }
 
@@ -678,49 +532,19 @@ programsEl.addEventListener("change", (ev) => {
   loadProgram((ev.target! as HTMLSelectElement).value);
 });
 
+document.addEventListener("keydown", (ev) => {
+  if (ev.key == "Enter" && (ev.metaKey || ev.ctrlKey)) {
+    run();
+  }
+});
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 async function run() {
   try {
     runButtonEl.disabled = true;
-    reset();
-
-    const forth = new WAForth();
-    await forth.load();
-    forth.bind("forward", (stack) => {
-      forward(stack.pop());
-    });
-    forth.bind("rotate", (stack) => {
-      rotate(-stack.pop());
-    });
-    forth.bind("pen", (stack) => {
-      setPen(stack.pop());
-    });
-    forth.bind("turtle", (stack) => {
-      setVisible(stack.pop() != 0);
-    });
-    forth.bind("setpensize", (stack) => {
-      setPenSize(stack.pop());
-    });
-    forth.bind("setxy", (stack) => {
-      const y = stack.pop();
-      const x = stack.pop();
-      setXY(x, -y);
-    });
-    forth.bind("setheading", (stack) => {
-      setRotation(-90 - stack.pop());
-    });
-    forth.interpret(thurtleFS);
-    forth.onEmit = (c) => {
-      outputEl.appendChild(document.createTextNode(c));
-      if (c === "\n") {
-        outputEl.scrollTop = outputEl.scrollHeight;
-      }
-    };
-    forth.interpret(editor.getValue());
+    await draw({ program: editor.getValue(), drawEl: worldEl, outputEl });
     editor.focus();
-
-    draw();
   } catch (e) {
     console.error(e);
   } finally {
@@ -728,11 +552,9 @@ async function run() {
   }
 }
 
-document.addEventListener("keydown", (ev) => {
-  if (ev.key == "Enter" && (ev.metaKey || ev.ctrlKey)) {
-    run();
-  }
-});
+async function reset() {
+  await draw({ drawEl: worldEl, outputEl });
+}
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -749,5 +571,4 @@ if (qs.ar) {
   run();
 } else {
   reset();
-  draw();
 }
