@@ -6,6 +6,10 @@
   height: calc(100% - 40px);
 }
 
+.no-nav .main {
+  height: 100%;
+}
+
 .editor {
   flex: 1;
 }
@@ -13,6 +17,10 @@
 .navbar {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+
+.no-nav nav {
+  display: none;
 }
 
 .world {
@@ -32,14 +40,14 @@
 .output {
   font-size: 0.75em;
   overflow: auto;
-  min-height: calc(
-    100vh - 438px
-  ); /* hack because i can't figure out how to auto scale this */
-  max-height: calc(
-    100vh - 438px
-  ); /* hack because i can't figure out how to auto scale this */
   height: calc(
     100vh - 438px
+  ); /* hack because i can't figure out how to auto scale this */
+}
+
+.no-nav .output {
+  height: calc(
+    100vh - 398px
   ); /* hack because i can't figure out how to auto scale this */
 }
 

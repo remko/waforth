@@ -67,7 +67,10 @@ export const createElement = (
   return element;
 };
 
-const appendChild = (parent: HTMLElement, child: Child | Child[]) => {
+const appendChild = (parent: HTMLElement, child: Child | Child[] | null) => {
+  if (child == null) {
+    return;
+  }
   if (Array.isArray(child))
     child.forEach((nestedChild) => appendChild(parent, nestedChild));
   else

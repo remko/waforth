@@ -1,3 +1,11 @@
+/////////////////////////////////////////////////////////////////////////
+// Query parameters:
+// `p`: Base64-encoded program
+// `pn`: Program name. If `p` is not provided, looks up builtin example
+// `ar`: Auto-run program
+// `sn`: Show navbar (default: 1)
+/////////////////////////////////////////////////////////////////////////
+
 import * as jsx from "./jsx";
 import WAForth from "waforth";
 import "./thurtle.css";
@@ -15,6 +23,25 @@ import { saveAs } from "file-saver";
 
 declare let bootstrap: any;
 
+function parseQS(sqs = window.location.search) {
+  const qs: Record<string, string> = {};
+  const sqss = sqs
+    .substring(sqs.indexOf("?") + 1)
+    .replace(/\+/, " ")
+    .split("&");
+  for (const p of sqss) {
+    const j = p.indexOf("=");
+    if (j > 0) {
+      qs[decodeURIComponent(p.substring(0, j))] = decodeURIComponent(
+        p.substring(j + 1)
+      );
+    }
+  }
+  return qs;
+}
+
+const qs = parseQS();
+
 function About() {
   return (
     <>
@@ -27,7 +54,7 @@ function About() {
 const editor = new Editor();
 
 const rootEl = (
-  <div class="root">
+  <div class={"root" + (qs.sn === "0" ? " no-nav" : "")}>
     <nav class="navbar navbar-light bg-light">
       <div class="container-fluid">
         <a class="navbar-brand" href="/thurtle">
@@ -217,11 +244,13 @@ const rootEl = (
           </form>
         </div>
       </div>
-      <div class="container mt-2 text-muted d-sm-none">
-        <p>
-          <About />
-        </p>
-      </div>
+      {qs.sn !== "0" ? (
+        <div class="container mt-2 text-muted d-sm-none">
+          <p>
+            <About />
+          </p>
+        </div>
+      ) : null}
     </div>
     <div
       class="modal fade"
@@ -705,26 +734,8 @@ document.addEventListener("keydown", (ev) => {
   }
 });
 
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
-function parseQS(sqs = window.location.search) {
-  const qs: Record<string, string> = {};
-  const sqss = sqs
-    .substring(sqs.indexOf("?") + 1)
-    .replace(/\+/, " ")
-    .split("&");
-  for (const p of sqss) {
-    const j = p.indexOf("=");
-    if (j > 0) {
-      qs[decodeURIComponent(p.substring(0, j))] = decodeURIComponent(
-        p.substring(j + 1)
-      );
-    }
-  }
-  return qs;
-}
-
-const qs = parseQS();
 if (qs.p) {
   saveProgram(qs.pn ?? "", atob(qs.p), true);
   loadPrograms();
