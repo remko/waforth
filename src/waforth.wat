@@ -1898,13 +1898,9 @@
       (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
       (if (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))))
         (then
-          (local.set $p (i32.add (local.get $entryP) (i32.const 5)))
-          (local.set $pe (i32.add (local.get $p) 
-                                  (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))))
-          (loop $emitLoop
-            (call $shell_emit (i32.load8_u (local.get $p)))
-            (local.set $p (i32.add (local.get $p) (i32.const 1)))
-            (br_if $emitLoop (i32.lt_s (local.get $p) (local.get $pe))))))
+          (call $type  
+            (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))
+            (i32.add (local.get $entryP) (i32.const 5)))))
       (call $shell_emit (i32.const 0x20))
       (local.set $entryP (i32.load (local.get $entryP)))
       (br_if $loop (local.get $entryP)))
