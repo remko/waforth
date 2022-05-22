@@ -14,6 +14,14 @@ function loadTests() {
         output = output + c;
         // console.log(output);
       };
+      let k = 0;
+      const keyString =
+        "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      forth.key = () => {
+        const c = keyString.charCodeAt(k);
+        k = (k + 1) % keyString.length;
+        return c;
+      };
       const x = forth.load().then(
         () => {
           core = forth.core.exports;
@@ -1576,6 +1584,9 @@ function loadTests() {
           "YOU SHOULD SEE THE NUMBER RANGES OF SIGNED AND UNSIGNED NUMBERS:\n  SIGNED: -80000000 7FFFFFFF \n"
         );
         expect(output).to.include("UNSIGNED: 0 FFFFFFFF \n");
+        expect(output).to.include(
+          `RECEIVED: "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr"\n`
+        );
       });
     });
   });

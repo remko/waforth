@@ -971,17 +971,17 @@ T{ OUTPUT-TEST -> }T
 
 \ ------------------------------------------------------------------------
 \ TESTING INPUT: ACCEPT
-\ 
-\ CREATE ABUF 50 CHARS ALLOT
-\ 
-\ : ACCEPT-TEST
-\    CR ." PLEASE TYPE UP TO 80 CHARACTERS:" CR
-\    ABUF 50 ACCEPT
-\    CR ." RECEIVED: " [CHAR] " EMIT
-\    ABUF SWAP TYPE [CHAR] " EMIT CR
-\ ;
-\ 
-\ T{ ACCEPT-TEST -> }T
+
+CREATE ABUF 50 CHARS ALLOT
+
+: ACCEPT-TEST
+   CR ." PLEASE TYPE UP TO 80 CHARACTERS:" CR
+   ABUF 50 ACCEPT
+   CR ." RECEIVED: " [CHAR] " EMIT
+   ABUF SWAP TYPE [CHAR] " EMIT CR
+;
+
+T{ ACCEPT-TEST -> }T
 
 \ ------------------------------------------------------------------------
 TESTING DICTIONARY SEARCH RULES

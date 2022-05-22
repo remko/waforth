@@ -55,6 +55,7 @@ class WAForth {
    * `c` is the ASCII code of the character to be emitted.
    */
   onEmit?: (c: string) => void;
+  key: () => number;
 
   constructor() {
     this.#fns = {};
@@ -70,6 +71,21 @@ class WAForth {
         }
       };
     })();
+
+    const keyBuffer: string[] = [];
+    this.key = () => {
+      while (keyBuffer.length === 0) {
+        const c = window.prompt("Enter text");
+        if (c == null) {
+          continue;
+        }
+        keyBuffer.push(...c.split(""));
+        if (c.length === 0 || c.length > 1) {
+          keyBuffer.push("\n");
+        }
+      }
+      return keyBuffer.shift()!.charCodeAt(0);
+    };
   }
 
   /**
@@ -101,26 +117,8 @@ class WAForth {
           return buffer.pop();
         },
 
-        debug: (d: number) => {
-          console.log("DEBUG: ", d, String.fromCharCode(d));
-        },
-
         key: () => {
-          let c: string | null = null;
-          while (c == null || c == "") {
-            c = window.prompt("Enter character");
-          }
-          return c.charCodeAt(0);
-        },
-
-        accept: (p: number, n: number) => {
-          const input = (window.prompt("Enter text") || "").substring(0, n);
-          const target = new Uint8Array(memory.buffer, p, input.length);
-          for (let i = 0; i < input.length; ++i) {
-            target[i] = input.charCodeAt(i);
-          }
-          console.log("ACCEPT", p, n, input.length);
-          return input.length;
+          return this.key();
         },
 
         ////////////////////////////////////////

@@ -15,8 +15,6 @@
   (import "shell" "emit" (func $shell_emit (param i32)))
   (import "shell" "getc" (func $shell_getc (result i32)))
   (import "shell" "key" (func $shell_key (result i32)))
-  (import "shell" "accept" (func $shell_accept (param i32) (param i32) (result i32)))
-  ;; (import "shell" "debug" (func $shell_debug (param i32)))
 
   ;; Load a webassembly module.
   ;; Parameters: memory offset, size, table index where the new module will
@@ -712,9 +710,23 @@
   (func $ACCEPT (param $tos i32) (result i32)
     (local $btos i32)
     (local $bbtos i32)
-    (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
-                (call $shell_accept (i32.load (local.get $bbtos))
-                                    (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
+    (local $addr i32)
+    (local $p i32)
+    (local $endp i32)
+    (local $c i32)
+    (local.set $endp 
+      (i32.add 
+        (local.tee $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
+        (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
+    (local.set $p (local.get $addr))
+    (block $endLoop
+      (loop $loop
+        (br_if $endLoop (i32.eq (local.tee $c (call $shell_key)) (i32.const 0xa)))
+        (i32.store8 (local.get $p) (local.get $c))
+        (local.set $p (i32.add (local.get $p) (i32.const 1)))
+        (call $shell_emit (local.get $c))
+        (br_if $loop (i32.lt_u (local.get $p) (local.get $endp)))))
+    (i32.store (local.get $bbtos)  (i32.sub (local.get $p) (local.get $addr)))
     (local.get $btos))
   (data (i32.const 135744) "4\12\02\00" "\06" "ACCEPT\00" "<\00\00\00")
   (elem (i32.const 0x3c) $ACCEPT)
