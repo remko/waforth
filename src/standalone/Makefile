@@ -1,7 +1,7 @@
 WAMR_DIR=wasm-micro-runtime
 CC=clang
-CFLAGS=-I$(WAMR_DIR)/core/iwasm/include -DWASM_ENABLE_DEBUG_INTERP
-LDFLAGS=-L$(WAMR_DIR)/product-mini/platforms/darwin/build -rpath $(WAMR_DIR)/product-mini/platforms/darwin/build
+CFLAGS=-g -I$(WAMR_DIR)/core/iwasm/include -DWASM_ENABLE_DEBUG_INTERP
+LDFLAGS=-g -L$(WAMR_DIR)/product-mini/platforms/darwin/build -rpath $(WAMR_DIR)/product-mini/platforms/darwin/build
 LIBS=-liwasm
 
 BIN2H=../../scripts/bin2h
