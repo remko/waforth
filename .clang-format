@@ -1,0 +1,6 @@
+---
+BasedOnStyle: LLVM
+ColumnLimit: 150
+---
+Language: Cpp
+AllowShortFunctionsOnASingleLine: Empty

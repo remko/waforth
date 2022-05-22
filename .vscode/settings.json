@@ -32,5 +32,8 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
+  },
+  "[c]": {
+    "editor.formatOnSave": true
   }
 }
