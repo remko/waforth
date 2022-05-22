@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+const process = require("process");
+const fs = require("fs");
+const path = require("path");
+
+const infn = process.argv[2];
+const outfn = process.argv[3];
+
+const name = path.basename(outfn).split(".").slice(0, -1).join(".");
+const inf = fs.readFileSync(infn);
+const bs = [];
+for (const b of inf) {
+  bs.push(`0x${b.toString(16)}`);
+}
+const out = `unsigned char ${name}[] = { ${bs.join(", ")} };\n`;
+fs.writeFileSync(outfn, out);
