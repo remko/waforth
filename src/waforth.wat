@@ -2756,15 +2756,14 @@
   (func $readChar (result i32)
     (local $n i32)
     (local $in i32)
-    (if (i32.ge_u (local.tee $in (i32.load (i32.const 0x21908 (; body(>IN) ;))))
+    (if (result i32) (i32.ge_u (local.tee $in (i32.load (i32.const 0x21908 (; body(>IN) ;))))
                   (global.get $inputBufferSize))
       (then
-        (return (i32.const -1)))
+        (i32.const -1))
       (else
         (local.set $n (i32.load8_s (i32.add (global.get $inputBufferBase) (local.get $in))))
         (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.add (local.get $in) (i32.const 1)))
-        (return (local.get $n))))
-    (unreachable))
+        (local.get $n))))
 
     (func $numberToChar (param $v i32) (result i32)
       (if (result i32) (i32.ge_u (local.get $v) (i32.const 10))
