@@ -2188,9 +2188,12 @@
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))))
 
     ;; Load the code
-    (call $shell_load (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)) 
-                      (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)))
-                      (global.get $nextTableIndex))
+    (if (i32.ge_u (global.get $nextTableIndex) (table.size 0))
+      (then (drop (table.grow 0 (ref.func $!) (table.size 0))))) ;; Double size
+    (call $shell_load 
+      (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)) 
+      (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)))
+      (global.get $nextTableIndex))
 
     (global.set $nextTableIndex (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
