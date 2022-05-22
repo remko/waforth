@@ -96,7 +96,7 @@ class WAForth {
   async load() {
     let table: WebAssembly.Table;
     let memory: WebAssembly.Memory;
-    const buffer = (this.#buffer = []);
+    this.#buffer = [];
 
     const instance = await WebAssembly.instantiate(wasmModule, {
       shell: {
@@ -110,11 +110,18 @@ class WAForth {
           }
         },
 
-        getc: () => {
-          if (buffer.length === 0) {
-            return -1;
+        read: (addr: number, length: number): number => {
+          let data = new Uint8Array(
+            (this.core!.exports.memory as WebAssembly.Memory).buffer,
+            addr,
+            length
+          );
+          let n = 0;
+          while (this.#buffer!.length > 0 && n < length) {
+            data[n] = this.#buffer!.shift()!;
+            n += 1;
           }
-          return buffer.pop();
+          return n;
         },
 
         key: () => {
@@ -212,7 +219,7 @@ class WAForth {
    */
   read(s: string) {
     const data = new TextEncoder().encode(s);
-    for (let i = data.length - 1; i >= 0; --i) {
+    for (let i = 0, len = data.length; i < len; ++i) {
       this.#buffer!.push(data[i]);
     }
   }

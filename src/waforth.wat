@@ -13,7 +13,7 @@
 
   ;; I/O
   (import "shell" "emit" (func $shell_emit (param i32)))
-  (import "shell" "getc" (func $shell_getc (result i32)))
+  (import "shell" "read" (func $shell_read (param i32 i32) (result i32)))
   (import "shell" "key" (func $shell_key (result i32)))
 
   ;; Load a webassembly module.
@@ -77,6 +77,7 @@
   ;;
   ;; Memory layout:
   ;;   INPUT_BUFFER_BASE  :=   0x300
+  ;;   INPUT_BUFFER_SIZE  :=   0x700
   ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
   ;;   MODULE_HEADER_BASE :=  0x1000 
   ;;   RETURN_STACK_BASE  :=  0x2000
@@ -1730,13 +1731,10 @@
       (then
         (call $push (i32.const -1))
         (return)))
-    (block $endLoop (param i32) (result i32) 
-      (loop $loop (param i32) (result i32) 
-        (br_if $endLoop (i32.eq (local.tee $char (call $shell_getc)) (i32.const -1)))
-        (i32.store8 (i32.add (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)) (global.get $inputBufferSize)) 
-                    (local.get $char))
-        (global.set $inputBufferSize (i32.add (global.get $inputBufferSize) (i32.const 1)))
-        (br $loop)))
+    (global.set $inputBufferSize 
+      (call $shell_read 
+        (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)) 
+        (i32.const 0x700 (; = INPUT_BUFFER_SIZE ;))))
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
       (else 
