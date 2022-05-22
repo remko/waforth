@@ -147,9 +147,6 @@ class WAForth {
             }
             data = new Uint8Array(dataCopy);
           }
-          if (index >= table.length) {
-            table.grow(table.length); // Double size
-          }
           // console.log("Load", index, arrayToBase64(data));
           try {
             var module = new WebAssembly.Module(data);
