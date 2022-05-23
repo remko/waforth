@@ -28,14 +28,8 @@ process: src/waforth.vanilla.wat
 src/waforth.vanilla.wat: src/waforth.wat
 	./scripts/process.js $< $@
 
-src/waforth.bulkmem.wat: src/waforth.wat
-	./scripts/process.js --enable-bulk-memory $< $@
-
 src/web/benchmarks/sieve/sieve-c.js:
 	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ -sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-
-src/waforth.bulkmem.wasm: src/waforth.bulkmem.wat
-	$(WAT2WASM) $(WAT2WASM_FLAGS) --enable-bulk-memory -o $@ $<
 
 %.wasm: %.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<

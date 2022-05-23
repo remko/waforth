@@ -903,9 +903,10 @@
     (drop (call $pop))
     (i32.store8 (global.get $here) (local.get $length))
 
-    (call $memcopy 
+    (memory.copy 
       (local.tee $here (i32.add (global.get $here) (i32.const 1)))
-      (i32.add (call $wordBase) (i32.const 1)) (local.get $length))
+      (i32.add (call $wordBase) (i32.const 1)) 
+      (local.get $length))
 
     (global.set $here (i32.add (local.get $here) (local.get $length)))
 
@@ -1077,9 +1078,10 @@
   ;; 6.1.1540
   (func $FILL (param $tos i32) (result i32)
     (local $bbbtos i32)
-    (call $memset (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
-                  (i32.load (i32.sub (local.get $tos) (i32.const 4)))
-                  (i32.load (i32.sub (local.get $tos) (i32.const 8))))
+    (memory.fill 
+      (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
+      (i32.load (i32.sub (local.get $tos) (i32.const 4)))
+      (i32.load (i32.sub (local.get $tos) (i32.const 8))))
     (local.get $bbbtos))
   (data (i32.const 136236) "\1c\14\02\00" "\04" "FILL\00\00\00" "\5c\00\00\00")
   (elem (i32.const 0x5c) $FILL)
@@ -1297,9 +1299,10 @@
   ;; 6.1.1900
   (func $MOVE (param $tos i32) (result i32)
     (local $bbbtos i32)
-    (call $memcopy (i32.load (i32.sub (local.get $tos) (i32.const 8)))
-                    (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
-                    (i32.load (i32.sub (local.get $tos) (i32.const 4))))
+    (memory.copy 
+      (i32.load (i32.sub (local.get $tos) (i32.const 8)))
+      (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
+      (i32.load (i32.sub (local.get $tos) (i32.const 4))))
     (local.get $bbbtos))
   (data (i32.const 136512) "4\15\02\00" "\04" "MOVE\00\00\00" "o\00\00\00")
   (elem (i32.const 0x6f) $MOVE)
@@ -1703,9 +1706,10 @@
   ;; 6.2.1350
   (func $ERASE (param $tos i32) (result i32)
     (local $bbtos i32)
-    (call $memset (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
-                  (i32.const 0)
-                  (i32.load (i32.sub (local.get $tos) (i32.const 4))))
+    (memory.fill 
+      (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
+      (i32.const 0)
+      (i32.load (i32.sub (local.get $tos) (i32.const 4))))
     (local.get $bbtos))
   (data (i32.const 137072) "d\17\02\00" "\05" "ERASE\00\00" "\95\00\00\00")
   (elem (i32.const 0x95) $ERASE)
@@ -2183,9 +2187,10 @@
                     (i32.add (i32.const 1) (local.get $nameLength)))
         (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (local.get $nameLength)) 
         (global.set $cp (i32.add (global.get $cp) (i32.const 3)))
-        (call $memcopy (global.get $cp)
-                      (i32.add (global.get $latest) (i32.const 5))
-                      (local.get $nameLength))
+        (memory.copy 
+          (global.get $cp)
+          (i32.add (global.get $latest) (i32.const 5))
+          (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))
 
         (i32.store8 (global.get $cp) (i32.const 0x01))
@@ -2195,9 +2200,10 @@
         (i32.store8 (i32.add (global.get $cp) (i32.const 3)) (i32.const 0x00))
         (i32.store8 (i32.add (global.get $cp) (i32.const 4)) (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (i32.const 5)))
-        (call $memcopy (global.get $cp)
-                      (i32.add (global.get $latest) (i32.const 5))
-                      (local.get $nameLength))
+        (memory.copy 
+          (global.get $cp)
+          (i32.add (global.get $latest) (i32.const 5))
+          (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))))
 
     ;; Load the code
@@ -2668,42 +2674,6 @@
       (i32.xor 
         (i32.load (i32.add (global.get $latest) (i32.const 4)))
         (i32.const 0x20 (; = F_HIDDEN ;)))))
-
-  ;; Drop-in replacement of memory.copy
-  (func $memcopy (param $dst i32) (param $src i32) (param $n i32)
-    (local $end i32)
-    (if (i32.gt_u (local.get $dst) (local.get $src))
-      (then
-        (local.set $end (local.get $src))
-        (local.set $src (i32.sub (i32.add (local.get $src) (local.get $n)) (i32.const 1)))
-        (local.set $dst (i32.sub (i32.add (local.get $dst) (local.get $n)) (i32.const 1)))
-        (block $endLoop
-          (loop $loop
-            (br_if $endLoop (i32.lt_u (local.get $src) (local.get $end)))
-            (i32.store8 (local.get $dst) (i32.load8_u (local.get $src)))
-            (local.set $src (i32.sub (local.get $src) (i32.const 1)))
-            (local.set $dst (i32.sub (local.get $dst) (i32.const 1)))
-            (br $loop))))
-      (else
-        (local.set $end (i32.add (local.get $src) (local.get $n)))
-        (block $endLoop
-          (loop $loop
-            (br_if $endLoop (i32.eq (local.get $src) (local.get $end)))
-            (i32.store8 (local.get $dst) (i32.load8_u (local.get $src)))
-            (local.set $src (i32.add (local.get $src) (i32.const 1)))
-            (local.set $dst (i32.add (local.get $dst) (i32.const 1)))
-            (br $loop))))))
-
-  ;; Drop-in replacement of memory.fill
-  (func $memset (param $dst i32) (param $c i32) (param $n i32)
-    (local $end i32)
-    (local.set $end (i32.add (local.get $dst) (local.get $n)))
-    (block $endLoop
-      (loop $loop
-        (br_if $endLoop (i32.eq (local.get $dst) (local.get $end)))
-        (i32.store8 (local.get $dst) (local.get $c))
-        (local.set $dst (i32.add (local.get $dst) (i32.const 1)))
-        (br $loop))))
 
   ;; LEB128 with fixed 4 bytes (with padding bytes)
   ;; This means we can only represent 28 bits, which should be plenty.
