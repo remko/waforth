@@ -623,7 +623,6 @@
 
   ;; 6.1.0560
   (data (i32.const 0x218fc) "\e8\18\02\00" "\43" (; DATA ;) ">IN" "\03\00\00\00" "\00\00\00\00")
-  (data (i32.const 135632) "\c0\11\02\00" "\23" (; HIDDEN;) "UNU" "4\00\00\00")
 
   ;; 6.1.0570
   (func $>NUMBER (param $tos i32) (result i32) 
@@ -773,7 +772,6 @@
 
   ;; 6.1.0750 
   (data (i32.const 0x218d4) "\c4\18\02\00" "\44" "BASE\00\00\00" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\0a\00\00\00" (; = pack(10) ;))
-  (data (i32.const 135820) "\80\12\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "A\00\00\00")
 
   ;; 6.1.0760 
   (func $BEGIN (param $tos i32) (result i32)
@@ -983,18 +981,6 @@
     (i32.sub (local.get $tos) (i32.const 4)))
   (data (i32.const 136148) "\c4\13\02\00" "\04" "EMIT\00\00\00" "W\00\00\00")
   (elem (i32.const 0x57) $EMIT)
-
-  ;; TODO: Remove
-  (func $UNUSED1 (param $tos i32) (result i32)
-    (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 136164) "\d4\13\02\00" "\2b" (; HIDDEN ;) "UNUSED1____" "X\00\00\00")
-  (elem (i32.const 0x58) $UNUSED1)
-
-  ;; TODO: Remove
-  (func $UNUSED2 (param $tos i32) (result i32)
-    (call $fail (local.get $tos) (i32.const 0x20084))) ;; not implemented
-  (data (i32.const 137224) "\f8\17\02\00" "\2c" "UNUSED______\00\00\00" "\9f\00\00\00")
-  (elem (i32.const 0x9f) $UNUSED2)
 
   ;; 6.1.1345
   (func $ENVIRONMENT? (param $tos i32) (result i32)
@@ -1520,7 +1506,6 @@
 
   ;; 6.1.2250
   (data (i32.const 0x218e8) "\d4\18\02\00" "\45" (; DATA ;) "STATE\00\00" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; = pack(0) ;))
-  (data (i32.const 136796) "L\16\02\00" "\26" (; HIDDEN ;) "UNUSED\00" "\82\00\00\00")
 
   ;; 6.1.2260
   (func $SWAP (param $tos i32) (result i32)
@@ -1791,25 +1776,13 @@
   (data (i32.const 137160) "\bc\17\02\00" "\09" "SOURCE-ID\00\00" "\9b\00\00\00")
   (elem (i32.const 0x9b) $SOURCE-ID)
 
-  (func $DSP@ (param $tos i32) (result i32)
-    (i32.store
-      (local.get $tos)
-      (local.get $tos))
-    (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 137180) "\c8\17\02\00" "\04" "DSP@\00\00\00" "\9c\00\00\00")
-  (elem (i32.const 0x9c) $DSP@)
-
-  (func $S0 (param $tos i32) (result i32)
-    (call $push (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;))))
-  (data (i32.const 137196) "\dc\17\02\00" "\02" "S0\00" "\9d\00\00\00")
-  (elem (i32.const 0x9d) $S0)
-
   (func $LATEST (param $tos i32) (result i32)
     (i32.store (local.get $tos) (global.get $latest))
     (i32.add (local.get $tos) (i32.const 4)))
   (data (i32.const 137208) "\ec\17\02\00" "\06" "LATEST\00" "\9e\00\00\00")
   (elem (i32.const 0x9e) $LATEST)
 
+  ;; 6.2.1660
   (func $HEX (param $tos i32) (result i32)
     (i32.store (i32.const 0x218e4 (; = body(BASE) ;)) (i32.const 16))
     (local.get $tos))
@@ -1839,7 +1812,6 @@
   (func $TUCK (param $tos i32) (result i32)
     (local.get $tos)
     (call $SWAP) (call $OVER))
-  (data (i32.const 0x21858) "\4c\18\02\00" "\23" (; HIDDEN ;) "UND" "\a4\00\00\00")
   (data (i32.const 0x2190c) "\fc\18\02\00" "\04" "TUCK\00\00\00" "\a4\00\00\00")
   (elem (i32.const 0xa4) $TUCK)
 
@@ -1929,6 +1901,15 @@
     (global.get $tos))
   (data (i32.const 0x218c4) "\ac\18\02\00" "\05" "SCALL\00\00" "\aa\00\00\00")
   (elem (i32.const 0xaa) $SCALL)
+
+  (data (i32.const 135820) "\80\12\02\00" "\26" (; HIDDEN ;) "UNDEFIN" "A\00\00\00")
+  (data (i32.const 136796) "L\16\02\00" "\26" (; HIDDEN ;) "UNDEFIN" "\82\00\00\00")
+  (data (i32.const 137180) "\c8\17\02\00" "\24" (; HIDDEN ;) "UNDEFIN" "\9c\00\00\00")
+  (data (i32.const 137196) "\dc\17\02\00" "\22" (; HIDDEN ;) "UND" "\9d\00\00\00")
+  (data (i32.const 0x21858) "\4c\18\02\00" "\23" (; HIDDEN ;) "UND" "\a4\00\00\00")
+  (data (i32.const 136164) "\d4\13\02\00" "\2b" (; HIDDEN ;) "UNDEFINED__" "X\00\00\00")
+  (data (i32.const 137224) "\f8\17\02\00" "\2c" (; HIDDEN ;) "UNDEFINED___\00\00\00" "\9f\00\00\00")
+  (data (i32.const 135632) "\c0\11\02\00" "\23" (; HIDDEN;) "UND" "4\00\00\00")
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
