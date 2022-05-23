@@ -132,7 +132,7 @@ class WAForth {
         // Loader
         ////////////////////////////////////////
 
-        load: (offset: number, length: number, index: number) => {
+        load: (offset: number, length: number) => {
           let data = new Uint8Array(
             (this.core!.exports.memory as WebAssembly.Memory).buffer,
             offset,

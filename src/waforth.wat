@@ -17,9 +17,8 @@
   (import "shell" "key" (func $shell_key (result i32)))
 
   ;; Load a webassembly module.
-  ;; Parameters: memory offset, size, table index where the new module will
-  ;; be loaded.
-  (import "shell" "load" (func $shell_load (param i32 i32 i32)))
+  ;; Parameters: memory offset, size
+  (import "shell" "load" (func $shell_load (param i32 i32)))
 
   ;; Generic signal to shell
   (import "shell" "call" (func $shell_call))
@@ -2192,8 +2191,7 @@
       (then (drop (table.grow 0 (ref.func $!) (table.size 0))))) ;; Double size
     (call $shell_load 
       (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)) 
-      (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)))
-      (global.get $nextTableIndex))
+      (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))))
 
     (global.set $nextTableIndex (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
