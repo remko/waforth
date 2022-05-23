@@ -11,13 +11,19 @@
   ;; module)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; I/O
+  ;; Write a character to the output device
   (import "shell" "emit" (func $shell_emit (param i32)))
+
+  ;; Read input from input device
+  ;; Parameters: target address, maximum size
+  ;; Returns: number of bytes read
   (import "shell" "read" (func $shell_read (param i32 i32) (result i32)))
+
+  ;; Read a single key from the input device
   (import "shell" "key" (func $shell_key (result i32)))
 
   ;; Load a webassembly module.
-  ;; Parameters: memory offset, size
+  ;; Parameters: WASM bytecode memory offset, size
   (import "shell" "load" (func $shell_load (param i32 i32)))
 
   ;; Generic signal to shell
@@ -28,12 +34,13 @@
   ;; Function types
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; A regular compiled word is a function without any parameters.
-  ;; (arguments are passed via the stack)
+  ;; A regular compiled word is a function with only the 
+  ;; top-of-stack pointer as parameter (and return the new top-of-stack pointer)
+  ;; Arguments are passed via the stack.
   (type $word (func (param i32) (result i32)))
 
-  ;; Words with the 'data' flag set get a pointer to data passed
-  ;; as parameter.
+  ;; Words with the 'data' flag set also get a pointer to data passed
+  ;; as second parameter.
   (type $dataWord (func (param i32) (param i32) (result i32)))
 
 
