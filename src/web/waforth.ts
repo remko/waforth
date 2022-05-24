@@ -112,11 +112,11 @@ class WAForth {
 
         read: (addr: number, length: number): number => {
           let input: string;
-          if (this.#buffer!.length <= length) {
+          const i = this.#buffer!.indexOf("\n");
+          if (i === -1) {
             input = this.#buffer!;
             this.#buffer = "";
           } else {
-            const i = this.#buffer!.lastIndexOf("\n", length - 1);
             input = this.#buffer!.substring(0, i + 1);
             this.#buffer = this.#buffer!.substring(i + 1);
           }
@@ -224,15 +224,15 @@ class WAForth {
   }
 
   /**
-   * Read data `s` into the input buffer, and interpret.
+   * Read data `s` into the input buffer, and start interpreter.
    */
-  interpret(s: string) {
+  interpret(s: string, silent = false) {
     if (!s.endsWith("\n")) {
       s = s + "\n";
     }
     this.read(s);
     try {
-      return (this.core!.exports.interpret as any)();
+      return (this.core!.exports.interpret as any)(silent);
     } catch (e) {
       // Exceptions thrown from the core means QUIT or ABORT is called, or an error
       // has occurred. Assume what has been done has been done, and ignore here.

@@ -105,7 +105,7 @@ export default async function draw({
         }
       };
     }
-    forth.interpret(program);
+    forth.interpret(program, true);
   }
 
   // Draw

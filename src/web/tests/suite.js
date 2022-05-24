@@ -87,22 +87,17 @@ function loadTests() {
       console.log("Entry:", p, previous, length, name, code, data, end);
     }
 
-    function run(ss, expectErrors = false) {
-      ss.split("\n").forEach((s) => {
-        // console.log("Running: ", s);
-        const r = forth.interpret(s);
-        if (expectErrors) {
-          expect(r).to.be.undefined;
-          output = output.substr(0, output.length);
-        } else {
-          expect(r).to.not.be.an(
-            "undefined",
-            "Error running: " + s + "; Output: " + output
-          );
-          expect(r).to.not.be.below(0);
-          output = output.substr(0, output.length - 3); // Strip 'ok\n' from output
-        }
-      });
+    function run(s, expectErrors = false) {
+      const r = forth.interpret(s, true);
+      if (expectErrors) {
+        expect(r).to.be.undefined;
+      } else {
+        expect(r).to.not.be.an(
+          "undefined",
+          "Error running: " + s + "; Output: " + output
+        );
+        expect(r).to.not.be.below(0);
+      }
     }
 
     function here() {
