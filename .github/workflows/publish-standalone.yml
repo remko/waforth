@@ -1,0 +1,13 @@
+name: Publish Standalone
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-standalone:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup
+      - run: make -C src/standalone install-deps all

@@ -1,4 +1,5 @@
 .DS_Store
+/.vscode/*.log
 node_modules/
 public/waforth/
 public/thurtle/
