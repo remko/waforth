@@ -2758,29 +2758,34 @@
     (local $result i32)
     (local $tos i32)
     (local.tee $tos (global.get $tos))
-    (call $REFILL)
-    (drop (call $pop))
-    (local.set $result (call $interpret))
-    (global.set $tos)
+    (block $endLoop (param i32) (result i32)
+      (loop $loop (param i32) (result i32)
+        (call $REFILL)
+        (br_if $endLoop (i32.eqz (call $pop)))
+        (local.set $result (call $interpret))
+        (local.set $tos)
 
-    ;; Check for stack underflow
-    (if (i32.lt_s (global.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-      (drop (call $fail (global.get $tos) (i32.const 0x200B2 (; stack empty ;)))))
-        
-    (if (i32.ge_s (local.get $result) (i32.const 0))
-      (then
-        ;; Write ok
-        (call $shell_emit (i32.const 111))
-        (call $shell_emit (i32.const 107)))
-      (else
-        ;; Write error
-        (call $shell_emit (i32.const 101))
-        (call $shell_emit (i32.const 114))
-        (call $shell_emit (i32.const 114))
-        (call $shell_emit (i32.const 111))
-        (call $shell_emit (i32.const 114))))
-    (call $shell_emit (i32.const 10))
-    (local.get $result))
+        ;; Check for stack underflow
+        (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
+          (drop (call $fail (local.get $tos) (i32.const 0x200B2 (; stack empty ;)))))
+            
+        (if (i32.ge_s (local.get $result) (i32.const 0))
+          (then
+            ;; Write ok
+            (call $shell_emit (i32.const 111))
+            (call $shell_emit (i32.const 107)))
+          (else
+            ;; Write error
+            (call $shell_emit (i32.const 101))
+            (call $shell_emit (i32.const 114))
+            (call $shell_emit (i32.const 114))
+            (call $shell_emit (i32.const 111))
+            (call $shell_emit (i32.const 114))))
+        (call $shell_emit (i32.const 10))
+        (local.get $tos)
+        (br $loop)))
+      (global.set $tos)
+      (local.get $result))
   
   (func (export "push") (param $v i32)
     (global.set $tos (call $push (global.get $tos) (local.get $v))))

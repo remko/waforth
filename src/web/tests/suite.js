@@ -222,6 +222,15 @@ function loadTests() {
         expect(() => core.interpret()).to.throw();
         expect(output.trim()).to.eql("undefined word: 23FOO");
       });
+
+      it("should interpret a long string", () => {
+        const p = ["1"];
+        for (let i = 0; i < 1000; i++) {
+          p.push(`${1} +`);
+        }
+        forth.interpret(p.join("\n"));
+        expect(stackValues()).to.eql([1001]);
+      });
     });
 
     describe("DUP", () => {

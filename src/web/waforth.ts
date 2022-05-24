@@ -46,7 +46,7 @@ function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
  * */
 class WAForth {
   core?: WebAssembly.Instance;
-  #buffer?: number[];
+  #buffer?: string;
   #fns: Record<string, (f: WAForth) => void>;
 
   /**
@@ -96,7 +96,7 @@ class WAForth {
   async load() {
     let table: WebAssembly.Table;
     let memory: WebAssembly.Memory;
-    this.#buffer = [];
+    this.#buffer = "";
 
     const instance = await WebAssembly.instantiate(wasmModule, {
       shell: {
@@ -111,17 +111,22 @@ class WAForth {
         },
 
         read: (addr: number, length: number): number => {
-          let data = new Uint8Array(
-            (this.core!.exports.memory as WebAssembly.Memory).buffer,
-            addr,
-            length
-          );
-          let n = 0;
-          while (this.#buffer!.length > 0 && n < length) {
-            data[n] = this.#buffer!.shift()!;
-            n += 1;
+          let input: string;
+          if (this.#buffer!.length <= length) {
+            input = this.#buffer!;
+            this.#buffer = "";
+          } else {
+            const i = this.#buffer!.lastIndexOf("\n", length - 1);
+            input = this.#buffer!.substring(0, i + 1);
+            this.#buffer = this.#buffer!.substring(i + 1);
           }
-          return n;
+          // console.log("read: %s (%d remaining)", input, this.#buffer!.length);
+          saveString(
+            input,
+            this.core!.exports.memory as WebAssembly.Memory,
+            addr
+          );
+          return input.length;
         },
 
         key: () => {
@@ -215,16 +220,16 @@ class WAForth {
    * Read data `s` into the input buffer without interpreting it.
    */
   read(s: string) {
-    const data = new TextEncoder().encode(s);
-    for (let i = 0, len = data.length; i < len; ++i) {
-      this.#buffer!.push(data[i]);
-    }
+    this.#buffer = this.#buffer + s;
   }
 
   /**
    * Read data `s` into the input buffer, and interpret.
    */
   interpret(s: string) {
+    if (!s.endsWith("\n")) {
+      s = s + "\n";
+    }
     this.read(s);
     try {
       return (this.core!.exports.interpret as any)();
