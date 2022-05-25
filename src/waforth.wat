@@ -996,21 +996,20 @@
     (local $bbtos i32)
     (local.set $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.set $len (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-    (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091) (i32.const 0x11) (; "ADDRESS-UNIT-BITS" ;))
+    (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091) (i32.const 0x11) (; "ADDRESS-UNIT-BITS" ;))
       (then
         (i32.store (local.get $bbtos) (i32.const 8))
         (i32.store (local.get $btos) (i32.const -1))
-        (return (local.get $tos)))
+        (local.get $tos))
       (else 
-        (if (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200A3) (i32.const 0x0F) (; "/COUNTED-STRING" ;))
+        (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200A3) (i32.const 0x0F) (; "/COUNTED-STRING" ;))
           (then
             (i32.store (local.get $bbtos) (i32.const 255))
             (i32.store (local.get $btos) (i32.const -1))
-            (return (local.get $tos)))
+            (local.get $tos))
           (else
             (i32.store (local.get $bbtos) (i32.const 0))
-            (return (local.get $btos))))))
-    (unreachable))
+            (local.get $btos))))))
   (data (i32.const 0x218ac) "\9c\18\02\00" "\0c" "ENVIRONMENT?000" "\a9\00\00\00")
   (elem (i32.const 0xa9) $ENVIRONMENT?)
 
@@ -2606,15 +2605,14 @@
       (return (i32.const 0)))
     (local.set $end1 (i32.add (local.get $addr1) (local.get $len1)))
     (local.set $end2 (i32.add (local.get $addr2) (local.get $len2)))
-    (loop $loop
+    (loop $loop (result i32)
       (if (i32.eq (local.get $addr1) (local.get $end1)) 
         (return (i32.const 1)))
       (if (i32.ne (i32.load8_s (local.get $addr1)) (i32.load8_s (local.get $addr2)))
         (return (i32.const 0)))
       (local.set $addr1 (i32.add (local.get $addr1) (i32.const 1)))
       (local.set $addr2 (i32.add (local.get $addr2)(i32.const 1)))
-      (br $loop))
-    (unreachable))
+      (br $loop)))
 
   (func $fail (param $tos i32) (param $str i32) (result i32)
     (call $type 
