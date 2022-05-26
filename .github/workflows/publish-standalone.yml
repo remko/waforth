@@ -18,7 +18,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
       - run: make -C src/standalone install-deps package
-      - uses: AButler/upload-release-assets@e940f6342206c9655b12a28a79646d3982571ad9
-        with:
-          files: 'src/standalone/waforth-*.tgz'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          echo "$EVENT"
+          for f in src/standalone/waforth-*.tgz; do
+            curl \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type $f)" \
+              --data-binary @$f \
+              "https://uploads.github.com/repos/remko/waforth/releases/$RELEASE_ID/assets?name=$(basename $f)"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.release_id }}
+          EVENT: ${{ toJSON(github.event) }}
+
