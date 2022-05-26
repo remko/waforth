@@ -20,6 +20,7 @@ jobs:
       - run: make -C src/standalone install-deps package
       - name: "Upload artifacts"
         run: |
+          ls -l src/standalone
           for f in src/standalone/waforth-*.tgz; do
             curl --fail \
               -H "Authorization: token $GITHUB_TOKEN" \
