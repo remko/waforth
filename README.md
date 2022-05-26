@@ -28,8 +28,19 @@ core word tests), and several [ANS Core Extension Words](http://lars.nocrew.org/
 You can read more about the internals and the design of WAForth in the [Design
 document](doc/Design.md).
 
+<div align="center">
+<div>
+<a href="https://mko.re/waforth/"><img src="https://raw.githubusercontent.com/remko/waforth/master/doc/console.gif" alt="WAForth Console"></a>
+</div>
+<figcaption><a href="https://mko.re/waforth/">WAForth Console</a></figcaption>
+</div>
 
-![WAForth Console](doc/console.gif "WAForth Console")
+<div align="center" style="margin-top: 2em">
+<div>
+<a href="https://mko.re/thurtle/"><img style="width: 550px" src="https://raw.githubusercontent.com/remko/waforth/master/doc/thurtle.png" alt="Thurtle"></a>
+</div>
+<figcaption><a href="https://mko.re/thurtle/">Thurtle program</a></figcaption>
+</div>
 
 ## Standalone shell
 
