@@ -31,6 +31,16 @@ document](doc/Design.md).
 
 ![WAForth Console](doc/console.gif "WAForth Console")
 
+## Standalone shell
+
+Although WAForth is typically used in a web environment (browser, Node.JS), there also is a standalone
+command-line shell. You can download a pre-built binary of the standalone shell from 
+[the Releases page](https://github.com/remko/waforth/releases).
+
+The standalone shell is built using [wasmtime](https://wasmtime.dev),
+but can easily be adapted to be built using other WASM libraries that support the
+[WebAssembly C API](https://github.com/WebAssembly/wasm-c-api).
+
 
 ## Using WAForth in a JavaScript application
 
