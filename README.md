@@ -9,7 +9,7 @@ WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in action
 [in an interactive Forth console](https://mko.re/waforth/), and in [a Logo-like Turtle graphics language](https://mko.re/thurtle/).
 
-It is [entirely written in (raw)
+WAForth is [entirely written in (raw)
 WebAssembly](https://github.com/remko/waforth/blob/master/src/waforth.wat), and
 the compiler generates WebAssembly code on the fly. The only parts for which it
 relies on external (JavaScript) code is to dynamically load modules (since
@@ -30,16 +30,16 @@ document](doc/Design.md).
 
 <div align="center">
 <div>
-<a href="https://mko.re/waforth/"><img src="https://raw.githubusercontent.com/remko/waforth/master/doc/console.gif" alt="WAForth Console"></a>
+<a href="https://mko.re/waforth/"><img src="https://raw.githubusercontent.com/remko/waforth/master/doc/console.gif" alt="WAForth console"></a>
 </div>
-<figcaption><a href="https://mko.re/waforth/">WAForth Console</a></figcaption>
+<figcaption><em><a href="https://mko.re/waforth/">WAForth console</a></em></figcaption>
 </div>
 
 <div align="center" style="margin-top: 2em">
 <div>
-<a href="https://mko.re/thurtle/"><img style="width: 550px" src="https://raw.githubusercontent.com/remko/waforth/master/doc/thurtle.png" alt="Thurtle"></a>
+<a href="https://mko.re/thurtle/"><img style="width: 550px" src="https://raw.githubusercontent.com/remko/waforth/master/doc/thurtle.png" alt="Thurtle program"></a>
 </div>
-<figcaption><a href="https://mko.re/thurtle/">Thurtle program</a></figcaption>
+<figcaption><em>WAForth integrated in <a href="https://mko.re/thurtle/">Thurtle</a>, a <a href="https://en.wikipedia.org/wiki/Turtle_graphics">turtle graphics</a> programming environment using Forth</em></figcaption>
 </div>
 
 ## Standalone shell
