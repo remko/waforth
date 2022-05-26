@@ -1,0 +1,25 @@
+name: Publish Standalone
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  publish-standalone:
+    needs: build
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup
+      - run: make -C src/standalone install-deps package
+      - uses: skx/github-action-publish-binaries@44887b225ceca96efd8a912d39c09ad70312af31
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'waforth-*.tgz'

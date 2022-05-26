@@ -2,3 +2,4 @@
 /waforth_core.h
 /wasm-micro-runtime
 /wasmtime-*
+/*.tgz

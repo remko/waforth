@@ -3,6 +3,10 @@
 #include "waforth_core.h"
 #include "wasm.h"
 
+#ifndef VERSION
+#define VERSION "dev"
+#endif
+
 #define CORE_TABLE_EXPORT_INDEX 0
 #define CORE_MEMORY_EXPORT_INDEX 1
 #define CORE_INTERPRET_EXPORT_INDEX 6
@@ -164,7 +168,7 @@ int main(int argc, char *argv_main[]) {
     return -1;
   }
 
-  printf("WAForth\n");
+  printf("WAForth (" VERSION ")\n");
   wasm_val_t as[1] = {WASM_I32_VAL(0)};
   wasm_val_vec_t args = WASM_ARRAY_VEC(as);
   wasm_val_t vs[] = {WASM_INIT_VAL};
