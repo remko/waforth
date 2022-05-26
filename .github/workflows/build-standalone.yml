@@ -1,12 +1,17 @@
-name: Publish Standalone
+name: Build Standalone
 
 on:
+  push:
+  pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   publish-standalone:
-    needs: build
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup

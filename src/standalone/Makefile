@@ -1,9 +1,17 @@
+UNAME_S=$(shell uname -s)
+UNAME_P=$(shell uname -p)
+ifeq ($(UNAME_S),Darwin)
 WASMTIME_DIR=wasmtime-v0.37.0-x86_64-macos-c-api
 WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v0.37.0/wasmtime-v0.37.0-x86_64-macos-c-api.tar.xz
+else
+WASMTIME_DIR=wasmtime-v0.37.0-x86_64-linux-c-api
+WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v0.37.0/wasmtime-v0.37.0-x86_64-linux-c-api.tar.xz
+LIBS=-lpthread -lm -ldl
+endif
 
 CFLAGS=-I$(WASMTIME_DIR)/include
 LDFLAGS=
-LIBS=$(WASMTIME_DIR)/lib/libwasmtime.a
+LIBS:=$(WASMTIME_DIR)/lib/libwasmtime.a $(LIBS)
 
 BIN2H=../../scripts/bin2h
 WAT2WASM=wat2wasm
@@ -27,7 +35,7 @@ waforth_core.h: waforth_core.wasm
 .PHONY: install-deps
 install-deps:
 	-rm -rf wasmtime-*
-	curl -L -s $(WASMTIME_RELEASE_URL) | tar xvz 
+	curl -L -s $(WASMTIME_RELEASE_URL) | tar xJv
 
 
 .PHONY: clean
