@@ -18,17 +18,16 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
       - run: make -C src/standalone install-deps package
-      - run: |
-          echo "$EVENT"
+      - name: "Upload artifacts"
+        run: |
           for f in src/standalone/waforth-*.tgz; do
-            curl \
+            curl --fail \
               -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: $(file -b --mime-type $f)" \
               --data-binary @$f \
-              "https://uploads.github.com/repos/remko/waforth/releases/$RELEASE_ID/assets?name=$(basename $f)"
+              "$RELEASE_ASSETS_UPLOAD_URL?name=$(basename $f)"
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_ID: ${{ github.event.release.release_id }}
-          EVENT: ${{ toJSON(github.event) }}
+          RELEASE_ASSETS_UPLOAD_URL: https://uploads.github.com/repos/${{ github.event.repository.full_name}}/releases/${{ github.event.release.id }}/assets
 
