@@ -7,7 +7,7 @@ on:
   workflow_call:
 
 jobs:
-  publish-standalone:
+  build-standalone:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-18.04]
