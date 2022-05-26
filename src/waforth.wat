@@ -1830,8 +1830,8 @@
         (then
           (call $type  
             (i32.and (local.get $entryLF) (i32.const 0x1F (; = LENGTH_MASK ;)))
-            (i32.add (local.get $entryP) (i32.const 5)))))
-      (call $shell_emit (i32.const 0x20))
+            (i32.add (local.get $entryP) (i32.const 5)))
+          (call $shell_emit (i32.const 0x20))))
       (local.set $entryP (i32.load (local.get $entryP)))
       (br_if $loop (local.get $entryP)))
     (local.get $tos))
