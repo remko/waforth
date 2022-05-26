@@ -19,7 +19,7 @@
   ;; Returns: number of bytes read
   (import "shell" "read" (func $shell_read (param i32 i32) (result i32)))
 
-  ;; Read a single key from the input device
+  ;; Read a single key from the input device (without echoing)
   (import "shell" "key" (func $shell_key (result i32)))
 
   ;; Load a webassembly module.
@@ -35,7 +35,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; A regular compiled word is a function with only the 
-  ;; top-of-stack pointer as parameter (and return the new top-of-stack pointer)
+  ;; top-of-stack pointer as parameter (and returns the new top-of-stack pointer)
   ;; Arguments are passed via the stack.
   (type $word (func (param i32) (result i32)))
 
@@ -68,7 +68,6 @@
   ;;   ABORT_INDEX := 0x39
   ;;   CONSTANT_INDEX := 0x4c
   ;;   NEXT_TABLE_INDEX := 0xab   (; Next available table index for a compiled word ;)
-
   (table (export "table") 0xab (; = NEXT_TABLE_INDEX ;) funcref)
 
 
@@ -186,9 +185,9 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; These follow the following pattern:
-  ;; - WebAssembly function definition (func ...)
-  ;; - Dictionary entry in memory (data ...)
-  ;; - Function table entry (elem ...)
+  ;; - WebAssembly function definition: `(func ...)`
+  ;; - Dictionary entry in memory: `(data ...)`
+  ;; - Function table entry: `(elem ...)`
   ;;
   ;; The dictionary entry has the following form:
   ;; - prev (4 bytes): Pointer to start of previous entry
