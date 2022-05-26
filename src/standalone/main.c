@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <termios.h>
 
 #include "waforth_core.h"
 #include "wasm.h"
@@ -58,7 +59,16 @@ wasm_trap_t *read_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
 }
 
 wasm_trap_t *key_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
-  // TODO
+  struct termios old, current;
+  tcgetattr(0, &old);
+  current = old;
+  current.c_lflag &= ~ICANON;
+  current.c_lflag &= ~ECHO;
+  tcsetattr(0, TCSANOW, &current);
+  char ch = getchar();
+  tcsetattr(0, TCSANOW, &old);
+  results->data[0].kind = WASM_I32;
+  results->data[0].of.i32 = ch;
   return NULL;
 }
 
