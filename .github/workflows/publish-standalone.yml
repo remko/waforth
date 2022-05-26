@@ -22,7 +22,6 @@ jobs:
         run: |
           ls -l src/standalone
           for f in src/standalone/waforth-*.tgz; do
-            echo "Content-Length: $(du -b $f | cut -f1)"
             curl --fail \
               -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: $(file -b --mime-type $f)" \
