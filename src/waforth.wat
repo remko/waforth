@@ -87,8 +87,7 @@
   ;;   MODULE_HEADER_BASE :=  0x1000 
   ;;   RETURN_STACK_BASE  :=  0x2000
   ;;   STACK_BASE         := 0x10000
-  ;;   STRINGS_BASE       := 0x20000
-  ;;   DICTIONARY_BASE    := 0x21000
+  ;;   DATA_SPACE_BASE    := 0x20000 
   ;;
   ;;   PICTURED_OUTPUT_OFFSET := 0x200 (offset from HERE; filled backward)
   ;;   WORD_OFFSET := 0x200 (offset from HERE)
@@ -213,7 +212,7 @@
     (i32.store (i32.load (i32.sub (local.get $tos) (i32.const 4)))
                 (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.get $bbtos))
-  (data (i32.const 0x21000 (; = DICTIONARY_BASE ;)) "\00\00\00\00" "\01" "!\00\00" "\10\00\00\00")
+  (data (i32.const 0x21000) "\00\00\00\00" "\01" "!\00\00" "\10\00\00\00")
   (elem (i32.const 0x10) $!)
 
   ;; 6.1.0030
