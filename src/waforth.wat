@@ -1789,7 +1789,7 @@
   (elem (i32.const 0xa5) $UWIDTH)
 
   ;; 6.2.2405
-  (data (i32.const 0x21874) "\64\18\02\00" "\05" "VALUE00" "\4c\00\00\00") ;; CONSTANT_INDEX
+  (data (i32.const 0x21874) "\64\18\02\00" "\05" "VALUE00" "\4c\00\00\00" (; = pack(CONSTANT_INDEX) ;))
 
   ;; 6.1.2410
   (func $VARIABLE (param $tos i32) (result i32)
