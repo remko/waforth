@@ -1,15 +1,29 @@
+\ From: John Hayes S1I
+\ Subject: core.fr
+\ Date: Mon, 27 Nov 95 13:10
+
+\ (C) 1995 JOHNS HOPKINS UNIVERSITY / APPLIED PHYSICS LABORATORY
+\ MAY BE DISTRIBUTED FREELY AS LONG AS THIS COPYRIGHT NOTICE REMAINS.
+\ VERSION 1.2
+\ THIS PROGRAM TESTS THE CORE WORDS OF AN ANS FORTH SYSTEM.
+\ THE PROGRAM ASSUMES A TWO'S COMPLEMENT IMPLEMENTATION WHERE
+\ THE RANGE OF SIGNED NUMBERS IS -2^(N-1) ... 2^(N-1)-1 AND
+\ THE RANGE OF UNSIGNED NUMBERS IS 0 ... 2^(N)-1.
+\ I HAVEN'T FIGURED OUT HOW TO TEST KEY, QUIT, ABORT, OR ABORT"...
+\ I ALSO HAVEN'T THOUGHT OF A WAY TO TEST ENVIRONMENT?...
+
 CR
 TESTING CORE WORDS
+HEX
 
 \ ------------------------------------------------------------------------
 TESTING BASIC ASSUMPTIONS
 
 T{ -> }T               \ START WITH CLEAN SLATE
-
-\ TEST IF ANY BITS ARE SET; ANSWER IN BASE 1
+( TEST IF ANY BITS ARE SET; ANSWER IN BASE 1 )
 T{ : BITSSET? IF 0 0 ELSE 0 THEN ; -> }T
-T{  0 BITSSET? -> 0 }T  \ ( ZERO IS ALL BITS CLEAR )
-T{  1 BITSSET? -> 0 0 }T \ ( OTHER NUMBER HAVE AT LEAST ONE BIT )
+T{  0 BITSSET? -> 0 }T      ( ZERO IS ALL BITS CLEAR )
+T{  1 BITSSET? -> 0 0 }T      ( OTHER NUMBER HAVE AT LEAST ONE BIT )
 T{ -1 BITSSET? -> 0 0 }T
 
 \ ------------------------------------------------------------------------
@@ -220,7 +234,7 @@ T{ : GR1 >R R> ; -> }T
 T{ : GR2 >R R@ R> DROP ; -> }T
 T{ 123 GR1 -> 123 }T
 T{ 123 GR2 -> 123 }T
-T{ 1S GR1 -> 1S }T   \ ( RETURN STACK HOLDS CELLS )
+T{ 1S GR1 -> 1S }T   ( RETURN STACK HOLDS CELLS )
 
 \ ------------------------------------------------------------------------
 TESTING ADD/SUBTRACT: + - 1+ 1- ABS NEGATE
@@ -393,7 +407,7 @@ T{ MIN-INT MIN-INT M* MIN-INT SM/REM -> 0 MIN-INT }T
 T{ MIN-INT MAX-INT M* MIN-INT SM/REM -> 0 MAX-INT }T
 T{ MIN-INT MAX-INT M* MAX-INT SM/REM -> 0 MIN-INT }T
 T{ MAX-INT MAX-INT M* MAX-INT SM/REM -> 0 MAX-INT }T
- 
+
 T{ 0 0 1 UM/MOD -> 0 0 }T
 T{ 1 0 1 UM/MOD -> 0 1 }T
 T{ 1 0 2 UM/MOD -> 1 0 }T
@@ -820,13 +834,13 @@ TESTING <# # #S #> HOLD SIGN BASE >NUMBER HEX DECIMAL
 
 : GP1  <# 41 HOLD 42 HOLD 0 0 #> S" BA" S= ;
 T{ GP1 -> <TRUE> }T
- 
+
 : GP2  <# -1 SIGN 0 SIGN -1 SIGN 0 0 #> S" --" S= ;
 T{ GP2 -> <TRUE> }T
- 
+
 : GP3  <# 1 0 # # #> S" 01" S= ;
 T{ GP3 -> <TRUE> }T
- 
+
 : GP4  <# 1 0 #S #> S" 1" S= ;
 T{ GP4 -> <TRUE> }T
 
@@ -882,7 +896,7 @@ T{ 1 0 GN' 1' >NUMBER -> BASE @ 1+ 0 GN-CONSUMED }T
 T{ 0 0 GN' -' >NUMBER -> 0 0 GN-STRING }T   \ SHOULD FAIL TO CONVERT THESE
 T{ 0 0 GN' +' >NUMBER -> 0 0 GN-STRING }T
 T{ 0 0 GN' .' >NUMBER -> 0 0 GN-STRING }T
- 
+
 : >NUMBER-BASED
    BASE @ >R BASE ! >NUMBER R> BASE ! ;
 
@@ -904,7 +918,7 @@ T{ MAX-UINT DUP 2 GN1 -> MAX-UINT DUP 0 }T
 T{ 0 0 MAX-BASE GN1 -> 0 0 0 }T
 T{ MAX-UINT 0 MAX-BASE GN1 -> MAX-UINT 0 0 }T
 T{ MAX-UINT DUP MAX-BASE GN1 -> MAX-UINT DUP 0 }T
- 
+
 : GN2   \ ( -- 16 10 )
    BASE @ >R  HEX BASE @  DECIMAL BASE @  R> BASE ! ;
 T{ GN2 -> 10 A }T
@@ -944,7 +958,7 @@ T{ FBUF CHAR+ FBUF 2 CHARS MOVE -> }T
 T{ SEEBUF -> 12 34 34 }T
 
 \ ------------------------------------------------------------------------
-\ TESTING OUTPUT: . ." CR EMIT SPACE SPACES TYPE U.
+TESTING OUTPUT: . ." CR EMIT SPACE SPACES TYPE U.
 
 : OUTPUT-TEST
    ." YOU SHOULD SEE THE STANDARD GRAPHIC CHARACTERS:" CR
@@ -970,7 +984,7 @@ T{ OUTPUT-TEST -> }T
 
 
 \ ------------------------------------------------------------------------
-\ TESTING INPUT: ACCEPT
+TESTING INPUT: ACCEPT
 
 CREATE ABUF 50 CHARS ALLOT
 
@@ -989,3 +1003,7 @@ TESTING DICTIONARY SEARCH RULES
 T{ : GDX   123 ; : GDX   GDX 234 ; -> }T
 
 T{ GDX -> 123 234 }T
+
+\ CR .( End of Core word set tests) CR
+
+

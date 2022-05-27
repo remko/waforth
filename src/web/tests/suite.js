@@ -1,7 +1,12 @@
 import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
-import standardTestSuiteTester from "./standard-testsuite/tester.f";
-import standardCoreWordsTestSuite from "./standard-testsuite/core.f";
+import forth2012TestSuiteTester from "./forth2012-test-suite/tester.fr";
+import forth2012CoreTestSuite from "./forth2012-test-suite/core.fr";
+import forth2012CorePlusTestSuite from "./forth2012-test-suite/coreplustest.fth";
+// import forth2012ErrorReport from "./forth2012-test-suite/errorreport.fth";
+import forth2012PreliminaryTestSuite from "./forth2012-test-suite/prelimtest.fth";
+import forth2012CoreExtTestSuite from "./forth2012-test-suite/coreexttest.fth";
+
 import { expect, assert } from "chai";
 
 function loadTests() {
@@ -1554,14 +1559,23 @@ function loadTests() {
       });
     });
 
-    describe("standard test suite", () => {
+    describe("forth2012 test suite", () => {
       beforeEach(() => {
-        run(standardTestSuiteTester);
+        run(forth2012TestSuiteTester);
         run("TRUE VERBOSE !");
       });
 
+      it("should run preliminary tests", () => {
+        run(forth2012PreliminaryTestSuite);
+        run("#ERRS @");
+        expect(tosValue()).to.eql(0);
+        for (let i = 1; i < 24; i++) {
+          expect(output).to.include(`Pass #${i}`);
+        }
+      });
+
       it("should run core word tests", () => {
-        run(standardCoreWordsTestSuite);
+        run(forth2012CoreTestSuite);
         run("#ERRORS @");
         if (tosValue() !== 0) {
           assert.fail(output);
@@ -1591,6 +1605,20 @@ function loadTests() {
         expect(output).to.include(
           `RECEIVED: "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr"\n`
         );
+      });
+
+      it("should run core word plus tests", () => {
+        run(forth2012CoreTestSuite);
+        run(forth2012CorePlusTestSuite);
+        run("#ERRORS @");
+        if (tosValue() !== 0) {
+          assert.fail(output);
+        }
+      });
+
+      it("should run core ext tests", () => {
+        // run(forth2012ErrorReport);
+        run(forth2012CoreExtTestSuite);
       });
     });
   });

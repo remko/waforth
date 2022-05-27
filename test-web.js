@@ -33,6 +33,8 @@ let buildConfig = {
   loader: {
     ".wasm": "binary",
     ".f": "text",
+    ".fr": "text",
+    ".fth": "text",
   },
   sourcemap: true,
   plugins: [wasmTextPlugin({ debug: true })],

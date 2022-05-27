@@ -74,6 +74,8 @@ let buildConfig = {
     ".js": "jsx",
     ".fs": "text",
     ".f": "text",
+    ".fr": "text",
+    ".fth": "text",
     ".svg": "file",
   },
   define: {
