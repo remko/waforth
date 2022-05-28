@@ -9,6 +9,9 @@
   "search.exclude": {
     "**/node_modules": true
   },
+  "files.associations": {
+    "*.fr": "forth"
+  },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true

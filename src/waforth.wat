@@ -64,11 +64,7 @@
   ;;   COMPILE_CALL_INDEX := 5
   ;;   PUSH_INDIRECT_INDEX := 6
   ;;   END_DO_INDEX := 9
-  ;;   TYPE_INDEX := 0x85
-  ;;   ABORT_INDEX := 0x39
-  ;;   CONSTANT_INDEX := 0x4c
-  ;;   NEXT_TABLE_INDEX := 0xab   (; Next available table index for a compiled word ;)
-  (table (export "table") 0xab (; = NEXT_TABLE_INDEX ;) funcref)
+  (table (export "table") 0xab funcref)
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -400,7 +396,7 @@
     (local.get $tos)
     (call $ensureCompiling)
     (call $Sq)
-    (call $emitICall (i32.const 0) (i32.const 0x85 (; = TYPE_INDEX ;))))
+    (call $emitICall (i32.const 0) (i32.const 0x85 (; = index("TYPE") ;))))
   (data (i32.const 0x20164) "\58\01\02\00" "\82" (; F_IMMEDIATE ;) ".\22 " "\1e\00\00\00")
   (elem (i32.const 0x1e) $.q)
 
@@ -667,7 +663,7 @@
   (elem (i32.const 0x33) $>BODY)
 
   ;; 6.1.0560
-  (data (i32.const 0x2029c) "\8c\02\02\00" "\43" (; F_DATA ;) ">IN" "\03\00\00\00" "\00\00\00\00")
+  (data (i32.const 0x2029c) "\8c\02\02\00" "\43" (; F_DATA ;) ">IN" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00")
 
   ;; 6.1.0570
   (func $>NUMBER (param $tos i32) (result i32) 
@@ -725,15 +721,15 @@
   (func $ABORT (param $tos i32) (result i32)
     (call $QUIT (i32.const 0x10000 (; = STACK_BASE ;))))
   (data (i32.const 0x202e4) "\d8\02\02\00" "\05" "ABORT  " "\39\00\00\00")
-  (elem (i32.const 0x39 (; = ABORT_INDEX ;)) $ABORT)
+  (elem (i32.const 0x39 (; = index("ABORT") ;)) $ABORT)
 
   ;; 6.1.0680 ABORT"
   (func $ABORTq (param $tos i32) (result i32)
     (local.get $tos)
     (call $compileIf)
     (call $Sq)
-    (call $emitICall (i32.const 0) (i32.const 0x85 (; = TYPE_INDEX ;)))
-    (call $emitICall (i32.const 0) (i32.const 0x39 (; = ABORT_INDEX ;)))
+    (call $emitICall (i32.const 0) (i32.const 0x85 (; = index("TYPE") ;)))
+    (call $emitICall (i32.const 0) (i32.const 0x39 (; = index("ABORT") ;)))
     (call $compileThen))
   (data (i32.const 0x202f4) "\e4\02\02\00" "\86" (; F_IMMEDIATE ;) "ABORT\22 " "\3a\00\00\00")
   (elem (i32.const 0x3a) $ABORTq)
@@ -910,7 +906,7 @@
     (i32.store (global.get $here) (local.get $v))
     (global.set $here (i32.add (global.get $here) (i32.const 4))))
   (data (i32.const 0x20400) "\f0\03\02\00" "\08" "CONSTANT   " "\4c\00\00\00")
-  (elem (i32.const 0x4c (; = CONSTANT_INDEX ;)) $CONSTANT)
+  (elem (i32.const 0x4c) $CONSTANT)
 
   ;; 6.1.0980
   (func $COUNT (param $tos i32) (result i32)
@@ -1693,7 +1689,6 @@
     (local.set $len (call $pop))
     (local.set $p (call $pop))
     (call $type (local.get $len) (local.get $p)))
-  ;; WARNING: If you change this table index, make sure the emitted ICalls are also updated
   (data (i32.const 0x20820) "\10\08\02\00" "\04" "TYPE   " "\85\00\00\00")
   (elem (i32.const 0x85) $TYPE) ;; none
 
@@ -1789,7 +1784,7 @@
   (elem (i32.const 0xa5) $UWIDTH)
 
   ;; 6.2.2405
-  (data (i32.const 0x208a4) "\94\08\02\00" "\05" "VALUE  " "\4c\00\00\00" (; = pack(CONSTANT_INDEX) ;))
+  (data (i32.const 0x208a4) "\94\08\02\00" "\05" "VALUE  " "\4c\00\00\00" (; = pack(index("CONSTANT")) ;))
 
   ;; 6.1.2410
   (func $VARIABLE (param $tos i32) (result i32)
@@ -2068,7 +2063,7 @@
   ;; Dictionary pointers
   (global $latest (mut i32) (i32.const 0x20938))
   (global $here (mut i32) (i32.const 0x20944))
-  (global $nextTableIndex (mut i32) (i32.const 0xab (; = NEXT_TABLE_INDEX ;)))
+  (global $nextTableIndex (mut i32) (i32.const 0xab))
 
   ;; Pictured output pointer
   (global $po (mut i32) (i32.const -1))
