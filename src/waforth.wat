@@ -2069,6 +2069,13 @@
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
+  ;;
+  ;; `compileXXXX` functions compile Forth words. These are mostly defined in terms of
+  ;; several lower level `emitXXXX` functions.
+  ;;
+  ;; `emitXXXX` words are low level functions that emit a single WebAssembly 
+  ;; instruction in binary format. This is a direct translation from the WebAssembly
+  ;; spec.
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; Initializes compilation.
