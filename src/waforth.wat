@@ -270,7 +270,7 @@
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase))) 
       (then 
-        (call $fail (i32.const 0x20028)))) ;; incomplete input
+        (call $fail (i32.const 0x20028) (; = "incomplete input" ;) )))
     (call $FIND)
     (drop (call $pop)))
   (data (i32.const 0x21030) "\24\10\02\00" "\01" "'  " "\14\00\00\00")
@@ -282,7 +282,7 @@
     (local.get $tos)
     (loop $loop (param i32) (result i32) 
       (if (param i32) (result i32) (i32.lt_s (local.tee $c (call $readChar)) (i32.const 0)) 
-        (call $fail (i32.const 0x2003C))) ;; missing ')'
+        (call $fail (i32.const 0x2003C (; = "missing ')'" ;)))) 
       (br_if $loop (i32.ne (local.get $c) (i32.const 41)))))
   (data (i32.const 0x2103c) "\30\10\02\00" "\81" (; F_IMMEDIATE ;) "(  " "\15\00\00\00")
   (elem (i32.const 0x15) $paren)
@@ -425,7 +425,7 @@
     (local $bbtos i32)
     (local $divisor i32)
     (if (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
-      (return (call $fail (local.get $tos) (i32.const 0x20014)))) ;; division by 0
+      (return (call $fail (local.get $tos) (i32.const 0x20014 (; = "division by 0" ;)))))
     (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i32.div_s (i32.load (local.get $bbtos)) (local.get $divisor)))
     (local.get $btos))
@@ -725,7 +725,7 @@
   (func $ABORT (param $tos i32) (result i32)
     (call $QUIT (i32.const 0x10000 (; = STACK_BASE ;))))
   (data (i32.const 0x21214) "\08\12\02\00" "\05" "ABORT  " "\39\00\00\00")
-  (elem (i32.const 0x39 (; = ABORT_INDEX ;)) $ABORT) ;; none
+  (elem (i32.const 0x39 (; = ABORT_INDEX ;)) $ABORT)
 
   ;; 6.1.0680 ABORT"
   (func $ABORTq (param $tos i32) (result i32)
@@ -881,7 +881,7 @@
   (func $CHAR (param $tos i32) (result i32)
     (call $readWord (local.get $tos) (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028))) ;; incomplete input
+      (call $fail (i32.const 0x20028 (; = "incomplete input" ;)))) 
     (local.tee $tos)
     (i32.store (i32.sub (local.get $tos) (i32.const 4))
                 (i32.load8_u (i32.add (call $wordBase) (i32.const 1)))))
@@ -942,7 +942,7 @@
     (local.get $tos)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (local.tee $length (i32.load8_u (call $wordBase))))
-      (call $fail (i32.const 0x20028))) ;; incomplete input
+      (call $fail (i32.const 0x20028 (; = "incomplete input" ;))))
     (drop (call $pop))
     (i32.store8 (global.get $here) (local.get $length))
 
@@ -1035,13 +1035,13 @@
     (local $bbtos i32)
     (local.set $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.set $len (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-    (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091) (i32.const 0x11) (; "ADDRESS-UNIT-BITS" ;))
+    (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091 (; = "ADDRESS-UNIT-BITS" ;)) (i32.const 0x11 (; = len("ADDRESS-UNIT-BITS") ;)))
       (then
         (i32.store (local.get $bbtos) (i32.const 8))
         (i32.store (local.get $btos) (i32.const -1))
         (local.get $tos))
       (else 
-        (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200A3) (i32.const 0x0F) (; "/COUNTED-STRING" ;))
+        (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200A3 (; = "/COUNTED-STRING" ;)) (i32.const 0x0F (; = len("/COUNTED-STRING") ;)))
           (then
             (i32.store (local.get $bbtos) (i32.const 255))
             (i32.store (local.get $btos) (i32.const -1))
@@ -1073,20 +1073,20 @@
 
     ;; Save input state
     (local.set $prevSourceID (global.get $sourceID))
-    (local.set $prevIn (i32.load (i32.const 0x21908 (; body(>IN) ;))))
+    (local.set $prevIn (i32.load (i32.const 0x21908 (; = body(>IN) ;))))
     (local.set $prevInputBufferSize (global.get $inputBufferSize))
     (local.set $prevInputBufferBase (global.get $inputBufferBase))
 
     (global.set $sourceID (i32.const -1))
     (global.set $inputBufferBase (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (global.set $inputBufferSize (i32.load (i32.sub (local.get $tos) (i32.const 4))))
-    (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.const 0))
+    (i32.store (i32.const 0x21908 (; = body(>IN) ;)) (i32.const 0))
 
     (drop (call $interpret (local.get $bbtos)))
 
     ;; Restore input state
     (global.set $sourceID (local.get $prevSourceID))
-    (i32.store (i32.const 0x21908 (; body(>IN) ;)) (local.get $prevIn))
+    (i32.store (i32.const 0x21908 (; = body(>IN) ;)) (local.get $prevIn))
     (global.set $inputBufferBase (local.get $prevInputBufferBase))
     (global.set $inputBufferSize (local.get $prevInputBufferSize)))
   (data (i32.const 0x213f8) "\e4\13\02\00" "\08" "EVALUATE   " "\59\00\00\00")
@@ -1277,7 +1277,7 @@
     (call $ensureCompiling)
     (call $compileLeave))
   (data (i32.const 0x214d0) "\c4\14\02\00" "\85" (; F_IMMEDIATE ;) "LEAVE  " "\67\00\00\00")
-  (elem (i32.const 0x67) $LEAVE) ;; immediate
+  (elem (i32.const 0x67) $LEAVE)
 
   ;; 6.1.1780
   (func $LITERAL (param $tos i32) (result i32)
@@ -1285,7 +1285,7 @@
     (call $ensureCompiling)
     (call $compilePushConst (call $pop)))
   (data (i32.const 0x214e0) "\d0\14\02\00" "\87" (; F_IMMEDIATE ;) "LITERAL" "\68\00\00\00")
-  (elem (i32.const 0x68) $LITERAL) ;; immediate
+  (elem (i32.const 0x68) $LITERAL)
 
   ;; 6.1.1800
   (func $LOOP (param $tos i32) (result i32)
@@ -1293,7 +1293,7 @@
     (call $ensureCompiling)
     (call $compileLoop))
   (data (i32.const 0x214f0) "\e0\14\02\00" "\84" (; F_IMMEDIATE ;) "LOOP   " "\69\00\00\00")
-  (elem (i32.const 0x69) $LOOP) ;; immediate
+  (elem (i32.const 0x69) $LOOP)
 
   ;; 6.1.1805
   (func $LSHIFT (param $tos i32) (result i32)
@@ -1422,7 +1422,7 @@
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028))) ;; incomplete input
+      (call $fail (i32.const 0x20028 (; = "incomplete input" ;))))
     (call $FIND)
     (local.set $FINDResult (call $pop))
     (if (param i32) (result i32) (i32.eqz (local.get $FINDResult)) 
@@ -1435,14 +1435,14 @@
         (call $emitConst (local.get $FINDToken))
         (call $emitICall (i32.const 1) (i32.const 5 (; = COMPILE_CALL_INDEX ;))))))
   (data (i32.const 0x2157c) "\6c\15\02\00" "\88" (; F_IMMEDIATE ;) "POSTPONE   " "\73\00\00\00")
-  (elem (i32.const 0x73) $POSTPONE) ;; immediate
+  (elem (i32.const 0x73) $POSTPONE)
 
   ;; 6.1.2050
   (func $QUIT (param $tos i32) (result i32)
     (global.set $tos (local.get $tos))
     (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
     (global.set $sourceID (i32.const 0))
-    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 0))
+    (i32.store (i32.const 0x218f8 (; = body(STATE) ;)) (i32.const 0))
     (unreachable))
   (data (i32.const 0x21590) "\7c\15\02\00" "\04" "QUIT   " "\74\00\00\00")
   (elem (i32.const 0x74) $QUIT)
@@ -1468,7 +1468,7 @@
     (call $ensureCompiling)
     (call $compileRecurse))
   (data (i32.const 0x215b8) "\ac\15\02\00" "\87" (; F_IMMEDIATE ;) "RECURSE" "\77\00\00\00")
-  (elem (i32.const 0x77) $RECURSE) ;; immediate
+  (elem (i32.const 0x77) $RECURSE)
 
   ;; 6.2.2125
   (func $REFILL (param $tos i32) (result i32)
@@ -1486,7 +1486,7 @@
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
       (else 
-        (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.const 0))
+        (i32.store (i32.const 0x21908 (; = body(>IN) ;)) (i32.const 0))
         (call $push (i32.const -1)))))
   (data (i32.const 0x21790) "\80\17\02\00" "\06" "REFILL " "\97\00\00\00")
   (elem (i32.const 0x97) $REFILL)
@@ -1497,7 +1497,7 @@
     (call $ensureCompiling)
     (call $compileRepeat))
   (data (i32.const 0x215c8) "\b8\15\02\00" "\86" (; F_IMMEDIATE ;) "REPEAT " "\78\00\00\00")
-  (elem (i32.const 0x78) $REPEAT) ;; immediate
+  (elem (i32.const 0x78) $REPEAT)
 
   ;; 6.1.2160 ROT 
   (func $ROT (param $tos i32) (result i32)
@@ -1536,7 +1536,7 @@
     (block $endLoop (param i32) (result i32) 
       (loop $loop (param i32) (result i32) 
         (if (param i32) (result i32) (i32.lt_s (local.tee $c (call $readChar)) (i32.const 0))
-          (call $fail (i32.const 0x2003C))) ;; missing closing quote
+          (call $fail (i32.const 0x2003C (; = "missing \22" ;))))
         (br_if $endLoop (i32.eq (local.get $c) (i32.const 0x22)))
         (i32.store8 (global.get $here) (local.get $c))
         (global.set $here (i32.add (global.get $here) (i32.const 1)))
@@ -1545,7 +1545,7 @@
     (call $compilePushConst (i32.sub (global.get $here) (local.get $start)))
     (call $ALIGN))
   (data (i32.const 0x215f4) "\e4\15\02\00" "\82" (; F_IMMEDIATE ;) "S\22 " "\7b\00\00\00")
-  (elem (i32.const 0x7b) $Sq) ;; immediate
+  (elem (i32.const 0x7b) $Sq)
 
   ;; 6.1.2170
   (func $S>D (param $tos i32) (result i32)
@@ -1569,7 +1569,7 @@
     (local $npo i32)
     (if (i32.lt_s (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))) (i32.const 0))
       (then 
-        (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1))) (i32.const 0x2D (; '-' ;)))
+        (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1))) (i32.const 0x2D (; = '-' ;)))
         (global.set $po (local.get $npo))))
     (local.get $btos))
   (data (i32.const 0x2160c) "\00\16\02\00" "\04" "SIGN   " "\7d\00\00\00")
@@ -1653,7 +1653,7 @@
     (call $ensureCompiling)
     (call $compileThen))
   (data (i32.const 0x2167c) "\6c\16\02\00" "\84" (; F_IMMEDIATE ;) "THEN   " "\84\00\00\00")
-  (elem (i32.const 0x84) $THEN) ;; immediate
+  (elem (i32.const 0x84) $THEN)
 
   ;; 6.2.2295
   (func $TO (param $tos i32) (result i32)
@@ -1662,7 +1662,7 @@
     (local.get $tos)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028))) ;; incomplete input
+      (call $fail (i32.const 0x20028 (; = "incomplete input" ;))))
     (call $FIND)
     (if (param i32) (result i32) (i32.eqz (call $pop)) 
       (call $failUndefinedWord))
@@ -1754,7 +1754,7 @@
     (call $ensureCompiling)
     (call $emitICall (i32.const 0) (i32.const 9 (; = END_DO_INDEX ;))))
   (data (i32.const 0x216d0) "\c0\16\02\00" "\86" (; F_IMMEDIATE ;) "UNLOOP " "\8a\00\00\00")
-  (elem (i32.const 0x8a) $UNLOOP) ;; immediate
+  (elem (i32.const 0x8a) $UNLOOP)
 
   ;; 6.1.2390
   (func $UNTIL (param $tos i32) (result i32)
@@ -1762,7 +1762,7 @@
     (call $ensureCompiling)
     (call $compileUntil))
   (data (i32.const 0x216e0) "\d0\16\02\00" "\85" (; F_IMMEDIATE ;) "UNTIL  " "\8b\00\00\00")
-  (elem (i32.const 0x8b) $UNTIL) ;; immediate
+  (elem (i32.const 0x8b) $UNTIL)
 
   ;; 6.1.2395
   (func $UNUSED (param $tos i32) (result i32)
@@ -1805,7 +1805,7 @@
     (call $ensureCompiling)
     (call $compileWhile))
   (data (i32.const 0x21704) "\f0\16\02\00" "\85" (; F_IMMEDIATE ;) "WHILE  " "\8d\00\00\00")
-  (elem (i32.const 0x8d) $WHILE) ;; immediate
+  (elem (i32.const 0x8d) $WHILE)
 
   ;; 6.1.2450
   (func $WORD (param $tos i32) (result i32)
@@ -1851,9 +1851,9 @@
   (func $left-bracket (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 0)))
+    (i32.store (i32.const 0x218f8 (; = body(STATE) ;)) (i32.const 0)))
   (data (i32.const 0x21730) "\24\17\02\00" "\81" (; F_IMMEDIATE ;) "[  " "\90\00\00\00")
-  (elem (i32.const 0x90) $left-bracket) ;; immediate
+  (elem (i32.const 0x90) $left-bracket)
 
   ;; 6.1.2510
   (func $bracket-tick (param $tos i32) (result i32)
@@ -1862,7 +1862,7 @@
     (call $')
     (call $compilePushConst (call $pop)))
   (data (i32.const 0x2173c) "\30\17\02\00" "\83" (; F_IMMEDIATE ;) "[']" "\91\00\00\00")
-  (elem (i32.const 0x91) $bracket-tick) ;; immediate
+  (elem (i32.const 0x91) $bracket-tick)
 
   ;; 6.1.2520
   (func $bracket-char (param $tos i32) (result i32)
@@ -1871,7 +1871,7 @@
     (call $CHAR)
     (call $compilePushConst (call $pop)))
   (data (i32.const 0x21748) "\3c\17\02\00" "\86" (; F_IMMEDIATE ;) "[CHAR] " "\92\00\00\00")
-  (elem (i32.const 0x92) $bracket-char) ;; immediate
+  (elem (i32.const 0x92) $bracket-char)
 
   ;; 6.2.2535
   (func $\ (param $tos i32) (result i32)
@@ -1885,11 +1885,11 @@
         (br $skipComments)))
     (local.get $tos))
   (data (i32.const 0x217bc) "\ac\17\02\00" "\81" (; F_IMMEDIATE ;) "\\  " "\9a\00\00\00")
-  (elem (i32.const 0x9a) $\) ;; immediate
+  (elem (i32.const 0x9a) $\)
 
   ;; 6.1.2540
   (func $right-bracket (param $tos i32) (result i32)
-    (i32.store (i32.const 0x218f8 (; body(STATE) ;)) (i32.const 1))
+    (i32.store (i32.const 0x218f8 (; = body(STATE) ;)) (i32.const 1))
     (local.get $tos))
   (data (i32.const 0x21758) "\48\17\02\00" "\01" "]  " "\93\00\00\00")
   (elem (i32.const 0x93) $right-bracket)
@@ -1940,10 +1940,10 @@
                     (call $push (local.get $number)))))
               (else ;; It's not a number.
                 (drop)
-                (call $failUndefinedWord)))) ;; undefined word
+                (call $failUndefinedWord))))
           (else ;; Found the word. 
             ;; Are we compiling or is it immediate?
-            (if (param i32) (result i32) (i32.or (i32.eqz (i32.load (i32.const 0x218f8 (; body(STATE) ;))))
+            (if (param i32) (result i32) (i32.or (i32.eqz (i32.load (i32.const 0x218f8 (; = body(STATE) ;))))
                         (i32.eq (local.get $FINDResult) (i32.const 1)))
               (then
                 (call $push (local.get $FINDToken))
@@ -1966,7 +1966,7 @@
       (loop $skipBlanks
         (local.set $char (call $readChar))
         (br_if $skipBlanks (i32.eq (local.get $char) (local.get $delimiter)))
-        (br_if $skipBlanks (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
+        (br_if $skipBlanks (i32.eq (local.get $char) (i32.const 0x0a)))
         (br $endSkipBlanks)))
 
     (local.set $stringPtr (i32.add (local.tee $wordBase (call $wordBase)) (i32.const 1)))
@@ -1980,7 +1980,7 @@
             (loop $readChars
               (local.set $char (call $readChar))
               (br_if $endReadChars (i32.eq (local.get $char) (local.get $delimiter)))
-              (br_if $endReadChars (i32.eq (local.get $char) (i32.const 0x0a (; ' ' ;))))
+              (br_if $endReadChars (i32.eq (local.get $char) (i32.const 0x0a)))
               (br_if $endReadChars (i32.eq (local.get $char) (i32.const -1)))
               (i32.store8 (local.get $stringPtr) (local.get $char))
               (local.set $stringPtr (i32.add (local.get $stringPtr) (i32.const 0x1)))
@@ -2019,10 +2019,10 @@
     (local.set $base (i32.load (i32.const 0x218e4 (; = body(BASE) ;))))
 
     ;; Read first character
-    (if (i32.eq (local.tee $char (i32.load8_u (local.get $p))) (i32.const 0x2d (; '-' ;)))
+    (if (i32.eq (local.tee $char (i32.load8_u (local.get $p))) (i32.const 0x2d (; = '-' ;)))
       (then 
         (local.set $sign (i64.const -1))
-        (local.set $char (i32.const 48 (; '0' ;) ))
+        (local.set $char (i32.const 48 (; = '0' ;) ))
         (if (i32.eq (local.get $length) (i32.const 1))
           (then
             (return (local.get $value) (local.get $p) (local.get $length)))))
@@ -2032,13 +2032,13 @@
     ;; Read all characters
     (block $endLoop
       (loop $loop
-        (if (i32.lt_s (local.get $char) (i32.const 48 (; '0' ;) ))
+        (if (i32.lt_s (local.get $char) (i32.const 48 (; = '0' ;) ))
           (br $endLoop))      
-        (if (i32.le_s (local.get $char) (i32.const 57 (; '9' ;) ))
+        (if (i32.le_s (local.get $char) (i32.const 57 (; = '9' ;) ))
           (then 
             (local.set $n (i32.sub (local.get $char) (i32.const 48))))
           (else
-            (if (i32.lt_s (local.get $char) (i32.const 65 (; 'A' ;) ))
+            (if (i32.lt_s (local.get $char) (i32.const 65 (; = 'A' ;) ))
               (br $endLoop))
             (local.set $n (i32.sub (local.get $char) (i32.const 55)))))
         (if (i32.ge_s (local.get $n) (local.get $base))
@@ -2638,7 +2638,7 @@
   (func $ensureCompiling (param $tos i32) (result i32)
     (local.get $tos) 
     (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x218f8 (; = body(STATE) ;))))
-      (call $fail (i32.const 0x2005C)))) ;; word not interpretable
+      (call $fail (i32.const 0x2005C (; = "word not supported in interpret mode" ;)))))
 
   ;; Toggle the hidden flag
   (func $hidden
@@ -2709,13 +2709,13 @@
   (func $readChar (result i32)
     (local $n i32)
     (local $in i32)
-    (if (result i32) (i32.ge_u (local.tee $in (i32.load (i32.const 0x21908 (; body(>IN) ;))))
+    (if (result i32) (i32.ge_u (local.tee $in (i32.load (i32.const 0x21908 (; = body(>IN) ;))))
                   (global.get $inputBufferSize))
       (then
         (i32.const -1))
       (else
         (local.set $n (i32.load8_s (i32.add (global.get $inputBufferBase) (local.get $in))))
-        (i32.store (i32.const 0x21908 (; body(>IN) ;)) (i32.add (local.get $in) (i32.const 1)))
+        (i32.store (i32.const 0x21908 (; = body(>IN) ;)) (i32.add (local.get $in) (i32.const 1)))
         (local.get $n))))
 
     (func $numberToChar (param $v i32) (result i32)
@@ -2760,7 +2760,7 @@
 
         ;; Check for stack underflow
         (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (drop (call $fail (local.get $tos) (i32.const 0x200B2 (; stack empty ;)))))
+          (drop (call $fail (local.get $tos) (i32.const 0x200B2 (; = "stack empty" ;)))))
 
         ;; Show prompt
         (if (i32.eqz (local.get $silent))
