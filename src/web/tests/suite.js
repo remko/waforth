@@ -970,21 +970,21 @@ function loadTests() {
       it("should find a word", () => {
         loadString("DUP");
         run("FIND");
-        expect(stackValues()[0]).to.eql(136120);
+        expect(stackValues()[0]).to.eql(132236); // FIXME: Make test more robust against dict changes
         expect(stackValues()[1]).to.eql(-1);
       });
 
       it("should find a short word", () => {
         loadString("!");
         run("FIND");
-        expect(stackValues()[0]).to.eql(135168);
+        expect(stackValues()[0]).to.eql(131240); // FIXME: Make test more robust against dict changes
         expect(stackValues()[1]).to.eql(-1);
       });
 
       it("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
-        expect(stackValues()[0]).to.eql(135304);
+        expect(stackValues()[0]).to.eql(131376); // FIXME: Make test more robust against dict changes
         expect(stackValues()[1]).to.eql(1);
       });
 
@@ -1480,19 +1480,19 @@ function loadTests() {
       it("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([123, 0, 137515, 2]);
+        expect(stackValues()).to.eql([123, 0, 133459, 2]); // FIXME: Make test more robust against dictionary changes
       });
 
       it("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([11, 0, 137513, 0]);
+        expect(stackValues()).to.eql([11, 0, 133457, 0]); // FIXME: Make test more robust against dictionary changes
       });
 
       it("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
-        expect(stackValues()).to.eql([0, 0, 137512, 1]);
+        expect(stackValues()).to.eql([0, 0, 133456, 1]); // FIXME: Make test more robust against dictionary changes
       });
     });
 
