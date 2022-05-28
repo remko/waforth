@@ -1884,7 +1884,7 @@
         (br_if $endSkipComments (i32.eq (local.get $char) (i32.const -1)))
         (br $skipComments)))
     (local.get $tos))
-  (data (i32.const 0x217bc) "\ac\17\02\00" "\81" (; F_IMMEDIATE ;) "\\  " "\9a\00\00\00")
+  (data (i32.const 0x217bc) "\ac\17\02\00" "\81" (; F_IMMEDIATE ;) "\5c  " "\9a\00\00\00")
   (elem (i32.const 0x9a) $\)
 
   ;; 6.1.2540
