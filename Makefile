@@ -22,14 +22,12 @@ lint:
 
 wasm: src/waforth.assembled.wat scripts/word.wasm.hex
 
-process: src/waforth.vanilla.wat
-	cp $< src/waforth.wat
-
-src/waforth.vanilla.wat: src/waforth.wat
-	./scripts/process.js $< $@
-
 src/web/benchmarks/sieve/sieve-c.js:
 	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ -sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
+.PHONY: standalone
+standalone:
+	$(MAKE) -C src/standalone
 
 %.wasm: %.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
