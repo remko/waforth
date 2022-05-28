@@ -169,15 +169,15 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (data (i32.const 0x20000) "\0e" "undefined word")
-  (data (i32.const 0x20014) "\0d" "division by 0")
-  (data (i32.const 0x20028) "\10" "incomplete input")
-  (data (i32.const 0x2003c) "\0b" "missing ')'")
-  (data (i32.const 0x2004c) "\09" "missing \22")
-  (data (i32.const 0x2005c) "\24" "word not supported in interpret mode")
-  (data (i32.const 0x20084) "\0f" "not implemented")
-  (data (i32.const 0x20090) "\11" "ADDRESS-UNIT-BITS")
-  (data (i32.const 0x200a2) "\0f" "/COUNTED-STRING")
-  (data (i32.const 0x200b2) "\0b" "stack empty")
+  (data (i32.const 0x2000f) "\0d" "division by 0")
+  (data (i32.const 0x2001d) "\10" "incomplete input")
+  (data (i32.const 0x2002e) "\0b" "missing ')'")
+  (data (i32.const 0x2003a) "\09" "missing \22")
+  (data (i32.const 0x20044) "\24" "word not supported in interpret mode")
+  (data (i32.const 0x20069) "\0f" "not implemented")
+  (data (i32.const 0x20079) "\11" "ADDRESS-UNIT-BITS")
+  (data (i32.const 0x2008b) "\0f" "/COUNTED-STRING")
+  (data (i32.const 0x2009b) "\0b" "stack empty")
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -270,7 +270,7 @@
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase))) 
       (then 
-        (call $fail (i32.const 0x20028 (; = str("incomplete input") ;)))))
+        (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (call $FIND)
     (drop (call $pop)))
   (data (i32.const 0x21030) "\24\10\02\00" "\01" "'  " "\14\00\00\00")
@@ -282,7 +282,7 @@
     (local.get $tos)
     (loop $loop (param i32) (result i32) 
       (if (param i32) (result i32) (i32.lt_s (local.tee $c (call $readChar)) (i32.const 0)) 
-        (call $fail (i32.const 0x2003c (; = str("missing ')'") ;)))) 
+        (call $fail (i32.const 0x2002e (; = str("missing ')'") ;)))) 
       (br_if $loop (i32.ne (local.get $c) (i32.const 41)))))
   (data (i32.const 0x2103c) "\30\10\02\00" "\81" (; F_IMMEDIATE ;) "(  " "\15\00\00\00")
   (elem (i32.const 0x15) $paren)
@@ -425,7 +425,7 @@
     (local $bbtos i32)
     (local $divisor i32)
     (if (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
-      (return (call $fail (local.get $tos) (i32.const 0x20014 (; = str("division by 0") ;)))))
+      (return (call $fail (local.get $tos) (i32.const 0x2000f (; = str("division by 0") ;)))))
     (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i32.div_s (i32.load (local.get $bbtos)) (local.get $divisor)))
     (local.get $btos))
@@ -881,7 +881,7 @@
   (func $CHAR (param $tos i32) (result i32)
     (call $readWord (local.get $tos) (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028 (; = str("incomplete input") ;)))) 
+      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))) 
     (local.tee $tos)
     (i32.store (i32.sub (local.get $tos) (i32.const 4))
                 (i32.load8_u (i32.add (call $wordBase) (i32.const 1)))))
@@ -942,7 +942,7 @@
     (local.get $tos)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (local.tee $length (i32.load8_u (call $wordBase))))
-      (call $fail (i32.const 0x20028 (; = str("incomplete input") ;))))
+      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
     (drop (call $pop))
     (i32.store8 (global.get $here) (local.get $length))
 
@@ -1035,13 +1035,13 @@
     (local $bbtos i32)
     (local.set $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (local.set $len (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-    (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20091 (; = str("ADDRESS-UNIT-BITS") + 1 ;)) (i32.const 0x11 (; = len("ADDRESS-UNIT-BITS") ;)))
+    (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x2007a (; = str("ADDRESS-UNIT-BITS") + 1 ;)) (i32.const 0x11 (; = len("ADDRESS-UNIT-BITS") ;)))
       (then
         (i32.store (local.get $bbtos) (i32.const 8))
         (i32.store (local.get $btos) (i32.const -1))
         (local.get $tos))
       (else 
-        (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x200a3 (; = str("/COUNTED-STRING") + 1 ;)) (i32.const 0xf (; = len("/COUNTED-STRING") ;)))
+        (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x2008c (; = str("/COUNTED-STRING") + 1 ;)) (i32.const 0xf (; = len("/COUNTED-STRING") ;)))
           (then
             (i32.store (local.get $bbtos) (i32.const 255))
             (i32.store (local.get $btos) (i32.const -1))
@@ -1422,7 +1422,7 @@
     (call $ensureCompiling)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028 (; = str("incomplete input") ;))))
+      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
     (call $FIND)
     (local.set $FINDResult (call $pop))
     (if (param i32) (result i32) (i32.eqz (local.get $FINDResult)) 
@@ -1536,7 +1536,7 @@
     (block $endLoop (param i32) (result i32) 
       (loop $loop (param i32) (result i32) 
         (if (param i32) (result i32) (i32.lt_s (local.tee $c (call $readChar)) (i32.const 0))
-          (call $fail (i32.const 0x2004c (; = str("missing \"") ;))))
+          (call $fail (i32.const 0x2003a (; = str("missing \"") ;))))
         (br_if $endLoop (i32.eq (local.get $c) (i32.const 0x22)))
         (i32.store8 (global.get $here) (local.get $c))
         (global.set $here (i32.add (global.get $here) (i32.const 1)))
@@ -1662,7 +1662,7 @@
     (local.get $tos)
     (call $readWord (i32.const 0x20))
     (if (param i32) (result i32) (i32.eqz (i32.load8_u (call $wordBase)))
-      (call $fail (i32.const 0x20028 (; = str("incomplete input") ;))))
+      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
     (call $FIND)
     (if (param i32) (result i32) (i32.eqz (call $pop)) 
       (call $failUndefinedWord))
@@ -2638,7 +2638,7 @@
   (func $ensureCompiling (param $tos i32) (result i32)
     (local.get $tos) 
     (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x218f8 (; = body(STATE) ;))))
-      (call $fail (i32.const 0x2005c (; = str("word not supported in interpret mode") ;)))))
+      (call $fail (i32.const 0x20044 (; = str("word not supported in interpret mode") ;)))))
 
   ;; Toggle the hidden flag
   (func $hidden
@@ -2760,7 +2760,7 @@
 
         ;; Check for stack underflow
         (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (drop (call $fail (local.get $tos) (i32.const 0x200b2 (; = str("stack empty") ;)))))
+          (drop (call $fail (local.get $tos) (i32.const 0x2009b (; = str("stack empty") ;)))))
 
         ;; Show prompt
         (if (i32.eqz (local.get $silent))
