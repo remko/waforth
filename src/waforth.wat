@@ -410,7 +410,7 @@
     (local $bbtos i32)
     (local $divisor i32)
     (if (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
-      (return (call $fail (local.get $tos) (i32.const 0x2000f (; = str("division by 0") ;)))))
+      (call $fail (i32.const 0x2000f (; = str("division by 0") ;))))
     (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i32.div_s (i32.load (local.get $bbtos)) (local.get $divisor)))
     (local.get $btos))
@@ -865,7 +865,7 @@
     (local.set $addr (local.set $len (call $parseName)))
     (if (i32.eqz (local.get $len))
       (then
-        (return (call $fail (local.get $tos) (i32.const 0x2001d (; = str("incomplete input") ;))))))
+        (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (i32.store (local.get $tos) (i32.load8_u (local.get $addr)))
     (i32.add (local.get $tos) (i32.const 4)))
   (data (i32.const 0x203bc) "\ac\03\02\00" "\04" "CHAR   " "\4a\00\00\00")
@@ -925,7 +925,7 @@
 
     (local.set $addr (local.set $len (call $parseName)))
     (if (i32.eqz (local.get $len))
-      (return (call $fail (local.get $tos) (i32.const 0x2001d (; = str("incomplete input") ;)))))
+      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
     (i32.store8 (global.get $here) (local.get $len))
     (memory.copy 
       (local.tee $here (i32.add (global.get $here) (i32.const 1)))
@@ -1883,7 +1883,7 @@
                     (local.set $tos (call $push (local.get $tos) (local.get $number))))))
               (else ;; It's not a number.
                 (drop)
-                (local.set $tos (call $failUndefinedWord (local.get $tos))))))
+                (call $failUndefinedWord))))
           (else ;; Found the word. 
             ;; Are we compiling or is it immediate?
             (if
@@ -2516,13 +2516,17 @@
       (local.set $addr2 (i32.add (local.get $addr2)(i32.const 1)))
       (br $loop)))
 
-  (func $fail (param $tos i32) (param $str i32) (result i32)
+  (func $fail (param $str i32)
     (call $type 
       (i32.load8_u (local.get $str))
       (i32.add (local.get $str) (i32.const 1)))
     (call $shell_emit (i32.const 10))
-    (call $ABORT (local.get $tos)))
-  
+    (drop (call $ABORT (i32.const -1) (; unused ;))))
+
+  (func $failUndefinedWord
+    (call $type (i32.load8_u (i32.const 0x20000)) (i32.const 0x20001))
+    (drop (call $ABORT (i32.const -1) (; unused ;))))
+
   (func $type (param $len i32) (param $p i32)
     (local $end i32)
     (local.set $end (i32.add (local.get $p) (local.get $len)))
@@ -2532,10 +2536,6 @@
         (call $shell_emit (i32.load8_u (local.get $p)))
         (local.set $p (i32.add (local.get $p) (i32.const 1)))
         (br $loop))))
-
-  (func $failUndefinedWord (param $tos i32) (result i32)
-    (call $type (i32.load8_u (i32.const 0x20000)) (i32.const 0x20001))
-    (call $ABORT (local.get $tos)))
 
   (func $setFlag (param $v i32)
     (i32.store 
@@ -2738,7 +2738,7 @@
 
         ;; Check for stack underflow
         (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (drop (call $fail (local.get $tos) (i32.const 0x20085 (; = str("stack empty") ;)))))
+          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
 
         ;; Show prompt
         (if (i32.eqz (local.get $silent))
