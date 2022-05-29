@@ -1762,7 +1762,9 @@
     (call $skip (local.get $delimiter))
     (local.set $addr (local.set $len (call $parse (local.get $delimiter))))
     (memory.copy 
-      (i32.add (local.tee $wordBase (call $wordBase)) (i32.const 1))
+      (i32.add 
+        (local.tee $wordBase (i32.add (global.get $here) (i32.const 0x200 (; = WORD_OFFSET ;)))) 
+        (i32.const 1))
       (local.get $addr)
       (local.get $len))
     (i32.store8 (local.get $wordBase) (local.get $len))
@@ -2699,9 +2701,6 @@
       (br_if $loop (local.get $entryP)))
     (i32.const 0) (i32.const 0))
   
-  (func $wordBase (result i32)
-    (i32.add (global.get $here) (i32.const 0x200 (; = WORD_OFFSET ;))))
-
   (func $aligned (param $addr i32) (result i32)
     (i32.and 
       (i32.add (local.get $addr) (i32.const 3)) 
