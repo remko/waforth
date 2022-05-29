@@ -152,7 +152,7 @@ class WAForth {
             }
             data = new Uint8Array(dataCopy);
           }
-          // console.log("Load", index, arrayToBase64(data));
+          // console.log("Load", arrayToBase64(data));
           try {
             var module = new WebAssembly.Module(data);
             new WebAssembly.Instance(module, {
