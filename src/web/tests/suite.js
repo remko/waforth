@@ -192,8 +192,7 @@ function loadTests() {
       it("should return an error when word is not found", () => {
         forth.read("BADWORD");
         expect(() => core.interpret()).to.throw();
-        // expect(output.trim()).to.eql("undefined word: BADWORD");
-        expect(output.trim()).to.eql("undefined word");
+        expect(output.trim()).to.eql("undefined word: BADWORD");
       });
 
       it("should interpret a positive number", () => {
@@ -215,15 +214,13 @@ function loadTests() {
       it("should not interpret hex in decimal mode", () => {
         forth.read("DF");
         expect(() => core.interpret()).to.throw();
-        // expect(output.trim()).to.eql("undefined word: DF");
-        expect(output.trim()).to.eql("undefined word");
+        expect(output.trim()).to.eql("undefined word: DF");
       });
 
       it("should fail on half a word", () => {
         forth.read("23FOO");
         expect(() => core.interpret()).to.throw();
-        // expect(output.trim()).to.eql("undefined word: 23FOO");
-        expect(output.trim()).to.eql("undefined word");
+        expect(output.trim()).to.eql("undefined word: 23FOO");
       });
 
       it("should interpret a long string", () => {

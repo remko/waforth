@@ -260,7 +260,7 @@
 
   ;; 6.1.0070
   (func $' (param $tos i32) (result i32)
-    (i32.store (local.get $tos) (drop (call $find (call $parseName))))
+    (i32.store (local.get $tos) (drop (call $find! (call $parseName))))
     (i32.add (local.get $tos) (i32.const 4)))
   (data (i32.const 0x200c4) "\b8\00\02\00" "\01" "'  " "\14\00\00\00")
   (elem (i32.const 0x14) $')
@@ -1381,9 +1381,7 @@
     (local $FINDResult i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (local.set $FINDToken (local.set $FINDResult (call $find (call $parseName))))
-    (if (param i32) (result i32) (i32.eqz (local.get $FINDResult))
-      (call $failUndefinedWord))
+    (local.set $FINDToken (local.set $FINDResult (call $find! (call $parseName))))
     (if (param i32) (result i32) (i32.eq (local.get $FINDResult) (i32.const 1))
       (then 
         (call $compileCall (local.get $FINDToken)))
@@ -1610,7 +1608,7 @@
     (local $v i32)
     (local $xt i32)
     (local $btos i32)
-    (local.set $xt (drop (call $find (call $parseName))))
+    (local.set $xt (drop (call $find! (call $parseName))))
     (i32.store (i32.add (call $body (local.get $xt)) (i32.const 4)) 
       (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (local.get $btos))
@@ -1883,7 +1881,7 @@
                     (local.set $tos (call $push (local.get $tos) (local.get $number))))))
               (else ;; It's not a number.
                 (drop)
-                (call $failUndefinedWord))))
+                (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
           (else ;; Found the word. 
             ;; Are we compiling or is it immediate?
             (if
@@ -2523,8 +2521,12 @@
     (call $shell_emit (i32.const 10))
     (drop (call $ABORT (i32.const -1) (; unused ;))))
 
-  (func $failUndefinedWord
+  (func $failUndefinedWord (param $addr i32) (param $len i32)
     (call $type (i32.load8_u (i32.const 0x20000)) (i32.const 0x20001))
+    (call $shell_emit (i32.const 0x3a (; = ':' ;)))
+    (call $shell_emit (i32.const 0x20 (; = ' ' ;)))
+    (call $type (local.get $len) (local.get $addr))
+    (call $shell_emit (i32.const 0x0a))
     (drop (call $ABORT (i32.const -1) (; unused ;))))
 
   (func $type (param $len i32) (param $p i32)
@@ -2701,6 +2703,14 @@
       (br_if $loop (local.get $entryP)))
     (i32.const 0) (i32.const 0))
   
+  ;; Returns xt, type (1 = immediate, -1 = non-immediate)
+  ;; Aborts if not found
+  (func $find! (param $addr i32) (param $len i32) (result i32) (result i32)
+    (local $r i32)
+    (if (i32.eqz (local.tee $r (call $find (local.get $addr) (local.get $len))))      
+      (call $failUndefinedWord (local.get $addr) (local.get $len)))
+    (local.get $r))
+
   (func $aligned (param $addr i32) (result i32)
     (i32.and 
       (i32.add (local.get $addr) (i32.const 3)) 
