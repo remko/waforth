@@ -77,8 +77,8 @@
   ;;   MEMORY_SIZE_PAGES :=      1600   (MEMORY_SIZE / 65536)
   ;;
   ;; Memory layout:
-  ;;   INPUT_BUFFER_BASE  :=   0x300
-  ;;   INPUT_BUFFER_SIZE  :=   0x700
+  ;;   INPUT_BUFFER_BASE  :=     0x0
+  ;;   INPUT_BUFFER_SIZE  :=  0x1000
   ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
   ;;   MODULE_HEADER_BASE :=  0x1000 
   ;;   RETURN_STACK_BASE  :=  0x2000
@@ -1495,8 +1495,8 @@
         (return)))
     (global.set $inputBufferSize 
       (call $shell_read 
-        (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)) 
-        (i32.const 0x700 (; = INPUT_BUFFER_SIZE ;))))
+        (i32.const 0x0 (; = INPUT_BUFFER_BASE ;)) 
+        (i32.const 0x1000 (; = INPUT_BUFFER_SIZE ;))))
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
       (else (call $push (i32.const -1)))))
@@ -2023,7 +2023,7 @@
   (global $tors (mut i32) (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
 
   ;; Input buffer
-  (global $inputBufferBase (mut i32) (i32.const 0x300 (; = INPUT_BUFFER_BASE ;)))
+  (global $inputBufferBase (mut i32) (i32.const 0x0 (; = INPUT_BUFFER_BASE ;)))
   (global $inputBufferSize (mut i32) (i32.const 0))
 
   ;; Source ID
