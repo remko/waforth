@@ -73,8 +73,8 @@
 
   ;;
   ;; Memory size:
-  ;;   MEMORY_SIZE := 104857600     (100*1024*1024)
-  ;;   MEMORY_SIZE_PAGES := 1600    (MEMORY_SIZE / 65536)
+  ;;   MEMORY_SIZE       := 104857600   (100*1024*1024)
+  ;;   MEMORY_SIZE_PAGES :=      1600   (MEMORY_SIZE / 65536)
   ;;
   ;; Memory layout:
   ;;   INPUT_BUFFER_BASE  :=   0x300
@@ -83,11 +83,12 @@
   ;;   MODULE_HEADER_BASE :=  0x1000 
   ;;   RETURN_STACK_BASE  :=  0x2000
   ;;   STACK_BASE         := 0x10000
-  ;;   DATA_SPACE_BASE    := 0x20000 
+  ;;   DATA_SPACE_BASE    := 0x20000
   ;;
-  ;;   PICTURED_OUTPUT_OFFSET := 0x200 (offset from HERE; filled backward)
-  ;;   WORD_OFFSET := 0x200 (offset from HERE)
-  ;;   PAD_OFFSET  := 0x304 (offset from HERE) 
+  ;; Transient regions, offset from HERE:
+  ;;   PICTURED_OUTPUT_OFFSET := 0x200 (filled backward)
+  ;;   WORD_OFFSET            := 0x200 
+  ;;   PAD_OFFSET             := 0x304 (WORD_OFSET + 1 + 0xFF)
   ;;
   (memory (export "memory") 0x640 (; = MEMORY_SIZE_PAGES ;))
 
