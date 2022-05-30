@@ -1,10 +1,25 @@
-#!/usr/bin/env yarn exec ts-node
+#!/usr/bin/env yarn exec ts-node --
 
 import * as process from "process";
 import * as fs from "fs";
 import * as _ from "lodash";
 import simpleEval from "simple-eval";
 import { assert } from "console";
+
+let inplace = false;
+let addDict: string | undefined = undefined;
+for (let i = 2; i < process.argv.length; i++) {
+  const arg = process.argv[i];
+  switch (arg) {
+    case "--inplace":
+      inplace = true;
+      break;
+    case "--add-dict":
+      addDict = process.argv[i + 1];
+      i += 1;
+      break;
+  }
+}
 
 type DictElement = {
   type: "dict";
@@ -168,6 +183,30 @@ for (let line of lines) {
 }
 
 ////////////////////////////////////////////////////////////////////////
+// Add new entry
+////////////////////////////////////////////////////////////////////////
+
+let addDictElement: DictElement | undefined = undefined;
+if (addDict) {
+  addDictElement = {
+    type: "dict",
+    offset: -1,
+    prev: -1,
+    flags: 0,
+    name: addDict,
+    index: 0xffffffff,
+    func: "$" + addDict,
+  };
+  let i = 0;
+  for (; i < dictElements.length; ++i) {
+    if (dictElements[i].name.localeCompare(addDictElement.name) > 0) {
+      break;
+    }
+  }
+  dictElements.splice(i, 0, addDictElement);
+}
+
+////////////////////////////////////////////////////////////////////////
 // Update data elements
 ////////////////////////////////////////////////////////////////////////
 
@@ -193,6 +232,51 @@ for (const el of dictElements) {
 
 const here = offset;
 
+function serializeWordData(el: DictElement): string {
+  const paddedName = _.padEnd(
+    el.name,
+    Math.ceil((1 + el.name.length) / 4) * 4 - 1,
+    " "
+  );
+  const flagsLen =
+    "\\" + _.padStart((el.name.length | el.flags).toString(16), 2, "0");
+  let l = `  (data (i32.const 0x${el.offset.toString(16)})`;
+  l += ` "${pack(el.prev)}"`;
+  l += ` "${flagsLen}"`;
+  if (el.flags !== 0) {
+    const flags = [];
+    if (el.flags & 0x20) {
+      flags.push("F_HIDDEN");
+    }
+    if (el.flags & 0x40) {
+      flags.push("F_DATA");
+    }
+    if (el.flags & 0x80) {
+      flags.push("F_IMMEDIATE");
+    }
+    l += ` (; ${flags.join(" & ")} ;)`;
+  }
+  l += ` "${escapeString(paddedName)}"`;
+  l += ` "${pack(el.index)}"`;
+  if (el.indexExpr) {
+    l += ` (; = ${el.indexExpr} ;)`;
+  }
+  if (el.data) {
+    l += ` "${el.data}"`;
+    if (el.dataExpr) {
+      l += ` (; = ${el.dataExpr} ;)`;
+    }
+  }
+  l += ")";
+  return l;
+}
+
+function serializeStringData(el: StringElement): string {
+  const offset = "0x" + el.offset.toString(16);
+  const len = "\\" + _.padStart(el.string.length.toString(16), 2, "0");
+  return `  (data (i32.const ${offset}) "${len}" "${escapeString(el.string)}")`;
+}
+
 let newLines = [];
 for (const line of lines) {
   const dataElement = parseDataElement(line);
@@ -201,11 +285,7 @@ for (const line of lines) {
       case "string": {
         const el = stringElements.find((e) => e.string === dataElement.string)!;
         assert(el != null);
-        const offset = "0x" + el.offset.toString(16);
-        const len = "\\" + _.padStart(el.string.length.toString(16), 2, "0");
-        newLines.push(
-          `  (data (i32.const ${offset}) "${len}" "${escapeString(el.string)}")`
-        );
+        newLines.push(serializeStringData(el));
         break;
       }
       case "dict": {
@@ -214,42 +294,7 @@ for (const line of lines) {
           newLines.push(line);
           continue;
         }
-        const paddedName = _.padEnd(
-          el.name,
-          Math.ceil((1 + el.name.length) / 4) * 4 - 1,
-          " "
-        );
-        const flagsLen =
-          "\\" + _.padStart((el.name.length | el.flags).toString(16), 2, "0");
-        let l = `  (data (i32.const 0x${el.offset.toString(16)})`;
-        l += ` "${pack(el.prev)}"`;
-        l += ` "${flagsLen}"`;
-        if (el.flags !== 0) {
-          const flags = [];
-          if (el.flags & 0x20) {
-            flags.push("F_HIDDEN");
-          }
-          if (el.flags & 0x40) {
-            flags.push("F_DATA");
-          }
-          if (el.flags & 0x80) {
-            flags.push("F_IMMEDIATE");
-          }
-          l += ` (; ${flags.join(" & ")} ;)`;
-        }
-        l += ` "${escapeString(paddedName)}"`;
-        l += ` "${pack(el.index)}"`;
-        if (el.indexExpr) {
-          l += ` (; = ${el.indexExpr} ;)`;
-        }
-        if (el.data) {
-          l += ` "${el.data}"`;
-          if (el.dataExpr) {
-            l += ` (; = ${el.dataExpr} ;)`;
-          }
-        }
-        l += ")";
-        newLines.push(l);
+        newLines.push(serializeWordData(el));
         break;
       }
       default:
@@ -425,4 +470,17 @@ if (updateValues) {
 // }
 // lines = strippedLines;
 
-fs.writeFileSync("out.wat", lines.join("\n"));
+fs.writeFileSync(
+  inplace ? "src/waforth.wat" : "src/waforth.out.wat",
+  lines.join("\n")
+);
+
+if (addDictElement) {
+  console.log(`  (func $${addDictElement.name} (param $tos i32) (result i32))`);
+  console.log(serializeWordData(addDictElement));
+  console.log(
+    `  (elem (i32.const 0x${addDictElement.index.toString(16)}) $${
+      addDictElement.name
+    })`
+  );
+}

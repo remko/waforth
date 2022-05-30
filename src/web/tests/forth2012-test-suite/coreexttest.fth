@@ -304,15 +304,15 @@ T{ BASE @ HEX BASE @ DECIMAL BASE @ - SWAP BASE ! -> 6 }T
 \ T{ MAX-INT MAX-INT 1 WITHIN -> TRUE }T
 \ T{ MAX-INT MAX-INT MAX-INT WITHIN -> FALSE }T
 
-\ -----------------------------------------------------------------------------
-TESTING UNUSED  (contributed by James Bowman & Peter Knaggs)
+\ \ -----------------------------------------------------------------------------
+\ TESTING UNUSED  (contributed by James Bowman & Peter Knaggs)
 
-VARIABLE UNUSED0
-T{ UNUSED DROP -> }T                  
-T{ ALIGN UNUSED UNUSED0 ! 0 , UNUSED CELL+ UNUSED0 @ = -> TRUE }T
-T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ =
-         -> TRUE }T  \ aligned -> unaligned
-T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ = -> TRUE }T  \ unaligned -> ?
+\ VARIABLE UNUSED0
+\ T{ UNUSED DROP -> }T                  
+\ T{ ALIGN UNUSED UNUSED0 ! 0 , UNUSED CELL+ UNUSED0 @ = -> TRUE }T
+\ T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ =
+\          -> TRUE }T  \ aligned -> unaligned
+\ T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ = -> TRUE }T  \ unaligned -> ?
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING AGAIN   (contributed by James Bowman)
@@ -415,7 +415,7 @@ T{ VD1 -> 222 }T
 T{ : VD2 TO VAL2 ; -> }T
 T{ VAL2 -> -999 }T
 \ T{ -333 VD2 -> }T
-T{ VAL2 -> -333 }T
+\ T{ VAL2 -> -333 }T
 T{ VAL1 -> 222 }T
 T{ 123 VALUE VAL3 IMMEDIATE VAL3 -> 123 }T
 T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
@@ -509,14 +509,14 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 \ T{  4 RN2 EXECUTE -> 33 22 11 0 }T
 \ T{ 25 RN2 EXECUTE -> 33 22 11 0 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING C"
+\ -----------------------------------------------------------------------------
+TESTING C"
 
-\ T{ : CQ1 C" 123" ; -> }T
-\ T{ CQ1 COUNT EVALUATE -> 123 }T
-\ T{ : CQ2 C" " ; -> }T
-\ T{ CQ2 COUNT EVALUATE -> }T
-\ T{ : CQ3 C" 2345"COUNT EVALUATE ; CQ3 -> 2345 }T
+T{ : CQ1 C" 123" ; -> }T
+T{ CQ1 COUNT EVALUATE -> 123 }T
+T{ : CQ2 C" " ; -> }T
+T{ CQ2 COUNT EVALUATE -> }T
+T{ : CQ3 C" 2345"COUNT EVALUATE ; CQ3 -> 2345 }T
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING COMPILE,
@@ -542,18 +542,18 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 
 \ T{ S$ EVALUATE SI_INC @ -> 0 2345 15 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING .(
+\ -----------------------------------------------------------------------------
+TESTING .(
 
-\ CR CR .( Output from .() 
-\ T{ CR .( You should see -9876: ) -9876 . -> }T
-\ T{ CR .( and again: ).( -9876)CR -> }T
+CR CR .( Output from .() 
+T{ CR .( You should see -9876: ) -9876 . -> }T
+T{ CR .( and again: ).( -9876)CR -> }T
 
-\ CR CR .( On the next 2 lines you should see First then Second messages:)
-\ T{ : DOTP  CR ." Second message via ." [CHAR] " EMIT    \ Check .( is immediate
-\      [ CR ] .( First message via .( ) ; DOTP -> }T
-\ CR CR
-\ T{ : IMM? BL WORD FIND NIP ; IMM? .( -> 1 }T
+CR CR .( On the next 2 lines you should see First then Second messages:)
+T{ : DOTP  CR ." Second message via ." [CHAR] " EMIT    \ Check .( is immediate
+     [ CR ] .( First message via .( ) ; DOTP -> }T
+CR CR
+T{ : IMM? BL WORD FIND NIP ; IMM? .( -> 1 }T
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING .R and U.R - has to handle different cell sizes
@@ -582,12 +582,12 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 \ CR CR .( Output from .R and U.R)
 \ T{ .R&U.R -> }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING PAD ERASE
-\ \ Must handle different size characters i.e. 1 CHARS >= 1 
+\ -----------------------------------------------------------------------------
+TESTING PAD ERASE
+\ Must handle different size characters i.e. 1 CHARS >= 1 
 
-\ 84 CONSTANT CHARS/PAD      \ Minimum size of PAD in chars
-\ CHARS/PAD CHARS CONSTANT AUS/PAD
+84 CONSTANT CHARS/PAD      \ Minimum size of PAD in chars
+CHARS/PAD CHARS CONSTANT AUS/PAD
 \ : CHECKPAD  ( caddr u ch -- f )  \ f = TRUE if u chars = ch
 \    SWAP 0
 \    ?DO
@@ -597,9 +597,9 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 \    2DROP TRUE
 \ ;
 
-\ T{ PAD DROP -> }T
-\ T{ 0 INVERT PAD C! -> }T
-\ T{ PAD C@ CONSTANT MAXCHAR -> }T
+T{ PAD DROP -> }T
+T{ 0 INVERT PAD C! -> }T
+T{ PAD C@ CONSTANT MAXCHAR -> }T
 \ T{ PAD CHARS/PAD 2DUP MAXCHAR FILL MAXCHAR CHECKPAD -> TRUE }T
 \ T{ PAD CHARS/PAD 2DUP CHARS ERASE 0 CHECKPAD -> TRUE }T
 \ T{ PAD CHARS/PAD 2DUP MAXCHAR FILL PAD 0 ERASE MAXCHAR CHECKPAD -> TRUE }T
@@ -608,54 +608,54 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 \ T{ PAD 43 CHARS + 9 0 CHECKPAD -> TRUE }T
 \ T{ PAD 52 CHARS + CHARS/PAD 52 - MAXCHAR CHECKPAD -> TRUE }T
 
-\ \ Check that use of WORD and pictured numeric output do not corrupt PAD
-\ \ Minimum size of buffers for these are 33 chars and (2*n)+2 chars respectively
-\ \ where n is number of bits per cell
+\ Check that use of WORD and pictured numeric output do not corrupt PAD
+\ Minimum size of buffers for these are 33 chars and (2*n)+2 chars respectively
+\ where n is number of bits per cell
 
-\ PAD CHARS/PAD ERASE
-\ 2 BASE !
-\ MAX-UINT MAX-UINT <# #S CHAR 1 DUP HOLD HOLD #> 2DROP
-\ DECIMAL
-\ BL WORD 12345678123456781234567812345678 DROP
+PAD CHARS/PAD ERASE
+2 BASE !
+MAX-UINT MAX-UINT <# #S CHAR 1 DUP HOLD HOLD #> 2DROP
+DECIMAL
+BL WORD 12345678123456781234567812345678 DROP
 \ T{ PAD CHARS/PAD 0 CHECKPAD -> TRUE }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING PARSE
+\ -----------------------------------------------------------------------------
+TESTING PARSE
 
-\ T{ CHAR | PARSE 1234| DUP ROT ROT EVALUATE -> 4 1234 }T
-\ T{ CHAR ^ PARSE  23 45 ^ DUP ROT ROT EVALUATE -> 7 23 45 }T
-\ : PA1 [CHAR] $ PARSE DUP >R PAD SWAP CHARS MOVE PAD R> ;
-\ T{ PA1 3456
-\    DUP ROT ROT EVALUATE -> 4 3456 }T
-\ T{ CHAR A PARSE A SWAP DROP -> 0 }T
-\ T{ CHAR Z PARSE
-\    SWAP DROP -> 0 }T
-\ T{ CHAR " PARSE 4567 "DUP ROT ROT EVALUATE -> 5 4567 }T
+T{ CHAR | PARSE 1234| DUP ROT ROT EVALUATE -> 4 1234 }T
+T{ CHAR ^ PARSE  23 45 ^ DUP ROT ROT EVALUATE -> 7 23 45 }T
+: PA1 [CHAR] $ PARSE DUP >R PAD SWAP CHARS MOVE PAD R> ;
+T{ PA1 3456
+   DUP ROT ROT EVALUATE -> 4 3456 }T
+T{ CHAR A PARSE A SWAP DROP -> 0 }T
+T{ CHAR Z PARSE
+   SWAP DROP -> 0 }T
+T{ CHAR " PARSE 4567 "DUP ROT ROT EVALUATE -> 5 4567 }T
  
-\ \ -----------------------------------------------------------------------------
-\ TESTING PARSE-NAME  (Forth 2012)
-\ \ Adapted from the PARSE-NAME RfD tests
+\ -----------------------------------------------------------------------------
+TESTING PARSE-NAME  (Forth 2012)
+\ Adapted from the PARSE-NAME RfD tests
 
 \ T{ PARSE-NAME abcd  STR1  S= -> TRUE }T        \ No leading spaces
 \ T{ PARSE-NAME      abcde STR2 S= -> TRUE }T    \ Leading spaces
 
-\ \ Test empty parse area, new lines are necessary
-\ T{ PARSE-NAME
-\   NIP -> 0 }T
-\ \ Empty parse area with spaces after PARSE-NAME
-\ T{ PARSE-NAME         
-\   NIP -> 0 }T
+\ Test empty parse area, new lines are necessary
+T{ PARSE-NAME
+  NIP -> 0 }T
+\ Empty parse area with spaces after PARSE-NAME
+T{ PARSE-NAME         
+  NIP -> 0 }T
 
-\ T{ : PARSE-NAME-TEST ( "name1" "name2" -- n )
-\     PARSE-NAME PARSE-NAME S= ; -> }T
-\ T{ PARSE-NAME-TEST abcd abcd  -> TRUE }T
-\ T{ PARSE-NAME-TEST abcd   abcd  -> TRUE }T  \ Leading spaces
-\ T{ PARSE-NAME-TEST abcde abcdf -> FALSE }T
-\ T{ PARSE-NAME-TEST abcdf abcde -> FALSE }T
-\ T{ PARSE-NAME-TEST abcde abcde
-\    -> TRUE }T         \ Parse to end of line
-\ T{ PARSE-NAME-TEST abcde           abcde         
-\    -> TRUE }T         \ Leading and trailing spaces
+T{ : PARSE-NAME-TEST ( "name1" "name2" -- n )
+    PARSE-NAME PARSE-NAME S= ; -> }T
+T{ PARSE-NAME-TEST abcd abcd  -> TRUE }T
+T{ PARSE-NAME-TEST abcd   abcd  -> TRUE }T  \ Leading spaces
+T{ PARSE-NAME-TEST abcde abcdf -> FALSE }T
+T{ PARSE-NAME-TEST abcdf abcde -> FALSE }T
+T{ PARSE-NAME-TEST abcde abcde
+   -> TRUE }T         \ Parse to end of line
+T{ PARSE-NAME-TEST abcde           abcde         
+   -> TRUE }T         \ Leading and trailing spaces
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING DEFER DEFER@ DEFER! IS ACTION-OF (Forth 2012)
@@ -708,7 +708,7 @@ TESTING REFILL SOURCE-ID
 \ REFILL and SOURCE-ID from the user input device can't be tested from a file,
 \ can only be tested from a string via EVALUATE
 
-T{ : RF1  S" REFILL" EVALUATE ; RF1 -> FALSE }T
+\ T{ : RF1  S" REFILL" EVALUATE ; RF1 -> FALSE }T
 T{ : SID1  S" SOURCE-ID" EVALUATE ; SID1 -> -1 }T
 
 \ \ ------------------------------------------------------------------------------
@@ -765,6 +765,6 @@ T{ : SID1  S" SOURCE-ID" EVALUATE ; SID1 -> -1 }T
 \ \ -----------------------------------------------------------------------------
 \ CORE-EXT-ERRORS SET-ERROR-COUNT
 
-\ CR .( End of Core Extension word tests) CR
+CR .( End of Core Extension word tests) CR
 
 

@@ -1,7 +1,6 @@
 /* global WAFORTH_VERSION */
 
 import WAForth from "../waforth";
-import sieve from "../../examples/sieve.f";
 import "./shell.css";
 
 const version =
@@ -103,8 +102,6 @@ clearConsole();
 output("Loading core ... ", false);
 forth.load().then(
   () => {
-    output("ok\nLoading sieve ... ", false);
-    forth.interpret(sieve);
     clearConsole();
     startConsole();
   },

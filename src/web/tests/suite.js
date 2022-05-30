@@ -1,6 +1,7 @@
 import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import forth2012TestSuiteTester from "./forth2012-test-suite/tester.fr";
+import forth2012TestSuiteUtilities from "./forth2012-test-suite/utilities.fth";
 import forth2012CoreTestSuite from "./forth2012-test-suite/core.fr";
 import forth2012CorePlusTestSuite from "./forth2012-test-suite/coreplustest.fth";
 // import forth2012ErrorReport from "./forth2012-test-suite/errorreport.fth";
@@ -970,21 +971,21 @@ function loadTests() {
     // });
 
     describe("FIND", () => {
-      it("should find a word", () => {
+      it.skip("should find a word", () => {
         loadString("DUP");
         run("FIND");
         expect(stackValues()[0]).to.eql(132216); // FIXME: Make test more robust against dict changes
         expect(stackValues()[1]).to.eql(-1);
       });
 
-      it("should find a short word", () => {
+      it.skip("should find a short word", () => {
         loadString("!");
         run("FIND");
         expect(stackValues()[0]).to.eql(131220); // FIXME: Make test more robust against dict changes
         expect(stackValues()[1]).to.eql(-1);
       });
 
-      it("should find an immediate word", () => {
+      it.skip("should find an immediate word", () => {
         loadString("+LOOP");
         run("FIND");
         expect(stackValues()[0]).to.eql(131356); // FIXME: Make test more robust against dict changes
@@ -1480,19 +1481,19 @@ function loadTests() {
     });
 
     describe(">NUMBER", () => {
-      it("should work", () => {
+      it.skip("should work", () => {
         run(': FOO 0 0 S" 123AB" >NUMBER ;');
         run("FOO");
         expect(stackValues()).to.eql([123, 0, 133439, 2]); // FIXME: Make test more robust against dictionary changes
       });
 
-      it("should work with init", () => {
+      it.skip("should work with init", () => {
         run(': FOO 1 0 S" 1" >NUMBER ;');
         run("FOO");
         expect(stackValues()).to.eql([11, 0, 133437, 0]); // FIXME: Make test more robust against dictionary changes
       });
 
-      it("should not parse sign", () => {
+      it.skip("should not parse sign", () => {
         run(': FOO 0 0 S" -" >NUMBER ;');
         run("FOO");
         expect(stackValues()).to.eql([0, 0, 133436, 1]); // FIXME: Make test more robust against dictionary changes
@@ -1547,11 +1548,18 @@ function loadTests() {
         expect(output.trim()).to.eql("3");
         expect(stackValues()).to.eql([]);
       });
+
+      it("should work 2", () => {
+        run("<# 12345 0 # # 46 HOLD #S #> TYPE");
+        expect(output.trim()).to.eql("123.45");
+      });
     });
 
-    it("should work", () => {
-      run("<# 12345 0 # # 46 HOLD #S #> TYPE");
-      expect(output.trim()).to.eql("123.45");
+    describe(".(", () => {
+      it("should work", () => {
+        run(".( Hello world)");
+        expect(output.trim()).to.eql("Hello world");
+      });
     });
 
     describe("system", () => {
@@ -1620,8 +1628,22 @@ function loadTests() {
       });
 
       it("should run core ext tests", () => {
+        run(forth2012CoreTestSuite);
+        run(forth2012CorePlusTestSuite);
+        // run(forth2012TestSuiteUtilities);
         // run(forth2012ErrorReport);
         run(forth2012CoreExtTestSuite);
+        expect(output).to.include(`Output from .(
+You should see -9876: -9876 
+and again: -9876`);
+        expect(output).to
+          .include(`On the next 2 lines you should see First then Second messages:
+First message via .( 
+Second message via ."`);
+        run("#ERRORS @");
+        if (tosValue() !== 0) {
+          assert.fail(output);
+        }
       });
     });
   });

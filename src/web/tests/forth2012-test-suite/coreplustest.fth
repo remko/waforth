@@ -302,4 +302,4 @@ T{ HERE 0 ALLOT HERE = -> <TRUE> }T
  
 \ ------------------------------------------------------------------------------
 
-\ CR .( End of additional Core tests) CR
+CR .( End of additional Core tests) CR
