@@ -36,6 +36,13 @@ function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
   }
 }
 
+enum ErrorCode {
+  Unknown = 0x1, // Unknown error
+  Quit = 0x2, // QUIT was called
+  Abort = 0x3, // ABORT or ABORT" was called
+  EOI = 0x4, // No more input
+}
+
 /**
  * JavaScript shell around the WAForth WebAssembly module.
  *
@@ -235,8 +242,12 @@ class WAForth {
       return (this.core!.exports.interpret as any)(silent);
     } catch (e) {
       // Exceptions thrown from the core means QUIT or ABORT is called, or an error
-      // has occurred. Assume what has been done has been done, and ignore here.
+      // has occurred.
+      if ((this.core!.exports.error as any)() === ErrorCode.Unknown) {
+        console.error(e);
+      }
     }
+    return (this.core!.exports.error as any)() as ErrorCode;
   }
 
   /**

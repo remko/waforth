@@ -708,8 +708,10 @@
 
   ;; 6.1.0670 ABORT 
   (func $ABORT (param $tos i32) (result i32)
-    (call $QUIT (i32.const 0x10000 (; = STACK_BASE ;))))
+    (global.set $error (i32.const 0x3 (; = ERR_ABORT ;)))
+    (call $quit (i32.const 0x10000 (; = STACK_BASE ;))))
   (data (i32.const 0x202d0) "\c4\02\02\00" "\05" "ABORT  " "\3b\00\00\00")
+  (elem (i32.const 0x3b) $ABORT)
 
   ;; 6.1.0680 ABORT"
   (func $ABORTq (param $tos i32) (result i32)
@@ -1059,7 +1061,7 @@
     (global.set $inputBufferSize (i32.load (i32.sub (local.get $tos) (i32.const 4))))
     (i32.store (i32.const 0x20294 (; = body(>IN) ;)) (i32.const 0))
 
-    (drop (call $interpret (local.get $bbtos)))
+    (call $interpret (local.get $bbtos))
 
     ;; Restore input state
     (global.set $sourceID (local.get $prevSourceID))
@@ -1393,11 +1395,8 @@
 
   ;; 6.1.2050
   (func $QUIT (param $tos i32) (result i32)
-    (global.set $tos (local.get $tos))
-    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-    (global.set $sourceID (i32.const 0))
-    (i32.store (i32.const 0x207bc (; = body(STATE) ;)) (i32.const 0))
-    (unreachable))
+    (global.set $error (i32.const 0x2 (; = ERR_QUIT ;)))
+    (call $quit (local.get $tos)))
   (data (i32.const 0x206ac) "\98\06\02\00" "\04" "QUIT   " "\7b\00\00\00")
   (elem (i32.const 0x7b) $QUIT)
 
@@ -1851,7 +1850,7 @@
   ;; Interprets the string in the input, until the end of string is reached.
   ;; Returns 0 if processed, 1 if still compiling, or traps if a word 
   ;; was not found.
-  (func $interpret (param $tos i32) (result i32) (result i32)
+  (func $interpret (param $tos i32) (result i32)
     (local $FINDResult i32)
     (local $FINDToken i32)
     (local $error i32)
@@ -1897,8 +1896,7 @@
                 ;; We're compiling a non-immediate
                 (local.set $tos (call $compileCall (local.get $tos) (local.get $FINDToken)))))))
           (br $loop)))
-    (local.get $tos)
-    (i32.load (i32.const 0x207bc (; = body(STATE) ;))))
+    (local.get $tos))
 
   ;; Returns (number, unparsed length)
   (func $readNumber (param $addr i32) (param $len i32) (result i32 i32)
@@ -1962,6 +1960,13 @@
     (i64.mul (local.get $sign) (local.get $value))
     (local.get $p) 
     (i32.sub (local.get $end) (local.get $p)))
+  
+  (func $quit (param $tos i32) (result i32)
+    (global.set $tos (local.get $tos))
+    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
+    (global.set $sourceID (i32.const 0))
+    (i32.store (i32.const 0x207bc (; = body(STATE) ;)) (i32.const 0))
+    (unreachable))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter state
@@ -1987,6 +1992,17 @@
 
   ;; Pictured output pointer
   (global $po (mut i32) (i32.const -1))
+
+  ;; Error code
+  ;; 
+  ;; This can only be inspected after an interpret() call (using error()).
+  ;;
+  ;; Values:
+  ;;   ERR_UNKNOWN := 0x1   (Unknown error, e.g. exception during one of the `shell` functions)
+  ;;   ERR_QUIT :=    0x2   (QUIT called)
+  ;;   ERR_ABORT :=   0x3   (ABORT or ABORT" called)
+  ;;   ERR_EOI :=     0x4   (No more user input received)
+  (global $error (mut i32) (i32.const 0x0))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
@@ -2734,17 +2750,20 @@
   
   (func (export "here") (result i32)
     (global.get $here))
+  
+  (func (export "error") (result i32)
+    (global.get $error))
 
-  (func (export "interpret") (param $silent i32) (result i32)
-    (local $result i32)
+  (func (export "interpret") (param $silent i32)
+    (local $state i32)
     (local $tos i32)
     (local.tee $tos (global.get $tos))
+    (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
     (block $endLoop (param i32) (result i32)
       (loop $loop (param i32) (result i32)
         (call $REFILL)
         (br_if $endLoop (i32.eqz (call $pop)))
-        (local.set $result (call $interpret))
-        (local.set $tos)
+        (local.set $tos (call $interpret))
 
         ;; Check for stack underflow
         (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
@@ -2753,7 +2772,7 @@
         ;; Show prompt
         (if (i32.eqz (local.get $silent))
           (then
-            (if (i32.ge_s (local.get $result) (i32.const 0))
+            (if (i32.ge_s (i32.load (i32.const 0x207bc (; = body(STATE) ;))) (i32.const 0))
               (then
                 ;; Write ok
                 (call $shell_emit (i32.const 111))
@@ -2769,7 +2788,7 @@
         (local.get $tos)
         (br $loop)))
       (global.set $tos)
-      (local.get $result))
+      (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
 
   (func (export "push") (param $v i32)
     (global.set $tos (call $push (global.get $tos) (local.get $v))))

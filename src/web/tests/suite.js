@@ -93,15 +93,15 @@ function loadTests() {
     }
 
     function run(s, expectErrors = false) {
-      const r = forth.interpret(s, true);
+      forth.interpret(s, true);
+      const r = forth.core.exports.error();
       if (expectErrors) {
-        expect(r).to.be.undefined;
+        expect(r).to.not.eql(4);
       } else {
-        expect(r).to.not.be.an(
-          "undefined",
-          "Error running: " + s + "; Output: " + output
+        expect(r).to.eql(
+          4,
+          "Error " + r + " running: " + s + "; Output: " + output
         );
-        expect(r).to.not.be.below(0);
       }
     }
 
@@ -197,18 +197,21 @@ function loadTests() {
 
       it("should interpret a positive number", () => {
         forth.read("123");
-        expect(core.interpret()).to.eql(0);
+        core.interpret();
+        expect(core.error()).to.eql(4);
         expect(stackValues()[0]).to.eql(123);
       });
 
       it("should interpret a negative number", () => {
         forth.read("-123");
-        expect(core.interpret()).to.eql(0);
+        core.interpret();
+        expect(core.error()).to.eql(4);
         expect(stackValues()[0]).to.eql(-123);
       });
       it("should interpret a hex", () => {
         forth.read("16 BASE ! DF");
-        expect(core.interpret()).to.eql(0);
+        core.interpret();
+        expect(core.error()).to.eql(4);
         expect(stackValues()[0]).to.eql(223);
       });
       it("should not interpret hex in decimal mode", () => {

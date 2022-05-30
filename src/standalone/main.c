@@ -10,7 +10,13 @@
 
 #define CORE_TABLE_EXPORT_INDEX 0
 #define CORE_MEMORY_EXPORT_INDEX 1
-#define CORE_INTERPRET_EXPORT_INDEX 6
+#define CORE_ERROR_EXPORT_INDEX 6
+#define CORE_INTERPRET_EXPORT_INDEX 7
+
+#define ERR_UNKNOWN 0x1
+#define ERR_QUIT 0x2
+#define ERR_ABORT 0x3
+#define ERR_EOI 0x4
 
 wasm_memory_t *memory;
 wasm_table_t *table;
@@ -85,12 +91,8 @@ wasm_trap_t *load_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   wasm_trap_t *trap = NULL;
   wasm_instance_t *instance = wasm_instance_new(store, module, &imports, &trap);
   if (!instance) {
-    printf("> Error instantiating loaded module!\n");
-    if (trap) {
-      print_trap(trap);
-      wasm_trap_delete(trap);
-    }
-    return trap_from_string("error instantiating module");
+    assert(trap != NULL);
+    return trap;
   }
   return NULL;
 }
@@ -108,8 +110,6 @@ wasm_trap_t *call_cb(void *env, const wasm_val_vec_t *args, wasm_val_vec_t *resu
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv_main[]) {
-  int ret = -1;
-
   wasm_engine_t *engine = wasm_engine_new();
   store = wasm_store_new(engine);
   wasm_byte_vec_t core = {.data = (wasm_byte_t *)waforth_core, .size = sizeof(waforth_core)};
@@ -156,7 +156,7 @@ int main(int argc, char *argv_main[]) {
   wasm_extern_vec_t exports;
   wasm_instance_exports(instance, &exports);
   if (exports.size == 0) {
-    printf("error accessing export\n");
+    printf("error accessing exports\n");
     return -1;
   }
 
@@ -178,27 +178,43 @@ int main(int argc, char *argv_main[]) {
     return -1;
   }
 
+  const wasm_func_t *error_fn = wasm_extern_as_func(exports.data[CORE_ERROR_EXPORT_INDEX]);
+  if (error_fn == NULL) {
+    printf("error accessing `error` export\n");
+    return -1;
+  }
+
   printf("WAForth (" VERSION ")\n");
-  wasm_val_t as[1] = {WASM_I32_VAL(0)};
-  wasm_val_vec_t args = WASM_ARRAY_VEC(as);
-  wasm_val_t vs[] = {WASM_INIT_VAL};
-  wasm_val_vec_t results_vec = WASM_ARRAY_VEC(vs);
-  while (true) {
-    trap = wasm_func_call(interpret_fn, &args, &results_vec);
-    if (trap == NULL) {
-      // No trap means the input buffer was no longer filled when asked.
-      // This means the program should exit.
+  wasm_val_t interpret_as[1] = {WASM_I32_VAL(0)};
+  wasm_val_vec_t interpret_args = WASM_ARRAY_VEC(interpret_as);
+  wasm_val_vec_t interpret_results = WASM_EMPTY_VEC;
+
+  wasm_val_vec_t err_args = WASM_EMPTY_VEC;
+  wasm_val_t err_results_vs[] = {WASM_INIT_VAL};
+  wasm_val_vec_t err_results = WASM_ARRAY_VEC(err_results_vs);
+
+  for (int stopped = 0; !stopped;) {
+    trap = wasm_func_call(interpret_fn, &interpret_args, &interpret_results);
+    wasm_trap_t *etrap = wasm_func_call(error_fn, &err_args, &err_results);
+    assert(etrap == NULL);
+    switch (err_results.data[0].of.i32) {
+    case ERR_QUIT:
+    case ERR_ABORT:
+      assert(trap != NULL);
+      wasm_trap_delete(trap);
       break;
+    case ERR_EOI:
+      assert(trap == NULL);
+      stopped = true;
+      break;
+    case ERR_UNKNOWN:
+      assert(trap != NULL);
+      print_trap(trap);
+      wasm_trap_delete(trap);
+      break;
+    default:
+      assert(false);
     }
-    wasm_name_t message;
-    wasm_trap_message(trap, &message);
-    // `unreachable` is called when we want to reset the call stack, and start the interpreter
-    // loop again (i.e. when QUIT is called)
-    if (strstr(message.data, "wasm `unreachable` instruction executed") == NULL) {
-      printf("error: %s\n", message.data);
-    }
-    wasm_name_delete(&message);
-    wasm_trap_delete(trap);
   }
 
   wasm_extern_vec_delete(&exports);
@@ -211,5 +227,5 @@ int main(int argc, char *argv_main[]) {
   wasm_module_delete(module);
   wasm_store_delete(store);
   wasm_engine_delete(engine);
-  return ret;
+  return 0;
 }
