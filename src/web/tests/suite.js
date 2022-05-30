@@ -1413,18 +1413,6 @@ function loadTests() {
       });
     });
 
-    describe("UWIDTH", () => {
-      it("should work with 3 digits", () => {
-        run("123 UWIDTH");
-        expect(stackValues()[0]).to.eql(3);
-      });
-
-      it("should work with 4 digits", () => {
-        run("1234 UWIDTH");
-        expect(stackValues()[0]).to.eql(4);
-      });
-    });
-
     describe("[']", () => {
       it("should work", () => {
         run(': HELLO ." Hello " ;');
