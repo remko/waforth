@@ -10,8 +10,8 @@ runs:
   # - run: sudo apt-get install wabt
   - run: |
       if [ "$RUNNER_OS" == "Linux" ]; then
-        curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.27/wabt-1.0.27-ubuntu.tar.gz | tar xvz -C /tmp
-        sudo mv /tmp/wabt-1.0.27/bin/* /usr/local/bin
+        curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.29/wabt-1.0.29-ubuntu.tar.gz | tar xvz -C /tmp
+        sudo mv /tmp/wabt-1.0.29/bin/* /usr/local/bin
       else
         brew install wabt
       fi
