@@ -1564,6 +1564,13 @@ function loadTests() {
       });
     });
 
+    describe("2>R", () => {
+      it("should work", () => {
+        run("400 300 2>R R> R>");
+        expect(stackValues()).to.eql([300, 400]);
+      });
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);
