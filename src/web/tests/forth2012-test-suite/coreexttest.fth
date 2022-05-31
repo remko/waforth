@@ -118,13 +118,13 @@ T{ 0 -1 <> -> TRUE }T
 \ -----------------------------------------------------------------------------
 TESTING 0<> 0>   (contributed by James Bowman)
 
-\ T{ 0 0<> -> FALSE }T
-\ T{ 1 0<> -> TRUE }T
-\ T{ 2 0<> -> TRUE }T
-\ T{ -1 0<> -> TRUE }T
-\ T{ MAX-UINT 0<> -> TRUE }T
-\ T{ MIN-INT 0<> -> TRUE }T
-\ T{ MAX-INT 0<> -> TRUE }T
+T{ 0 0<> -> FALSE }T
+T{ 1 0<> -> TRUE }T
+T{ 2 0<> -> TRUE }T
+T{ -1 0<> -> TRUE }T
+T{ MAX-UINT 0<> -> TRUE }T
+T{ MIN-INT 0<> -> TRUE }T
+T{ MAX-INT 0<> -> TRUE }T
 
 T{ 0 0> -> FALSE }T
 T{ -1 0> -> FALSE }T
