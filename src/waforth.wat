@@ -1123,20 +1123,10 @@
 
   ;; [6.1.1370](https://forth-standard.org/standard/core/EXECUTE)
   (func $EXECUTE (param $tos i32) (result i32)
-    (local $xt i32)
-    (local $body i32)
-    (local.get $tos)
-    (local.set $body (call $body (local.tee $xt (call $pop))))
-    (if (param i32) (result i32) (i32.and (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
-                  (i32.const 0x40 (; = F_DATA ;)))
-      (then
-        (call_indirect (type $dataWord) (i32.add (local.get $body) (i32.const 4))
-                                        (i32.load (local.get $body))))
-      (else
-        (call_indirect (type $word) (i32.load (local.get $body))))))
+    (call $execute (call $pop (local.get $tos))))
   (data (i32.const 0x20510) "\fc\04\02\00" "\07" "EXECUTE" "\60\00\00\00")
   (elem (i32.const 0x60) $EXECUTE)
-
+    
   ;; [6.1.1380](https://forth-standard.org/standard/core/EXIT)
   (func $EXIT (param $tos i32) (result i32)
     (local.get $tos)
@@ -1913,9 +1903,10 @@
   ;; Interpreter
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; Interprets the string in the input, until the end of string is reached.
-  ;; Returns 0 if processed, 1 if still compiling, or traps if a word 
-  ;; was not found.
+  ;; Interpret the string in the input buffer word by word, until 
+  ;; the end of the input buffer is reached.
+  ;;
+  ;; Traps if a word was not found in the dictionary (and isn't a number).
   (func $interpret (param $tos i32) (result i32)
     (local $FINDResult i32)
     (local $FINDToken i32)
@@ -1927,14 +1918,21 @@
     (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
     (block $endLoop 
       (loop $loop
+        ;; Parse the next name in the input stream
         (local.set $wordAddr (local.set $wordLen (call $parseName)))
+
+        ;; No more input. Break the loop.
         (br_if $endLoop (i32.eqz (local.get $wordLen)))
+
+        ;; Search the name in the dictionary
         (local.set $FINDToken (local.set $FINDResult 
           (call $find (local.get $wordAddr) (local.get $wordLen))))
         (if (i32.eqz (local.get $FINDResult))
-          (then ;; Not in the dictionary. Is it a number?
+          (then 
+            ;; Name is not in the dictionary. Is it a number?
             (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
-              (then ;; It's a number. Are we compiling?
+              ;; It's a number. Are we compiling?
+              (then 
                 (local.set $number)
                 (if (i32.load (i32.const 0x2081c (; = body(STATE) ;)))
                   (then
@@ -1944,25 +1942,48 @@
                   (else 
                     ;; We're not compiling. Put the number on the stack.
                     (local.set $tos (call $push (local.get $tos) (local.get $number))))))
-              (else ;; It's not a number.
+              ;; It's not a number either. Fail.
+              (else 
                 (drop)
                 (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
-          (else ;; Found the word. 
-            ;; Are we compiling or is it immediate?
-            (if
-                (i32.or 
-                  (i32.eqz (i32.load (i32.const 0x2081c (; = body(STATE) ;))))
-                  (i32.eq (local.get $FINDResult) (i32.const 1)))
+          (else 
+            ;; Name found in the dictionary. 
+            ;; Are we compiling and is the word non-immediate?
+            (if (i32.and
+                  (i32.load (i32.const 0x2081c (; = body(STATE) ;)))
+                  (i32.ne (local.get $FINDResult) (i32.const 1)))
               (then
-                (local.get $tos)
-                (call $push (local.get $FINDToken))
-                (call $EXECUTE)
-                (local.set $tos))
+                ;; We're compiling a non-immediate. 
+                ;; Compile the execution of the word into the current compilation body.
+                (local.set $tos (call $compileCall (local.get $tos) (local.get $FINDToken))))
               (else
-                ;; We're compiling a non-immediate
-                (local.set $tos (call $compileCall (local.get $tos) (local.get $FINDToken)))))))
+                ;; We're not compiling, or this is an immediate word
+                ;; Execute the word.
+                (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))))
           (br $loop)))
     (local.get $tos))
+
+  ;; Execute the given execution token
+  (func $execute (param $tos i32) (param $xt i32) (result i32)
+    (local $body i32)
+
+    ;; Get the table index of the dictionary entry
+    (local.set $body (call $body (local.get $xt)))
+
+    ;; Perform an indirect call to the table index
+    (if (result i32) (i32.and 
+          (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
+          (i32.const 0x40 (; = F_DATA ;)))
+      (then
+        ;; A data word gets the pointer to the dictionary entry's data field 
+        ;; as extra parameter
+        (call_indirect 
+          (type $dataWord) 
+          (local.get $tos)
+          (i32.add (local.get $body) (i32.const 4))
+          (i32.load (local.get $body))))
+      (else
+        (call_indirect (type $word) (local.get $tos) (i32.load (local.get $body))))))
 
   ;; Returns (number, unparsed length)
   (func $readNumber (param $addr i32) (param $len i32) (result i32 i32)
