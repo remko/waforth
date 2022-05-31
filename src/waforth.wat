@@ -2389,153 +2389,65 @@
 
   (func $emitICall (param $type i32) (param $n i32)
     (call $emitConst (local.get $n))
-
-    (i32.store8 (global.get $cp) (i32.const 0x11))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (local.get $type))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitBlock
-    (i32.store8 (global.get $cp) (i32.const 0x02))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Block type
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitLoop
-    (i32.store8 (global.get $cp) (i32.const 0x03))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Block type
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitConst (param $n i32)
-    (i32.store8 (global.get $cp) (i32.const 0x41))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $cp (call $leb128 (global.get $cp) (local.get $n)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitIf
-    (i32.store8 (global.get $cp) (i32.const 0x04))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Block type
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitElse
-    (i32.store8 (global.get $cp) (i32.const 0x05))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitEnd
-    (i32.store8 (global.get $cp) (i32.const 0x0b))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitBr (param $n i32)
-    (i32.store8 (global.get $cp) (i32.const 0x0c))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (local.get $n))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitBrIf (param $n i32)
-    (i32.store8 (global.get $cp) (i32.const 0x0d))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (local.get $n))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
+    (call $emit2 (i32.const 0x11) (local.get $type) (i32.const 0x0)))
+  (func $emitBlock (call $emit1 (i32.const 0x02) (i32.const 0x0 (; block type ;))))
+  (func $emitLoop (call $emit1 (i32.const 0x03) (i32.const 0x0 (; block type ;))))
+  (func $emitConst (param $n i32) (call $emit1v (i32.const 0x41) (local.get $n)))
+  (func $emitIf (call $emit1 (i32.const 0x04) (i32.const 0x0 (; block type ;))))
+  (func $emitElse (call $emit0 (i32.const 0x05)))
+  (func $emitEnd (call $emit0 (i32.const 0x0b)))
+  (func $emitBr (param $n i32) (call $emit1 (i32.const 0x0c) (local.get $n)))
+  (func $emitBrIf (param $n i32) (call $emit1 (i32.const 0x0d) (local.get $n)))
   (func $emitSetLocal (param $n i32)
-    (i32.store8 (global.get $cp) (i32.const 0x21))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $cp (call $leb128 (global.get $cp) (local.get $n)))
+    (call $emit1v (i32.const 0x21) (local.get $n))
     (global.set $lastEmitWasGetTOS (i32.eqz (local.get $n))))
-
   (func $emitGetLocal (param $n i32)
     (if (i32.or (i32.ne (local.get $n) (i32.const 0)) (i32.eqz (global.get $lastEmitWasGetTOS)))
       (then
-        (i32.store8 (global.get $cp) (i32.const 0x20))
-        (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-        (global.set $cp (call $leb128 (global.get $cp) (local.get $n))))
+        (call $emit1v (i32.const 0x20) (local.get $n)))
       (else
         ;; In case we have a TOS get after a TOS set, replace the previous one with tee.
         ;; Doesn't seem to have much of a performance impact, but this makes the code a little bit shorter, 
         ;; and easier to step through.
         (i32.store8 (i32.sub (global.get $cp) (i32.const 2)) (i32.const 0x22))))
+        (global.set $lastEmitWasGetTOS (i32.const 0)))
+  (func $emitTeeLocal (param $n i32) (call $emit1v (i32.const 0x22) (local.get $n)))
+  (func $emitAdd (call $emit0 (i32.const 0x6a)))
+  (func $emitSub (call $emit0 (i32.const 0x6b)))
+  (func $emitXOR (call $emit0 (i32.const 0x73)))
+  (func $emitEqualsZero (call $emit0 (i32.const 0x45)))
+  (func $emitEqual (call $emit0 (i32.const 0x46)))
+  (func $emitNotEqual (call $emit0 (i32.const 0x47)))
+  (func $emitGreaterEqualSigned (call $emit0 (i32.const 0x4e)))
+  (func $emitLesserSigned (call $emit0 (i32.const 0x48)))
+  (func $emitReturn (call $emit0 (i32.const 0x0f)))
+  (func $emitStore (call $emit2 (i32.const 0x36) (i32.const 0x02 (; align ;)) (i32.const 0x00 (; offset ;))))
+  (func $emitLoad (call $emit2 (i32.const 0x28) (i32.const 0x02 (; align ;)) (i32.const 0x00 (; offset ;))))
+
+  (func $emit0 (param $op i32)
+    (call $emit (local.get $op))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
-  (func $emitTeeLocal (param $n i32)
-    (i32.store8 (global.get $cp) (i32.const 0x22))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $cp (call $leb128 (global.get $cp) (local.get $n)))
+  (func $emit1v (param $op i32) (param $i1 i32)
+    (call $emit (local.get $op))
+    (global.set $cp (call $leb128 (global.get $cp) (local.get $i1)))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
-  (func $emitAdd
-    (i32.store8 (global.get $cp) (i32.const 0x6a))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (func $emit1 (param $op i32) (param $i1 i32)
+    (call $emit (local.get $op))
+    (call $emit (local.get $i1))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
-  (func $emitSub
-    (i32.store8 (global.get $cp) (i32.const 0x6b))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
+  (func $emit2 (param $op i32) (param $i1 i32) (param $i2 i32)
+    (call $emit (local.get $op))
+    (call $emit (local.get $i1))
+    (call $emit (local.get $i2))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
-  (func $emitXOR
-    (i32.store8 (global.get $cp) (i32.const 0x73))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
+  (func $emit (param $v i32)
+    (i32.store8 (global.get $cp) (local.get $v))
+    (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
 
-  (func $emitEqualsZero
-    (i32.store8 (global.get $cp) (i32.const 0x45))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitEqual
-    (i32.store8 (global.get $cp) (i32.const 0x46))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitNotEqual
-    (i32.store8 (global.get $cp) (i32.const 0x47))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitGreaterEqualSigned
-    (i32.store8 (global.get $cp) (i32.const 0x4e))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitLesserSigned
-    (i32.store8 (global.get $cp) (i32.const 0x48))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitReturn
-    (i32.store8 (global.get $cp) (i32.const 0x0f))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitStore
-    (i32.store8 (global.get $cp) (i32.const 0x36))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x02)) ;; Alignment
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Offset
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emitLoad
-    (i32.store8 (global.get $cp) (i32.const 0x28))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x02)) ;; Alignment
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (i32.store8 (global.get $cp) (i32.const 0x00)) ;; Offset
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1)))
-    (global.set $lastEmitWasGetTOS (i32.const 0)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compilation state
