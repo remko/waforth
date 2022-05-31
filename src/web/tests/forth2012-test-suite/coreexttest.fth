@@ -636,8 +636,8 @@ T{ CHAR " PARSE 4567 "DUP ROT ROT EVALUATE -> 5 4567 }T
 TESTING PARSE-NAME  (Forth 2012)
 \ Adapted from the PARSE-NAME RfD tests
 
-\ T{ PARSE-NAME abcd  STR1  S= -> TRUE }T        \ No leading spaces
-\ T{ PARSE-NAME      abcde STR2 S= -> TRUE }T    \ Leading spaces
+T{ PARSE-NAME abcd  STR1  S= -> TRUE }T        \ No leading spaces
+T{ PARSE-NAME      abcde STR2 S= -> TRUE }T    \ Leading spaces
 
 \ Test empty parse area, new lines are necessary
 T{ PARSE-NAME

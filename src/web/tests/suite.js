@@ -1,7 +1,7 @@
 import WAForth from "../waforth";
 import sieve from "../../examples/sieve.f";
 import forth2012TestSuiteTester from "./forth2012-test-suite/tester.fr";
-// import forth2012TestSuiteUtilities from "./forth2012-test-suite/utilities.fth";
+import forth2012TestSuiteUtilities from "./forth2012-test-suite/utilities.fth";
 import forth2012CoreTestSuite from "./forth2012-test-suite/core.fr";
 import forth2012CorePlusTestSuite from "./forth2012-test-suite/coreplustest.fth";
 // import forth2012ErrorReport from "./forth2012-test-suite/errorreport.fth";
@@ -1639,7 +1639,7 @@ function loadTests() {
       it("should run core ext tests", () => {
         run(forth2012CoreTestSuite);
         run(forth2012CorePlusTestSuite);
-        // run(forth2012TestSuiteUtilities);
+        run(forth2012TestSuiteUtilities);
         // run(forth2012ErrorReport);
         run(forth2012CoreExtTestSuite);
         expect(output).to.include(`Output from .(
