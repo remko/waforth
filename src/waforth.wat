@@ -2192,6 +2192,11 @@
     (call $compileEndDests (local.get $tos)))
 
   (func $compileDo (param $tos i32) (result i32)
+    ;; Save branch nesting
+    (i32.store (local.get $tos) (global.get $branchNesting))
+    (local.set $tos (i32.add (local.get $tos) (i32.const 4)))
+    (global.set $branchNesting (i32.const 0))
+
     ;; 1: $diff_i = end index - current index
     ;; 2: $end_i
     (global.set $currentLocal (i32.add (global.get $currentLocal) (i32.const 2)))
@@ -2199,17 +2204,16 @@
       (then
         (global.set $lastLocal (global.get $currentLocal))))
 
-    ;; Save branch nesting
-    (i32.store (local.get $tos) (global.get $branchNesting))
-    (local.set $tos (i32.add (local.get $tos) (i32.const 4)))
-    (global.set $branchNesting (i32.const 0))
-
     ;; $1 = current index (temporary)
     (call $compilePop)
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     ;; $end_i = end index
     (call $compilePop)
     (call $emitSetLocal (global.get $currentLocal))
+
+    ;; Already emit the block, so we can jump out of it before starting DO
+    ;; in the conditional case
+    (call $emitBlock)
 
     ;; startDo $1
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
@@ -2221,7 +2225,6 @@
     (call $emitSub)
     (call $emitSetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
 
-    (call $emitBlock)
     (call $emitLoop)
     (local.get $tos))
 
