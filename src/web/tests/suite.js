@@ -731,6 +731,20 @@ function loadTests() {
       });
     });
 
+    describe("?DO/LOOP", () => {
+      it("should run a loop", () => {
+        run(`: FOO 4 0 ?DO 3 LOOP ;`);
+        run("FOO");
+        expect(stackValues()).to.eql([3, 3, 3, 3]);
+      });
+
+      it("should not run a loop with equal conditions", () => {
+        run(`: FOO 4 4 ?DO 3 LOOP ;`);
+        run("FOO");
+        expect(stackValues()).to.eql([]);
+      });
+    });
+
     describe("UNLOOP", () => {
       it("should work with nested loops", () => {
         run(

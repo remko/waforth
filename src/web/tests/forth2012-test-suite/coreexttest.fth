@@ -334,65 +334,65 @@ T{ BASE @ HEX BASE @ DECIMAL BASE @ - SWAP BASE ! -> 6 }T
 \ T{ MA0 -> }T
 \ T{ MA? MA0 MA? MA1 MA? MA2 -> FALSE FALSE FALSE }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING ?DO
+\ -----------------------------------------------------------------------------
+TESTING ?DO
 
-\ : QD ?DO I LOOP ;
-\ T{ 789 789 QD -> }T
-\ T{ -9876 -9876 QD -> }T
-\ T{ 5 0 QD -> 0 1 2 3 4 }T
+: QD ?DO I LOOP ;
+T{ 789 789 QD -> }T
+T{ -9876 -9876 QD -> }T
+T{ 5 0 QD -> 0 1 2 3 4 }T
 
-\ : QD1 ?DO I 10 +LOOP ;
-\ T{ 50 1 QD1 -> 1 11 21 31 41 }T
-\ T{ 50 0 QD1 -> 0 10 20 30 40 }T
+: QD1 ?DO I 10 +LOOP ;
+T{ 50 1 QD1 -> 1 11 21 31 41 }T
+T{ 50 0 QD1 -> 0 10 20 30 40 }T
 
-\ : QD2 ?DO I 3 > IF LEAVE ELSE I THEN LOOP ;
-\ T{ 5 -1 QD2 -> -1 0 1 2 3 }T
+: QD2 ?DO I 3 > IF LEAVE ELSE I THEN LOOP ;
+T{ 5 -1 QD2 -> -1 0 1 2 3 }T
 
-\ : QD3 ?DO I 1 +LOOP ;
-\ T{ 4  4 QD3 -> }T
-\ T{ 4  1 QD3 -> 1 2 3 }T
-\ T{ 2 -1 QD3 -> -1 0 1 }T
+: QD3 ?DO I 1 +LOOP ;
+T{ 4  4 QD3 -> }T
+T{ 4  1 QD3 -> 1 2 3 }T
+T{ 2 -1 QD3 -> -1 0 1 }T
 
-\ : QD4 ?DO I -1 +LOOP ;
-\ T{  4 4 QD4 -> }T
-\ T{  1 4 QD4 -> 4 3 2 1 }T
-\ T{ -1 2 QD4 -> 2 1 0 -1 }T
+: QD4 ?DO I -1 +LOOP ;
+T{  4 4 QD4 -> }T
+T{  1 4 QD4 -> 4 3 2 1 }T
+T{ -1 2 QD4 -> 2 1 0 -1 }T
 
-\ : QD5 ?DO I -10 +LOOP ;
-\ T{   1 50 QD5 -> 50 40 30 20 10 }T
-\ T{   0 50 QD5 -> 50 40 30 20 10 0 }T
-\ T{ -25 10 QD5 -> 10 0 -10 -20 }T
+: QD5 ?DO I -10 +LOOP ;
+T{   1 50 QD5 -> 50 40 30 20 10 }T
+T{   0 50 QD5 -> 50 40 30 20 10 0 }T
+T{ -25 10 QD5 -> 10 0 -10 -20 }T
 
-\ VARIABLE ITERS
-\ VARIABLE INCRMNT
+VARIABLE ITERS
+VARIABLE INCRMNT
 
-\ : QD6 ( limit start increment -- )
-\    INCRMNT !
-\    0 ITERS !
-\    ?DO
-\       1 ITERS +!
-\       I
-\       ITERS @  6 = IF LEAVE THEN
-\       INCRMNT @
-\    +LOOP ITERS @
-\ ;
+: QD6 ( limit start increment -- )
+   INCRMNT !
+   0 ITERS !
+   ?DO
+      1 ITERS +!
+      I
+      ITERS @  6 = IF LEAVE THEN
+      INCRMNT @
+   +LOOP ITERS @
+;
 
-\ T{  4  4 -1 QD6 -> 0 }T
-\ T{  1  4 -1 QD6 -> 4 3 2 1 4 }T
-\ T{  4  1 -1 QD6 -> 1 0 -1 -2 -3 -4 6 }T
-\ T{  4  1  0 QD6 -> 1 1 1 1 1 1 6 }T
-\ T{  0  0  0 QD6 -> 0 }T
-\ T{  1  4  0 QD6 -> 4 4 4 4 4 4 6 }T
-\ T{  1  4  1 QD6 -> 4 5 6 7 8 9 6 }T
-\ T{  4  1  1 QD6 -> 1 2 3 3 }T
-\ T{  4  4  1 QD6 -> 0 }T
-\ T{  2 -1 -1 QD6 -> -1 -2 -3 -4 -5 -6 6 }T
-\ T{ -1  2 -1 QD6 -> 2 1 0 -1 4 }T
-\ T{  2 -1  0 QD6 -> -1 -1 -1 -1 -1 -1 6 }T
-\ T{ -1  2  0 QD6 -> 2 2 2 2 2 2 6 }T
-\ T{ -1  2  1 QD6 -> 2 3 4 5 6 7 6 }T
-\ T{  2 -1  1 QD6 -> -1 0 1 3 }T
+T{  4  4 -1 QD6 -> 0 }T
+T{  1  4 -1 QD6 -> 4 3 2 1 4 }T
+T{  4  1 -1 QD6 -> 1 0 -1 -2 -3 -4 6 }T
+T{  4  1  0 QD6 -> 1 1 1 1 1 1 6 }T
+T{  0  0  0 QD6 -> 0 }T
+T{  1  4  0 QD6 -> 4 4 4 4 4 4 6 }T
+T{  1  4  1 QD6 -> 4 5 6 7 8 9 6 }T
+T{  4  1  1 QD6 -> 1 2 3 3 }T
+T{  4  4  1 QD6 -> 0 }T
+T{  2 -1 -1 QD6 -> -1 -2 -3 -4 -5 -6 6 }T
+T{ -1  2 -1 QD6 -> 2 1 0 -1 4 }T
+T{  2 -1  0 QD6 -> -1 -1 -1 -1 -1 -1 6 }T
+T{ -1  2  0 QD6 -> 2 2 2 2 2 2 6 }T
+T{ -1  2  1 QD6 -> 2 3 4 5 6 7 6 }T
+T{  2 -1  1 QD6 -> -1 0 1 3 }T
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING BUFFER:
