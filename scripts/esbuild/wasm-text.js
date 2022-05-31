@@ -2,7 +2,6 @@
 
 const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
-const fs = require("fs");
 const path = require("path");
 
 function wasmTextPlugin({ debug } = {}) {
@@ -23,30 +22,19 @@ function wasmTextPlugin({ debug } = {}) {
         };
       });
       build.onLoad({ filter: /.*/, namespace: "wasm-text" }, async (args) => {
-        // Would be handy if we could get output from stdout without going through file
-        const out = `wat2wasm.${Math.floor(
-          Math.random() * 1000000000
-        )}.tmp.wasm`;
-        try {
-          let flags = [];
-          if (debug) {
-            flags.push("--debug-names");
-          }
-          // console.log("wat: compiling %s", args.path);
-          await exec(
-            `wat2wasm ${flags.join(" ")} --output=${out} ${args.path}`
-          );
-          return {
-            contents: await fs.promises.readFile(out),
-            loader: "binary",
-          };
-        } finally {
-          try {
-            await fs.promises.unlink(out);
-          } catch (e) {
-            // ignore
-          }
+        let flags = [];
+        if (debug) {
+          flags.push("--debug-names");
         }
+        // console.log("wat: compiling %s", args.path);
+        const r = await exec(
+          `wat2wasm ${flags.join(" ")} --output=- ${args.path}`,
+          { encoding: "buffer" }
+        );
+        return {
+          contents: r.stdout,
+          loader: "binary",
+        };
       });
     },
   };
