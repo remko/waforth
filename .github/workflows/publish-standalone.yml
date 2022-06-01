@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
-      - run: make -C src/standalone install-deps package
+      - run: |
+          make -C src/standalone install-deps package
+          md5sum src/standalone/waforth*
       - name: "Upload artifacts"
         run: |
           ls -l src/standalone
