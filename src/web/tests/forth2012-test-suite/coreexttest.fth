@@ -479,20 +479,20 @@ T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
 \ T{ : CS6 CASE 1 OF ENDOF 2 ENDCASE ; 1 CS6 -> }T
 \ T{ : CS7 CASE 3 OF ENDOF 2 ENDCASE ; 1 CS7 -> 1 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING :NONAME RECURSE
+\ -----------------------------------------------------------------------------
+TESTING :NONAME RECURSE
 
-\ VARIABLE NN1
-\ VARIABLE NN2
-\ :NONAME 1234 ; NN1 !
-\ :NONAME 9876 ; NN2 !
-\ T{ NN1 @ EXECUTE -> 1234 }T
-\ T{ NN2 @ EXECUTE -> 9876 }T
+VARIABLE NN1
+VARIABLE NN2
+:NONAME 1234 ; NN1 !
+:NONAME 9876 ; NN2 !
+T{ NN1 @ EXECUTE -> 1234 }T
+T{ NN2 @ EXECUTE -> 9876 }T
 
-\ T{ :NONAME ( n -- 0,1,..n ) DUP IF DUP >R 1- RECURSE R> THEN ;
-\    CONSTANT RN1 -> }T
-\ T{ 0 RN1 EXECUTE -> 0 }T
-\ T{ 4 RN1 EXECUTE -> 0 1 2 3 4 }T
+T{ :NONAME ( n -- 0,1,..n ) DUP IF DUP >R 1- RECURSE R> THEN ;
+   CONSTANT RN1 -> }T
+T{ 0 RN1 EXECUTE -> 0 }T
+T{ 4 RN1 EXECUTE -> 0 1 2 3 4 }T
 
 \ :NONAME  ( n -- n1 )    \ Multiple RECURSEs in one definition
 \    1- DUP
