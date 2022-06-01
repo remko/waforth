@@ -2829,24 +2829,31 @@
   ;; API Functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-  (func (export "tos") (result i32)
-    (global.get $tos))
-  
-  (func (export "here") (result i32)
-    (global.get $here))
-  
-  (func (export "error") (result i32)
-    (global.get $error))
-
-  (func (export "interpret") (param $silent i32)
+  ;; Run the interpreter loop, until no more user input is available (or until
+  ;; execution is aborted using QUIT)
+  (func $run (export "run") (param $silent i32)
     (local $state i32)
     (local $tos i32)
+
+    ;; Load the top-of-stack (TOS) pointer as a local, and thread it through the execution.
+    ;; The global TOS pointer will not be accurate until it is reset at the end of the loop,
+    ;; at abort time, or at shell `call` time.
+    ;;
+    ;; Put the local value on the WASM operand stack, so it is threaded through the loop.
     (local.tee $tos (global.get $tos))
+
+    ;; In case a trap occurs, make sure the error is set to an unknown error.
+    ;; We'll reset the error to a real value later if no trap occurs.
     (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
+
+    ;; Start looping until there is no more input
     (block $endLoop (param i32) (result i32)
       (loop $loop (param i32) (result i32)
+        ;; Fill the input buffer with user input
         (call $REFILL)
         (br_if $endLoop (i32.eqz (call $pop)))
+
+        ;; Run the interpreter loop on the entire input buffer
         (local.set $tos (call $interpret))
 
         ;; Check for stack underflow
@@ -2871,7 +2878,11 @@
             (call $shell_emit (i32.const 10))))
         (local.get $tos)
         (br $loop)))
+      
+      ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
       (global.set $tos)
+
+      ;; End of input was reached
       (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
 
   (func (export "push") (param $v i32)
@@ -2882,6 +2893,10 @@
     (local.set $result (call $pop (global.get $tos)))
     (global.set $tos)
     (local.get $result))
+
+  (func (export "tos") (result i32) (global.get $tos))
+  (func (export "here") (result i32) (global.get $here))
+  (func (export "error") (result i32) (global.get $error))
 
   ;; Used for experiments
   (func (export "set_state") (param $latest i32) (param $here i32)

@@ -21,7 +21,7 @@ function run(s) {
   for (let i = data.length - 1; i >= 0; --i) {
     buffer.push(data[i]);
   }
-  return core.exports.interpret();
+  return core.exports.run();
 }
 
 function latest() {

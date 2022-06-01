@@ -11,7 +11,7 @@
 #define CORE_TABLE_EXPORT_INDEX 0
 #define CORE_MEMORY_EXPORT_INDEX 1
 #define CORE_ERROR_EXPORT_INDEX 6
-#define CORE_INTERPRET_EXPORT_INDEX 7
+#define CORE_RUN_EXPORT_INDEX 7
 
 #define ERR_UNKNOWN 0x1
 #define ERR_QUIT 0x2
@@ -172,8 +172,8 @@ int main(int argc, char *argv_main[]) {
     return -1;
   }
 
-  const wasm_func_t *interpret_fn = wasm_extern_as_func(exports.data[CORE_INTERPRET_EXPORT_INDEX]);
-  if (interpret_fn == NULL) {
+  const wasm_func_t *run_fn = wasm_extern_as_func(exports.data[CORE_RUN_EXPORT_INDEX]);
+  if (run_fn == NULL) {
     printf("error accessing `interpret` export\n");
     return -1;
   }
@@ -185,16 +185,16 @@ int main(int argc, char *argv_main[]) {
   }
 
   printf("WAForth (" VERSION ")\n");
-  wasm_val_t interpret_as[1] = {WASM_I32_VAL(0)};
-  wasm_val_vec_t interpret_args = WASM_ARRAY_VEC(interpret_as);
-  wasm_val_vec_t interpret_results = WASM_EMPTY_VEC;
+  wasm_val_t run_as[1] = {WASM_I32_VAL(0)};
+  wasm_val_vec_t run_args = WASM_ARRAY_VEC(run_as);
+  wasm_val_vec_t run_results = WASM_EMPTY_VEC;
 
   wasm_val_vec_t err_args = WASM_EMPTY_VEC;
   wasm_val_t err_results_vs[] = {WASM_INIT_VAL};
   wasm_val_vec_t err_results = WASM_ARRAY_VEC(err_results_vs);
 
   for (int stopped = 0; !stopped;) {
-    trap = wasm_func_call(interpret_fn, &interpret_args, &interpret_results);
+    trap = wasm_func_call(run_fn, &run_args, &run_results);
     wasm_trap_t *etrap = wasm_func_call(error_fn, &err_args, &err_results);
     assert(etrap == NULL);
     switch (err_results.data[0].of.i32) {

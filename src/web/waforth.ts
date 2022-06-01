@@ -239,7 +239,7 @@ class WAForth {
     }
     this.read(s);
     try {
-      return (this.core!.exports.interpret as any)(silent);
+      return (this.core!.exports.run as any)(silent);
     } catch (e) {
       // Exceptions thrown from the core means QUIT or ABORT is called, or an error
       // has occurred.
