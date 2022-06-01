@@ -1,0 +1,26 @@
+# Standalone native WAForth binary
+
+This directory contains a small C program to run the WAForth WebAssembly core
+in a native WebAssembly engine.
+
+The build currently uses the [Wasmtime](https://wasmtime.dev) engine,
+but its build configuration can easily be adapted to build using any 
+WebAssembly engine that supports the
+[WebAssembly C API](https://github.com/WebAssembly/wasm-c-api) (although some
+engines have [known issues](https://github.com/remko/waforth/issues/6#issue-326830993)).
+
+## Download
+
+You can download a pre-built binary of the standalone shell from 
+[the Releases page](https://github.com/remko/waforth/releases).
+
+
+## Building
+
+Download dependencies (Wasmtime):
+
+    make install-deps
+
+Build:
+  
+    make
