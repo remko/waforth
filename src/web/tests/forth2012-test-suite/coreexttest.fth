@@ -518,13 +518,13 @@ T{ : CQ2 C" " ; -> }T
 T{ CQ2 COUNT EVALUATE -> }T
 T{ : CQ3 C" 2345"COUNT EVALUATE ; CQ3 -> 2345 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING COMPILE,
+\ -----------------------------------------------------------------------------
+TESTING COMPILE,
 
-\ :NONAME DUP + ; CONSTANT DUP+
-\ T{ : Q DUP+ COMPILE, ; -> }T
-\ T{ : AS1 [ Q ] ; -> }T
-\ T{ 123 AS1 -> 246 }T
+:NONAME DUP + ; CONSTANT DUP+
+T{ : Q DUP+ COMPILE, ; -> }T
+T{ : AS1 [ Q ] ; -> }T
+T{ 123 AS1 -> 246 }T
 
 \ \ -----------------------------------------------------------------------------
 \ \ Cannot automatically test SAVE-INPUT and RESTORE-INPUT from a console source
