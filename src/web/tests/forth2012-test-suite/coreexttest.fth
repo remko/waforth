@@ -102,18 +102,18 @@ T{ -1 0 <> -> TRUE }T
 T{ 0 1 <> -> TRUE }T
 T{ 0 -1 <> -> TRUE }T
 
-\ T{ 0 1 U> -> FALSE }T
-\ T{ 1 2 U> -> FALSE }T
-\ T{ 0 MID-UINT U> -> FALSE }T
-\ T{ 0 MAX-UINT U> -> FALSE }T
-\ T{ MID-UINT MAX-UINT U> -> FALSE }T
-\ T{ 0 0 U> -> FALSE }T
-\ T{ 1 1 U> -> FALSE }T
-\ T{ 1 0 U> -> TRUE }T
-\ T{ 2 1 U> -> TRUE }T
-\ T{ MID-UINT 0 U> -> TRUE }T
-\ T{ MAX-UINT 0 U> -> TRUE }T
-\ T{ MAX-UINT MID-UINT U> -> TRUE }T
+T{ 0 1 U> -> FALSE }T
+T{ 1 2 U> -> FALSE }T
+T{ 0 MID-UINT U> -> FALSE }T
+T{ 0 MAX-UINT U> -> FALSE }T
+T{ MID-UINT MAX-UINT U> -> FALSE }T
+T{ 0 0 U> -> FALSE }T
+T{ 1 1 U> -> FALSE }T
+T{ 1 0 U> -> TRUE }T
+T{ 2 1 U> -> TRUE }T
+T{ MID-UINT 0 U> -> TRUE }T
+T{ MAX-UINT 0 U> -> TRUE }T
+T{ MAX-UINT MID-UINT U> -> TRUE }T
 
 \ -----------------------------------------------------------------------------
 TESTING 0<> 0>   (contributed by James Bowman)
