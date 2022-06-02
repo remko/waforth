@@ -82,6 +82,10 @@ function pack(n: number) {
   return acc.map((x) => "\\" + _.padStart(x.toString(16), 2, "0")).join("");
 }
 
+function toHex(n: number) {
+  return (n < 0 ? "-" : "") + "0x" + Math.abs(n).toString(16);
+}
+
 function parseExpr(s: string | undefined): string | undefined {
   if (s == null) {
     return undefined;
@@ -392,9 +396,7 @@ if (updateValues) {
           len,
           ord,
         });
-        const sval = _.isString(val)
-          ? '"' + val + '"'
-          : "0x" + (val as number).toString(16);
+        const sval = _.isString(val) ? '"' + val + '"' : toHex(val as number);
         return args[0] + sval + args[2] + args[3];
       }
     );
