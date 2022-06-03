@@ -394,13 +394,13 @@ T{ -1  2  0 QD6 -> 2 2 2 2 2 2 6 }T
 T{ -1  2  1 QD6 -> 2 3 4 5 6 7 6 }T
 T{  2 -1  1 QD6 -> -1 0 1 3 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING BUFFER:
+\ -----------------------------------------------------------------------------
+TESTING BUFFER:
 
-\ T{ 8 BUFFER: BUF:TEST -> }T
-\ T{ BUF:TEST DUP ALIGNED = -> TRUE }T
-\ T{ 111 BUF:TEST ! 222 BUF:TEST CELL+ ! -> }T
-\ T{ BUF:TEST @ BUF:TEST CELL+ @ -> 111 222 }T
+T{ 8 BUFFER: BUF:TEST -> }T
+T{ BUF:TEST DUP ALIGNED = -> TRUE }T
+T{ 111 BUF:TEST ! 222 BUF:TEST CELL+ ! -> }T
+T{ BUF:TEST @ BUF:TEST CELL+ @ -> 111 222 }T
 
 \ -----------------------------------------------------------------------------
 TESTING VALUE TO
