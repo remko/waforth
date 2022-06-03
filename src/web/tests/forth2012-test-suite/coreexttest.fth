@@ -304,15 +304,15 @@ T{ MAX-INT MAX-INT 0 WITHIN -> TRUE }T
 T{ MAX-INT MAX-INT 1 WITHIN -> TRUE }T
 T{ MAX-INT MAX-INT MAX-INT WITHIN -> FALSE }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING UNUSED  (contributed by James Bowman & Peter Knaggs)
+\ -----------------------------------------------------------------------------
+TESTING UNUSED  (contributed by James Bowman & Peter Knaggs)
 
-\ VARIABLE UNUSED0
-\ T{ UNUSED DROP -> }T                  
-\ T{ ALIGN UNUSED UNUSED0 ! 0 , UNUSED CELL+ UNUSED0 @ = -> TRUE }T
-\ T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ =
-\          -> TRUE }T  \ aligned -> unaligned
-\ T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ = -> TRUE }T  \ unaligned -> ?
+VARIABLE UNUSED0
+T{ UNUSED DROP -> }T                  
+T{ ALIGN UNUSED UNUSED0 ! 0 , UNUSED CELL+ UNUSED0 @ = -> TRUE }T
+T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ =
+         -> TRUE }T  \ aligned -> unaligned
+T{ UNUSED UNUSED0 ! 0 C, UNUSED CHAR+ UNUSED0 @ = -> TRUE }T  \ unaligned -> ?
 
 \ \ -----------------------------------------------------------------------------
 \ TESTING AGAIN   (contributed by James Bowman)

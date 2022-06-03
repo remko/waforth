@@ -1923,7 +1923,7 @@
   ;; [6.2.2395](https://forth-standard.org/standard/core/UNUSED)
   (func $UNUSED (param $tos i32) (result i32)
     (local.get $tos)
-    (call $push (i32.shr_s (i32.sub (i32.const 0x6400000 (; = MEMORY_SIZE ;)) (global.get $here)) (i32.const 2))))
+    (call $push (i32.sub (i32.const 0x6400000 (; = MEMORY_SIZE ;)) (global.get $here))))
   (data (i32.const 0x20970) "\60\09\02\00" "\06" "UNUSED " "\aa\00\00\00")
   (elem (i32.const 0xaa) $UNUSED)
 
