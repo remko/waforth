@@ -19,7 +19,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: |
           make -C src/standalone install-deps package
-          md5sum src/standalone/waforth*
+          shasum src/standalone/waforth*
       - name: "Upload artifacts"
         run: |
           ls -l src/standalone
