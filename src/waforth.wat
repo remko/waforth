@@ -65,7 +65,7 @@
   ;;   PUSH_INDIRECT_INDEX := 6
   ;;   RESET_MARKER_INDEX := 7
   ;;   END_DO_INDEX := 9
-  (table (export "table") 0xb5 funcref)
+  (table (export "table") 0xb6 funcref)
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -412,7 +412,7 @@
     (local.get $tos)
     (call $ensureCompiling)
     (call $Sq)
-    (call $compileCall (i32.const 0) (i32.const 0xa1 (; = index("TYPE") ;))))
+    (call $compileCall (i32.const 0) (i32.const 0xa2 (; = index("TYPE") ;))))
   (data (i32.const 0x20178) "\6c\01\02\00" "\82" (; F_IMMEDIATE ;) ".\22 " "\22\00\00\00")
   (elem (i32.const 0x22) $.q)
 
@@ -801,7 +801,7 @@
     (local.get $tos)
     (call $compileIf)
     (call $Sq)
-    (call $compileCall (i32.const 0) (i32.const 0xa1 (; = index("TYPE") ;)))
+    (call $compileCall (i32.const 0) (i32.const 0xa2 (; = index("TYPE") ;)))
     (call $compileCall (i32.const 0) (i32.const 0x43 (; = index("ABORT") ;)))
     (call $compileThen))
   (data (i32.const 0x20344) "\34\03\02\00" "\86" (; F_IMMEDIATE ;) "ABORT\22 " "\44\00\00\00")
@@ -1279,20 +1279,36 @@
   (data (i32.const 0x205f0) "\e4\05\02\00" "\04" "HOLD   " "\6f\00\00\00")
   (elem (i32.const 0x6f) $HOLD)
 
+  ;; [6.2.1675](https://forth-standard.org/standard/core/HOLDS)
+  (func $HOLDS (param $tos i32) (result i32)
+    (local $len i32)
+    (local $npo i32)
+    (memory.copy
+      (local.tee $npo 
+        (i32.sub 
+          (global.get $po) 
+          (local.tee $len (i32.load (i32.sub (local.get $tos) (i32.const 4))))))
+      (i32.load (i32.sub (local.get $tos) (i32.const 8)))
+      (local.get $len))
+    (global.set $po (local.get $npo))
+    (i32.sub (local.get $tos) (i32.const 8)))
+  (data (i32.const 0x20600) "\f0\05\02\00" "\05" "HOLDS  " "\70\00\00\00")
+  (elem (i32.const 0x70) $HOLDS)
+
   ;; [6.1.1680](https://forth-standard.org/standard/core/I)
   (func $I (param $tos i32) (result i32)
     (i32.store (local.get $tos) (i32.load (i32.sub (global.get $tors) (i32.const 4))))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x20600) "\f0\05\02\00" "\01" "I  " "\70\00\00\00")
-  (elem (i32.const 0x70) $I)
+  (data (i32.const 0x20610) "\00\06\02\00" "\01" "I  " "\71\00\00\00")
+  (elem (i32.const 0x71) $I)
 
   ;; [6.1.1700](https://forth-standard.org/standard/core/IF)
   (func $IF (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileIf))
-  (data (i32.const 0x2060c) "\00\06\02\00" "\82" (; F_IMMEDIATE ;) "IF " "\71\00\00\00")
-  (elem (i32.const 0x71) $IF)
+  (data (i32.const 0x2061c) "\10\06\02\00" "\82" (; F_IMMEDIATE ;) "IF " "\72\00\00\00")
+  (elem (i32.const 0x72) $IF)
 
   ;; [6.1.1710](https://forth-standard.org/standard/core/IMMEDIATE)
   (func $IMMEDIATE (param $tos i32) (result i32)
@@ -1301,8 +1317,8 @@
         (i32.load (i32.add (global.get $latest) (i32.const 4)))
         (i32.const 0x80 (; = F_IMMEDIATE ;))))
     (local.get $tos))
-  (data (i32.const 0x20618) "\0c\06\02\00" "\09" "IMMEDIATE  " "\72\00\00\00")
-  (elem (i32.const 0x72) $IMMEDIATE)
+  (data (i32.const 0x20628) "\1c\06\02\00" "\09" "IMMEDIATE  " "\73\00\00\00")
+  (elem (i32.const 0x73) $IMMEDIATE)
 
   ;; [6.1.1720](https://forth-standard.org/standard/core/INVERT)
   (func $INVERT (param $tos i32) (result i32)
@@ -1310,52 +1326,52 @@
     (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
                 (i32.xor (i32.load (local.get $btos)) (i32.const -1)))
     (local.get $tos))
-  (data (i32.const 0x2062c) "\18\06\02\00" "\06" "INVERT " "\73\00\00\00")
-  (elem (i32.const 0x73) $INVERT)
+  (data (i32.const 0x2063c) "\28\06\02\00" "\06" "INVERT " "\74\00\00\00")
+  (elem (i32.const 0x74) $INVERT)
 
   ;; [6.1.1730](https://forth-standard.org/standard/core/J)
   (func $J (param $tos i32) (result i32)
     (i32.store (local.get $tos) (i32.load (i32.sub (global.get $tors) (i32.const 8))))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x2063c) "\2c\06\02\00" "\01" "J  " "\74\00\00\00")
-  (elem (i32.const 0x74) $J)
+  (data (i32.const 0x2064c) "\3c\06\02\00" "\01" "J  " "\75\00\00\00")
+  (elem (i32.const 0x75) $J)
 
   ;; [6.1.1750](https://forth-standard.org/standard/core/KEY)
   (func $KEY (param $tos i32) (result i32)
     (i32.store (local.get $tos) (call $shell_key))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x20648) "\3c\06\02\00" "\03" "KEY" "\75\00\00\00")
-  (elem (i32.const 0x75) $KEY)
+  (data (i32.const 0x20658) "\4c\06\02\00" "\03" "KEY" "\76\00\00\00")
+  (elem (i32.const 0x76) $KEY)
 
   (func $LATEST (param $tos i32) (result i32)
     (i32.store (local.get $tos) (global.get $latest))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x20654) "\48\06\02\00" "\06" "LATEST " "\76\00\00\00")
-  (elem (i32.const 0x76) $LATEST)
+  (data (i32.const 0x20664) "\58\06\02\00" "\06" "LATEST " "\77\00\00\00")
+  (elem (i32.const 0x77) $LATEST)
 
   ;; [6.1.1760](https://forth-standard.org/standard/core/LEAVE)
   (func $LEAVE (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileLeave))
-  (data (i32.const 0x20664) "\54\06\02\00" "\85" (; F_IMMEDIATE ;) "LEAVE  " "\77\00\00\00")
-  (elem (i32.const 0x77) $LEAVE)
+  (data (i32.const 0x20674) "\64\06\02\00" "\85" (; F_IMMEDIATE ;) "LEAVE  " "\78\00\00\00")
+  (elem (i32.const 0x78) $LEAVE)
 
   ;; [6.1.1780](https://forth-standard.org/standard/core/LITERAL)
   (func $LITERAL (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compilePushConst (call $pop)))
-  (data (i32.const 0x20674) "\64\06\02\00" "\87" (; F_IMMEDIATE ;) "LITERAL" "\78\00\00\00")
-  (elem (i32.const 0x78) $LITERAL)
+  (data (i32.const 0x20684) "\74\06\02\00" "\87" (; F_IMMEDIATE ;) "LITERAL" "\79\00\00\00")
+  (elem (i32.const 0x79) $LITERAL)
 
   ;; [6.1.1800](https://forth-standard.org/standard/core/LOOP)
   (func $LOOP (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileLoop))
-  (data (i32.const 0x20684) "\74\06\02\00" "\84" (; F_IMMEDIATE ;) "LOOP   " "\79\00\00\00")
-  (elem (i32.const 0x79) $LOOP)
+  (data (i32.const 0x20694) "\84\06\02\00" "\84" (; F_IMMEDIATE ;) "LOOP   " "\7a\00\00\00")
+  (elem (i32.const 0x7a) $LOOP)
 
   ;; [6.1.1805](https://forth-standard.org/standard/core/LSHIFT)
   (func $LSHIFT (param $tos i32) (result i32)
@@ -1365,8 +1381,8 @@
                 (i32.shl (i32.load (local.get $bbtos))
                         (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.get $btos))
-  (data (i32.const 0x20694) "\84\06\02\00" "\06" "LSHIFT " "\7a\00\00\00")
-  (elem (i32.const 0x7a) $LSHIFT)
+  (data (i32.const 0x206a4) "\94\06\02\00" "\06" "LSHIFT " "\7b\00\00\00")
+  (elem (i32.const 0x7b) $LSHIFT)
 
   ;; [6.1.1810](https://forth-standard.org/standard/core/MTimes)
   (func $M* (param $tos i32) (result i32)
@@ -1376,8 +1392,8 @@
                         (i64.extend_i32_s (i32.load (i32.sub (local.get $tos) 
                                                               (i32.const 4))))))
     (local.get $tos))
-  (data (i32.const 0x206a4) "\94\06\02\00" "\02" "M* " "\7b\00\00\00")
-  (elem (i32.const 0x7b) $M*)
+  (data (i32.const 0x206b4) "\a4\06\02\00" "\02" "M* " "\7c\00\00\00")
+  (elem (i32.const 0x7c) $M*)
 
   ;; [16.2.1850](https://forth-standard.org/standard/core/MARKER)
   (func $MARKER (param $tos i32) (result i32)
@@ -1401,8 +1417,8 @@
     (i32.store (i32.add (global.get $here) (i32.const 4)) (local.get $oldLatest))
     (global.set $here (i32.add (global.get $here) (i32.const 8)))
     (local.get $tos))
-  (data (i32.const 0x206b0) "\a4\06\02\00" "\06" "MARKER " "\7c\00\00\00")
-  (elem (i32.const 0x7c) $MARKER)
+  (data (i32.const 0x206c0) "\b4\06\02\00" "\06" "MARKER " "\7d\00\00\00")
+  (elem (i32.const 0x7d) $MARKER)
 
   ;; [6.1.1870](https://forth-standard.org/standard/core/MAX)
   (func $MAX (param $tos i32) (result i32)
@@ -1415,8 +1431,8 @@
       (then
         (i32.store (local.get $bbtos) (local.get $v))))
     (local.get $btos))
-  (data (i32.const 0x206c0) "\b0\06\02\00" "\03" "MAX" "\7d\00\00\00")
-  (elem (i32.const 0x7d) $MAX)
+  (data (i32.const 0x206d0) "\c0\06\02\00" "\03" "MAX" "\7e\00\00\00")
+  (elem (i32.const 0x7e) $MAX)
 
   ;; [6.1.1880](https://forth-standard.org/standard/core/MIN)
   (func $MIN (param $tos i32) (result i32)
@@ -1429,8 +1445,8 @@
       (then
         (i32.store (local.get $bbtos) (local.get $v))))
     (local.get $btos))
-  (data (i32.const 0x206cc) "\c0\06\02\00" "\03" "MIN" "\7e\00\00\00")
-  (elem (i32.const 0x7e) $MIN)
+  (data (i32.const 0x206dc) "\d0\06\02\00" "\03" "MIN" "\7f\00\00\00")
+  (elem (i32.const 0x7f) $MIN)
 
   ;; [6.1.1890](https://forth-standard.org/standard/core/MOD)
   (func $MOD (param $tos i32) (result i32)
@@ -1440,8 +1456,8 @@
                 (i32.rem_s (i32.load (local.get $bbtos))
                           (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.get $btos))
-  (data (i32.const 0x206d8) "\cc\06\02\00" "\03" "MOD" "\7f\00\00\00")
-  (elem (i32.const 0x7f) $MOD)
+  (data (i32.const 0x206e8) "\dc\06\02\00" "\03" "MOD" "\80\00\00\00")
+  (elem (i32.const 0x80) $MOD)
 
   ;; [6.1.1900](https://forth-standard.org/standard/core/MOVE)
   (func $MOVE (param $tos i32) (result i32)
@@ -1451,8 +1467,8 @@
       (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
       (i32.load (i32.sub (local.get $tos) (i32.const 4))))
     (local.get $bbbtos))
-  (data (i32.const 0x206e4) "\d8\06\02\00" "\04" "MOVE   " "\80\00\00\00")
-  (elem (i32.const 0x80) $MOVE)
+  (data (i32.const 0x206f4) "\e8\06\02\00" "\04" "MOVE   " "\81\00\00\00")
+  (elem (i32.const 0x81) $MOVE)
 
   ;; [6.1.1910](https://forth-standard.org/standard/core/NEGATE)
   (func $NEGATE (param $tos i32) (result i32)
@@ -1460,8 +1476,8 @@
     (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
                 (i32.sub (i32.const 0) (i32.load (local.get $btos))))
     (local.get $tos))
-  (data (i32.const 0x206f4) "\e4\06\02\00" "\06" "NEGATE " "\81\00\00\00")
-  (elem (i32.const 0x81) $NEGATE)
+  (data (i32.const 0x20704) "\f4\06\02\00" "\06" "NEGATE " "\82\00\00\00")
+  (elem (i32.const 0x82) $NEGATE)
 
   ;; [6.2.1930](https://forth-standard.org/standard/core/NIP)
   (func $NIP (param $tos i32) (result i32)
@@ -1469,8 +1485,8 @@
     (i32.store (i32.sub (local.get $tos) (i32.const 8))
       (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (local.get $btos))
-  (data (i32.const 0x20704) "\f4\06\02\00" "\03" "NIP" "\82\00\00\00")
-  (elem (i32.const 0x82) $NIP)
+  (data (i32.const 0x20714) "\04\07\02\00" "\03" "NIP" "\83\00\00\00")
+  (elem (i32.const 0x83) $NIP)
 
   ;; [6.1.1980](https://forth-standard.org/standard/core/OR)
   (func $OR (param $tos i32) (result i32)
@@ -1480,23 +1496,23 @@
                 (i32.or (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
                         (i32.load (local.get $bbtos))))
     (local.get $btos))
-  (data (i32.const 0x20710) "\04\07\02\00" "\02" "OR " "\83\00\00\00")
-  (elem (i32.const 0x83) $OR)
+  (data (i32.const 0x20720) "\14\07\02\00" "\02" "OR " "\84\00\00\00")
+  (elem (i32.const 0x84) $OR)
 
   ;; [6.1.1990](https://forth-standard.org/standard/core/OVER)
   (func $OVER (param $tos i32) (result i32)
     (i32.store (local.get $tos)
                 (i32.load (i32.sub (local.get $tos) (i32.const 8))))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x2071c) "\10\07\02\00" "\04" "OVER   " "\84\00\00\00")
-  (elem (i32.const 0x84) $OVER)
+  (data (i32.const 0x2072c) "\20\07\02\00" "\04" "OVER   " "\85\00\00\00")
+  (elem (i32.const 0x85) $OVER)
 
   ;; [6.2.2000](https://forth-standard.org/standard/core/PAD)
   (func $PAD (param $tos i32) (result i32)
     (i32.store (local.get $tos) (i32.add (global.get $here) (i32.const 0x304 (; = PAD_OFFSET ;))))
     (i32.add (local.get $tos) (i32.const 0x4)))
-  (data (i32.const 0x2072c) "\1c\07\02\00" "\03" "PAD" "\85\00\00\00")
-  (elem (i32.const 0x85) $PAD)
+  (data (i32.const 0x2073c) "\2c\07\02\00" "\03" "PAD" "\86\00\00\00")
+  (elem (i32.const 0x86) $PAD)
 
   ;; [6.2.2008](https://forth-standard.org/standard/core/PARSE)
   (func $PARSE (param $tos i32) (result i32)
@@ -1509,8 +1525,8 @@
     (i32.store (local.get $btos) (local.get $addr))
     (i32.store (local.get $tos) (local.get $len))
     (i32.add (local.get $tos) (i32.const 0x4)))
-  (data (i32.const 0x20738) "\2c\07\02\00" "\05" "PARSE  " "\86\00\00\00")
-  (elem (i32.const 0x86) $PARSE)
+  (data (i32.const 0x20748) "\3c\07\02\00" "\05" "PARSE  " "\87\00\00\00")
+  (elem (i32.const 0x87) $PARSE)
 
   ;; [6.2.2020](https://forth-standard.org/standard/core/PARSE-NAME)
   (func $PARSE-NAME (param $tos i32) (result i32)
@@ -1520,8 +1536,8 @@
     (i32.store (local.get $tos) (local.get $addr))
     (i32.store (i32.add (local.get $tos) (i32.const 0x4)) (local.get $len))
     (i32.add (local.get $tos) (i32.const 0x8)))
-  (data (i32.const 0x20748) "\38\07\02\00" "\0a" "PARSE-NAME " "\87\00\00\00")
-  (elem (i32.const 0x87) $PARSE-NAME)
+  (data (i32.const 0x20758) "\48\07\02\00" "\0a" "PARSE-NAME " "\88\00\00\00")
+  (elem (i32.const 0x88) $PARSE-NAME)
 
   ;; [6.2.2030](https://forth-standard.org/standard/core/PICK)
   (func $PICK (param $tos i32) (result i32)
@@ -1532,8 +1548,8 @@
           (local.get $tos) 
           (i32.shl (i32.add (i32.load (local.get $btos)) (i32.const 2)) (i32.const 2)))))
     (local.get $tos))
-  (data (i32.const 0x2075c) "\48\07\02\00" "\04" "PICK   " "\88\00\00\00")
-  (elem (i32.const 0x88) $PICK)
+  (data (i32.const 0x2076c) "\58\07\02\00" "\04" "PICK   " "\89\00\00\00")
+  (elem (i32.const 0x89) $PICK)
 
   ;; [6.1.2033](https://forth-standard.org/standard/core/POSTPONE)
   (func $POSTPONE (param $tos i32) (result i32)
@@ -1548,38 +1564,38 @@
       (else
         (call $emitConst (local.get $FINDToken))
         (call $compileCall (i32.const 1) (i32.const 0x5 (; = COMPILE_EXECUTE_INDEX ;))))))
-  (data (i32.const 0x2076c) "\5c\07\02\00" "\88" (; F_IMMEDIATE ;) "POSTPONE   " "\89\00\00\00")
-  (elem (i32.const 0x89) $POSTPONE)
+  (data (i32.const 0x2077c) "\6c\07\02\00" "\88" (; F_IMMEDIATE ;) "POSTPONE   " "\8a\00\00\00")
+  (elem (i32.const 0x8a) $POSTPONE)
 
   ;; [6.1.2050](https://forth-standard.org/standard/core/QUIT)
   (func $QUIT (param $tos i32) (result i32)
     (global.set $error (i32.const 0x2 (; = ERR_QUIT ;)))
     (call $quit (local.get $tos)))
-  (data (i32.const 0x20780) "\6c\07\02\00" "\04" "QUIT   " "\8a\00\00\00")
-  (elem (i32.const 0x8a) $QUIT)
+  (data (i32.const 0x20790) "\7c\07\02\00" "\04" "QUIT   " "\8b\00\00\00")
+  (elem (i32.const 0x8b) $QUIT)
 
   ;; [6.1.2060](https://forth-standard.org/standard/core/Rfrom)
   (func $R> (param $tos i32) (result i32)
     (global.set $tors (i32.sub (global.get $tors) (i32.const 4)))
     (i32.store (local.get $tos) (i32.load (global.get $tors)))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x20790) "\80\07\02\00" "\02" "R> " "\8b\00\00\00")
-  (elem (i32.const 0x8b) $R>)
+  (data (i32.const 0x207a0) "\90\07\02\00" "\02" "R> " "\8c\00\00\00")
+  (elem (i32.const 0x8c) $R>)
 
   ;; [6.1.2070](https://forth-standard.org/standard/core/RFetch)
   (func $R@ (param $tos i32) (result i32)
     (i32.store (local.get $tos) (i32.load (i32.sub (global.get $tors) (i32.const 4))))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x2079c) "\90\07\02\00" "\02" "R@ " "\8c\00\00\00")
-  (elem (i32.const 0x8c) $R@)
+  (data (i32.const 0x207ac) "\a0\07\02\00" "\02" "R@ " "\8d\00\00\00")
+  (elem (i32.const 0x8d) $R@)
 
   ;; [6.1.2120](https://forth-standard.org/standard/core/RECURSE)
   (func $RECURSE  (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileRecurse))
-  (data (i32.const 0x207a8) "\9c\07\02\00" "\87" (; F_IMMEDIATE ;) "RECURSE" "\8d\00\00\00")
-  (elem (i32.const 0x8d) $RECURSE)
+  (data (i32.const 0x207b8) "\ac\07\02\00" "\87" (; F_IMMEDIATE ;) "RECURSE" "\8e\00\00\00")
+  (elem (i32.const 0x8e) $RECURSE)
 
   ;; [6.2.2125](https://forth-standard.org/standard/core/REFILL)
   (func $REFILL (param $tos i32) (result i32)
@@ -1598,16 +1614,16 @@
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
       (else (call $push (i32.const -1)))))
-  (data (i32.const 0x207b8) "\a8\07\02\00" "\06" "REFILL " "\8e\00\00\00")
-  (elem (i32.const 0x8e) $REFILL)
+  (data (i32.const 0x207c8) "\b8\07\02\00" "\06" "REFILL " "\8f\00\00\00")
+  (elem (i32.const 0x8f) $REFILL)
 
   ;; [6.1.2140](https://forth-standard.org/standard/core/REPEAT)
   (func $REPEAT (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileRepeat))
-  (data (i32.const 0x207c8) "\b8\07\02\00" "\86" (; F_IMMEDIATE ;) "REPEAT " "\8f\00\00\00")
-  (elem (i32.const 0x8f) $REPEAT)
+  (data (i32.const 0x207d8) "\c8\07\02\00" "\86" (; F_IMMEDIATE ;) "REPEAT " "\90\00\00\00")
+  (elem (i32.const 0x90) $REPEAT)
 
   ;; [6.1.2150](https://forth-standard.org/standard/core/ROLL)
   (func $ROLL (param $tos i32) (result i32)
@@ -1629,8 +1645,8 @@
       (i32.shl (local.get $u) (i32.const 2)))
     (i32.store (i32.sub (local.get $tos) (i32.const 8)) (local.get $x))
     (local.get $btos))
-  (data (i32.const 0x207d8) "\c8\07\02\00" "\04" "ROLL   " "\90\00\00\00")
-  (elem (i32.const 0x90) $ROLL)
+  (data (i32.const 0x207e8) "\d8\07\02\00" "\04" "ROLL   " "\91\00\00\00")
+  (elem (i32.const 0x91) $ROLL)
 
   ;; [6.1.2160](https://forth-standard.org/standard/core/ROT)
   (func $ROT (param $tos i32) (result i32)
@@ -1645,8 +1661,8 @@
       (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (i32.store (local.get $bbtos) (local.get $tmp))
     (local.get $tos))
-  (data (i32.const 0x207e8) "\d8\07\02\00" "\03" "ROT" "\91\00\00\00")
-  (elem (i32.const 0x91) $ROT)
+  (data (i32.const 0x207f8) "\e8\07\02\00" "\03" "ROT" "\92\00\00\00")
+  (elem (i32.const 0x92) $ROT)
 
   ;; [6.1.2162](https://forth-standard.org/standard/core/RSHIFT)
   (func $RSHIFT (param $tos i32) (result i32)
@@ -1656,8 +1672,8 @@
                 (i32.shr_u (i32.load (local.get $bbtos))
                           (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.get $btos))
-  (data (i32.const 0x207f4) "\e8\07\02\00" "\06" "RSHIFT " "\92\00\00\00")
-  (elem (i32.const 0x92) $RSHIFT)
+  (data (i32.const 0x20804) "\f8\07\02\00" "\06" "RSHIFT " "\93\00\00\00")
+  (elem (i32.const 0x93) $RSHIFT)
 
   ;; [6.1.2165](https://forth-standard.org/standard/core/Sq)
   (func $Sq (param $tos i32) (result i32)
@@ -1672,8 +1688,8 @@
     (call $compilePushConst (local.get $len))
     (global.set $here 
       (call $aligned (i32.add (global.get $here) (local.get $len)))))
-  (data (i32.const 0x20804) "\f4\07\02\00" "\82" (; F_IMMEDIATE ;) "S\22 " "\93\00\00\00")
-  (elem (i32.const 0x93) $Sq)
+  (data (i32.const 0x20814) "\04\08\02\00" "\82" (; F_IMMEDIATE ;) "S\22 " "\94\00\00\00")
+  (elem (i32.const 0x94) $Sq)
 
   ;; [6.1.2170](https://forth-standard.org/standard/core/StoD)
   (func $S>D (param $tos i32) (result i32)
@@ -1681,15 +1697,15 @@
     (i64.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
       (i64.extend_i32_s (i32.load (local.get $btos))))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x20810) "\04\08\02\00" "\03" "S>D" "\94\00\00\00")
-  (elem (i32.const 0x94) $S>D)
+  (data (i32.const 0x20820) "\14\08\02\00" "\03" "S>D" "\95\00\00\00")
+  (elem (i32.const 0x95) $S>D)
 
   (func $SCALL (param $tos i32) (result i32)
     (global.set $tos (local.get $tos))
     (call $shell_call)
     (global.get $tos))
-  (data (i32.const 0x2081c) "\10\08\02\00" "\05" "SCALL  " "\95\00\00\00")
-  (elem (i32.const 0x95) $SCALL)
+  (data (i32.const 0x2082c) "\20\08\02\00" "\05" "SCALL  " "\96\00\00\00")
+  (elem (i32.const 0x96) $SCALL)
 
   ;; [6.1.2210](https://forth-standard.org/standard/core/SIGN)
   (func $SIGN (param $tos i32) (result i32)
@@ -1700,8 +1716,8 @@
         (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1))) (i32.const 0x2d (; = '-' ;)))
         (global.set $po (local.get $npo))))
     (local.get $btos))
-  (data (i32.const 0x2082c) "\1c\08\02\00" "\04" "SIGN   " "\96\00\00\00")
-  (elem (i32.const 0x96) $SIGN)
+  (data (i32.const 0x2083c) "\2c\08\02\00" "\04" "SIGN   " "\97\00\00\00")
+  (elem (i32.const 0x97) $SIGN)
 
   ;; [6.1.2214](https://forth-standard.org/standard/core/SMDivREM)
   ;;
@@ -1722,29 +1738,29 @@
       (i32.wrap_i64 
         (i64.div_s (local.get $n1) (local.get $n2))))
     (local.get $btos))
-  (data (i32.const 0x2083c) "\2c\08\02\00" "\06" "SM/REM " "\97\00\00\00")
-  (elem (i32.const 0x97) $SM/REM)
+  (data (i32.const 0x2084c) "\3c\08\02\00" "\06" "SM/REM " "\98\00\00\00")
+  (elem (i32.const 0x98) $SM/REM)
 
   ;; [6.1.2216](https://forth-standard.org/standard/core/SOURCE)
   (func $SOURCE (param $tos i32) (result i32)
     (local.get $tos)
     (call $push (global.get $inputBufferBase))
     (call $push (global.get $inputBufferSize)))
-  (data (i32.const 0x2084c) "\3c\08\02\00" "\06" "SOURCE " "\98\00\00\00")
-  (elem (i32.const 0x98) $SOURCE)
+  (data (i32.const 0x2085c) "\4c\08\02\00" "\06" "SOURCE " "\99\00\00\00")
+  (elem (i32.const 0x99) $SOURCE)
 
   ;; [6.2.2218](https://forth-standard.org/standard/core/SOURCE-ID)
   (func $SOURCE-ID (param $tos i32) (result i32)
     (call $push (local.get $tos) (global.get $sourceID)))
-  (data (i32.const 0x2085c) "\4c\08\02\00" "\09" "SOURCE-ID  " "\99\00\00\00")
-  (elem (i32.const 0x99) $SOURCE-ID)
+  (data (i32.const 0x2086c) "\5c\08\02\00" "\09" "SOURCE-ID  " "\9a\00\00\00")
+  (elem (i32.const 0x9a) $SOURCE-ID)
 
   ;; [6.1.2220](https://forth-standard.org/standard/core/SPACE)
   (func $SPACE (param $tos i32) (result i32)
     (local.get $tos)
     (call $BL) (call $EMIT))
-  (data (i32.const 0x20870) "\5c\08\02\00" "\05" "SPACE  " "\9a\00\00\00")
-  (elem (i32.const 0x9a) $SPACE)
+  (data (i32.const 0x20880) "\6c\08\02\00" "\05" "SPACE  " "\9b\00\00\00")
+  (elem (i32.const 0x9b) $SPACE)
 
   ;; [6.1.2230](https://forth-standard.org/standard/core/SPACES)
   (func $SPACES (param $tos i32) (result i32)
@@ -1757,11 +1773,11 @@
         (call $SPACE)
         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
         (br $loop))))
-  (data (i32.const 0x20880) "\70\08\02\00" "\06" "SPACES " "\9b\00\00\00")
-  (elem (i32.const 0x9b) $SPACES)
+  (data (i32.const 0x20890) "\80\08\02\00" "\06" "SPACES " "\9c\00\00\00")
+  (elem (i32.const 0x9c) $SPACES)
 
   ;; [6.1.2250](https://forth-standard.org/standard/core/STATE)
-  (data (i32.const 0x20890) "\80\08\02\00" "\45" (; F_DATA ;) "STATE  " "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; = pack(0) ;))
+  (data (i32.const 0x208a0) "\90\08\02\00" "\45" (; F_DATA ;) "STATE  " "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00" (; = pack(0) ;))
 
   ;; [6.1.2260](https://forth-standard.org/standard/core/SWAP)
   (func $SWAP (param $tos i32) (result i32)
@@ -1773,16 +1789,16 @@
                 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (i32.store (local.get $btos) (local.get $tmp))
     (local.get $tos))
-  (data (i32.const 0x208a4) "\90\08\02\00" "\04" "SWAP   " "\9c\00\00\00")
-  (elem (i32.const 0x9c) $SWAP)
+  (data (i32.const 0x208b4) "\a0\08\02\00" "\04" "SWAP   " "\9d\00\00\00")
+  (elem (i32.const 0x9d) $SWAP)
 
   ;; [6.1.2270](https://forth-standard.org/standard/core/THEN)
   (func $THEN (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileThen))
-  (data (i32.const 0x208b4) "\a4\08\02\00" "\84" (; F_IMMEDIATE ;) "THEN   " "\9d\00\00\00")
-  (elem (i32.const 0x9d) $THEN)
+  (data (i32.const 0x208c4) "\b4\08\02\00" "\84" (; F_IMMEDIATE ;) "THEN   " "\9e\00\00\00")
+  (elem (i32.const 0x9e) $THEN)
 
   ;; [6.2.2295](https://forth-standard.org/standard/core/TO)
   (func $TO (param $tos i32) (result i32)
@@ -1793,14 +1809,14 @@
     (i32.store (i32.add (call $body (local.get $xt)) (i32.const 4)) 
       (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (local.get $btos))
-  (data (i32.const 0x208c4) "\b4\08\02\00" "\02" "TO " "\9e\00\00\00")
-  (elem (i32.const 0x9e) $TO)
+  (data (i32.const 0x208d4) "\c4\08\02\00" "\02" "TO " "\9f\00\00\00")
+  (elem (i32.const 0x9f) $TO)
 
   ;; [6.2.2298](https://forth-standard.org/standard/core/TRUE)
   (func $TRUE (param $tos i32) (result i32)
     (call $push (local.get $tos) (i32.const 0xffffffff)))
-  (data (i32.const 0x208d0) "\c4\08\02\00" "\04" "TRUE   " "\9f\00\00\00")
-  (elem (i32.const 0x9f) $TRUE)
+  (data (i32.const 0x208e0) "\d4\08\02\00" "\04" "TRUE   " "\a0\00\00\00")
+  (elem (i32.const 0xa0) $TRUE)
 
   ;; [6.2.2300](https://forth-standard.org/standard/core/TUCK)
   (func $TUCK (param $tos i32) (result i32)
@@ -1811,8 +1827,8 @@
       (i32.load (i32.sub (local.get $tos) (i32.const 8))))
     (i32.store (i32.sub (local.get $tos) (i32.const 8)) (local.get $v))
     (i32.add (local.get $tos) (i32.const 4)))
-  (data (i32.const 0x208e0) "\d0\08\02\00" "\04" "TUCK   " "\a0\00\00\00")
-  (elem (i32.const 0xa0) $TUCK)
+  (data (i32.const 0x208f0) "\e0\08\02\00" "\04" "TUCK   " "\a1\00\00\00")
+  (elem (i32.const 0xa1) $TUCK)
 
   ;; [6.1.2310](https://forth-standard.org/standard/core/TYPE)
   (func $TYPE (param $tos i32) (result i32)
@@ -1822,16 +1838,16 @@
     (local.set $len (call $pop))
     (local.set $p (call $pop))
     (call $type (local.get $p) (local.get $len)))
-  (data (i32.const 0x208f0) "\e0\08\02\00" "\04" "TYPE   " "\a1\00\00\00")
-  (elem (i32.const 0xa1) $TYPE)
+  (data (i32.const 0x20900) "\f0\08\02\00" "\04" "TYPE   " "\a2\00\00\00")
+  (elem (i32.const 0xa2) $TYPE)
 
   ;; [6.1.2320](https://forth-standard.org/standard/core/Ud)
   (func $U. (param $tos i32) (result i32)
     (local.get $tos)
     (call $U._ (call $pop) (i32.load (i32.const 0x203bc (; = body(BASE) ;))))
     (call $shell_emit (i32.const 0x20)))
-  (data (i32.const 0x20900) "\f0\08\02\00" "\02" "U. " "\a2\00\00\00")
-  (elem (i32.const 0xa2) $U.)
+  (data (i32.const 0x20910) "\00\09\02\00" "\02" "U. " "\a3\00\00\00")
+  (elem (i32.const 0xa3) $U.)
 
   ;; [6.1.2340](https://forth-standard.org/standard/core/Uless)
   (func $U< (param $tos i32) (result i32)
@@ -1842,8 +1858,8 @@
       (then (i32.store (local.get $bbtos) (i32.const -1)))
       (else (i32.store (local.get $bbtos) (i32.const 0))))
     (local.get $btos))
-  (data (i32.const 0x2090c) "\00\09\02\00" "\02" "U< " "\a3\00\00\00")
-  (elem (i32.const 0xa3) $U<)
+  (data (i32.const 0x2091c) "\10\09\02\00" "\02" "U< " "\a4\00\00\00")
+  (elem (i32.const 0xa4) $U<)
 
   ;; [6.2.2350](https://forth-standard.org/standard/core/Umore)
   (func $U> (param $tos i32) (result i32)
@@ -1854,8 +1870,8 @@
       (then (i32.store (local.get $bbtos) (i32.const -1)))
       (else (i32.store (local.get $bbtos) (i32.const 0))))
     (local.get $btos))
-  (data (i32.const 0x20918) "\0c\09\02\00" "\02" "U> " "\a4\00\00\00")
-  (elem (i32.const 0xa4) $U>)
+  (data (i32.const 0x20928) "\1c\09\02\00" "\02" "U> " "\a5\00\00\00")
+  (elem (i32.const 0xa5) $U>)
 
   ;; [6.1.2360](https://forth-standard.org/standard/core/UMTimes)
   (func $UM* (param $tos i32) (result i32)
@@ -1865,8 +1881,8 @@
                         (i64.extend_i32_u (i32.load (i32.sub (local.get $tos) 
                                                               (i32.const 4))))))
     (local.get $tos))
-  (data (i32.const 0x20924) "\18\09\02\00" "\03" "UM*" "\a5\00\00\00")
-  (elem (i32.const 0xa5) $UM*)
+  (data (i32.const 0x20934) "\28\09\02\00" "\03" "UM*" "\a6\00\00\00")
+  (elem (i32.const 0xa6) $UM*)
 
   ;; [6.1.2370](https://forth-standard.org/standard/core/UMDivMOD)
   (func $UM/MOD (param $tos i32) (result i32)
@@ -1885,50 +1901,50 @@
       (i32.wrap_i64 
         (i64.div_u (local.get $n1) (local.get $n2))))
     (local.get $btos))
-  (data (i32.const 0x20930) "\24\09\02\00" "\06" "UM/MOD " "\a6\00\00\00")
-  (elem (i32.const 0xa6) $UM/MOD)
+  (data (i32.const 0x20940) "\34\09\02\00" "\06" "UM/MOD " "\a7\00\00\00")
+  (elem (i32.const 0xa7) $UM/MOD)
 
   ;; [6.1.2380](https://forth-standard.org/standard/core/UNLOOP)
   (func $UNLOOP (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileCall (i32.const 0) (i32.const 0x9 (; = END_DO_INDEX ;))))
-  (data (i32.const 0x20940) "\30\09\02\00" "\86" (; F_IMMEDIATE ;) "UNLOOP " "\a7\00\00\00")
-  (elem (i32.const 0xa7) $UNLOOP)
+  (data (i32.const 0x20950) "\40\09\02\00" "\86" (; F_IMMEDIATE ;) "UNLOOP " "\a8\00\00\00")
+  (elem (i32.const 0xa8) $UNLOOP)
 
   ;; [6.1.2390](https://forth-standard.org/standard/core/UNTIL)
   (func $UNTIL (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileUntil))
-  (data (i32.const 0x20950) "\40\09\02\00" "\85" (; F_IMMEDIATE ;) "UNTIL  " "\a8\00\00\00")
-  (elem (i32.const 0xa8) $UNTIL)
+  (data (i32.const 0x20960) "\50\09\02\00" "\85" (; F_IMMEDIATE ;) "UNTIL  " "\a9\00\00\00")
+  (elem (i32.const 0xa9) $UNTIL)
 
   ;; [6.2.2395](https://forth-standard.org/standard/core/UNUSED)
   (func $UNUSED (param $tos i32) (result i32)
     (local.get $tos)
     (call $push (i32.shr_s (i32.sub (i32.const 0x6400000 (; = MEMORY_SIZE ;)) (global.get $here)) (i32.const 2))))
-  (data (i32.const 0x20960) "\50\09\02\00" "\06" "UNUSED " "\a9\00\00\00")
-  (elem (i32.const 0xa9) $UNUSED)
+  (data (i32.const 0x20970) "\60\09\02\00" "\06" "UNUSED " "\aa\00\00\00")
+  (elem (i32.const 0xaa) $UNUSED)
 
   ;; [6.2.2405](https://forth-standard.org/standard/core/VALUE)
-  (data (i32.const 0x20970) "\60\09\02\00" "\05" "VALUE  " "\58\00\00\00" (; = pack(index("CONSTANT")) ;))
+  (data (i32.const 0x20980) "\70\09\02\00" "\05" "VALUE  " "\58\00\00\00" (; = pack(index("CONSTANT")) ;))
 
   ;; [6.1.2410](https://forth-standard.org/standard/core/VARIABLE)
   (func $VARIABLE (param $tos i32) (result i32)
     (local.get $tos)
     (call $CREATE)
     (global.set $here (i32.add (global.get $here) (i32.const 4))))
-  (data (i32.const 0x20980) "\70\09\02\00" "\08" "VARIABLE   " "\aa\00\00\00")
-  (elem (i32.const 0xaa) $VARIABLE)
+  (data (i32.const 0x20990) "\80\09\02\00" "\08" "VARIABLE   " "\ab\00\00\00")
+  (elem (i32.const 0xab) $VARIABLE)
 
   ;; [6.1.2430](https://forth-standard.org/standard/core/WHILE)
   (func $WHILE (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
     (call $compileWhile))
-  (data (i32.const 0x20994) "\80\09\02\00" "\85" (; F_IMMEDIATE ;) "WHILE  " "\ab\00\00\00")
-  (elem (i32.const 0xab) $WHILE)
+  (data (i32.const 0x209a4) "\90\09\02\00" "\85" (; F_IMMEDIATE ;) "WHILE  " "\ac\00\00\00")
+  (elem (i32.const 0xac) $WHILE)
 
   ;; [6.2.2440](https://forth-standard.org/standard/core/WITHIN)
   (func $WITHIN (param $tos i32) (result i32)
@@ -1949,8 +1965,8 @@
         (else
           (i32.const 0))))
     (local.get $bbtos))
-  (data (i32.const 0x209a4) "\94\09\02\00" "\06" "WITHIN " "\ac\00\00\00")
-  (elem (i32.const 0xac) $WITHIN)
+  (data (i32.const 0x209b4) "\a4\09\02\00" "\06" "WITHIN " "\ad\00\00\00")
+  (elem (i32.const 0xad) $WITHIN)
 
   ;; [6.1.2450](https://forth-standard.org/standard/core/WORD)
   (func $WORD (param $tos i32) (result i32)
@@ -1970,8 +1986,8 @@
       (local.get $len))
     (i32.store8 (local.get $wordBase) (local.get $len))
     (call $push (local.get $wordBase)))
-  (data (i32.const 0x209b4) "\a4\09\02\00" "\04" "WORD   " "\ad\00\00\00")
-  (elem (i32.const 0xad) $WORD)
+  (data (i32.const 0x209c4) "\b4\09\02\00" "\04" "WORD   " "\ae\00\00\00")
+  (elem (i32.const 0xae) $WORD)
 
   ;; 15.6.1.2465
   (func $WORDS (param $tos i32) (result i32)
@@ -1992,8 +2008,8 @@
       (local.set $entryP (i32.load (local.get $entryP)))
       (br_if $loop (local.get $entryP)))
     (local.get $tos))
-  (data (i32.const 0x209c4) "\b4\09\02\00" "\05" "WORDS  " "\ae\00\00\00")
-  (elem (i32.const 0xae) $WORDS)
+  (data (i32.const 0x209d4) "\c4\09\02\00" "\05" "WORDS  " "\af\00\00\00")
+  (elem (i32.const 0xaf) $WORDS)
 
   ;; [6.1.2490](https://forth-standard.org/standard/core/XOR)
   (func $XOR (param $tos i32) (result i32)
@@ -2003,16 +2019,16 @@
                 (i32.xor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
                         (i32.load (local.get $bbtos))))
     (local.get $btos))
-  (data (i32.const 0x209d4) "\c4\09\02\00" "\03" "XOR" "\af\00\00\00")
-  (elem (i32.const 0xaf) $XOR)
+  (data (i32.const 0x209e4) "\d4\09\02\00" "\03" "XOR" "\b0\00\00\00")
+  (elem (i32.const 0xb0) $XOR)
 
   ;; [6.1.2500](https://forth-standard.org/standard/core/Bracket)
   (func $left-bracket (param $tos i32) (result i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (i32.store (i32.const 0x208a0 (; = body(STATE) ;)) (i32.const 0)))
-  (data (i32.const 0x209e0) "\d4\09\02\00" "\81" (; F_IMMEDIATE ;) "[  " "\b0\00\00\00")
-  (elem (i32.const 0xb0) $left-bracket)
+    (i32.store (i32.const 0x208b0 (; = body(STATE) ;)) (i32.const 0)))
+  (data (i32.const 0x209f0) "\e4\09\02\00" "\81" (; F_IMMEDIATE ;) "[  " "\b1\00\00\00")
+  (elem (i32.const 0xb1) $left-bracket)
 
   ;; [6.1.2510](https://forth-standard.org/standard/core/BracketTick)
   (func $bracket-tick (param $tos i32) (result i32)
@@ -2020,8 +2036,8 @@
     (call $ensureCompiling)
     (call $')
     (call $compilePushConst (call $pop)))
-  (data (i32.const 0x209ec) "\e0\09\02\00" "\83" (; F_IMMEDIATE ;) "[']" "\b1\00\00\00")
-  (elem (i32.const 0xb1) $bracket-tick)
+  (data (i32.const 0x209fc) "\f0\09\02\00" "\83" (; F_IMMEDIATE ;) "[']" "\b2\00\00\00")
+  (elem (i32.const 0xb2) $bracket-tick)
 
   ;; [6.1.2520](https://forth-standard.org/standard/core/BracketCHAR)
   (func $bracket-char (param $tos i32) (result i32)
@@ -2029,22 +2045,22 @@
     (call $ensureCompiling)
     (call $CHAR)
     (call $compilePushConst (call $pop)))
-  (data (i32.const 0x209f8) "\ec\09\02\00" "\86" (; F_IMMEDIATE ;) "[CHAR] " "\b2\00\00\00")
-  (elem (i32.const 0xb2) $bracket-char)
+  (data (i32.const 0x20a08) "\fc\09\02\00" "\86" (; F_IMMEDIATE ;) "[CHAR] " "\b3\00\00\00")
+  (elem (i32.const 0xb3) $bracket-char)
 
   ;; [6.2.2535](https://forth-standard.org/standard/core/bs)
   (func $\ (param $tos i32) (result i32)
     (drop (drop (call $parse (i32.const 0x0a (; '\n' ;)))))
     (local.get $tos))
-  (data (i32.const 0x20a08) "\f8\09\02\00" "\81" (; F_IMMEDIATE ;) "\5c  " "\b3\00\00\00")
-  (elem (i32.const 0xb3) $\)
+  (data (i32.const 0x20a18) "\08\0a\02\00" "\81" (; F_IMMEDIATE ;) "\5c  " "\b4\00\00\00")
+  (elem (i32.const 0xb4) $\)
 
   ;; [6.1.2540](https://forth-standard.org/standard/right-bracket)
   (func $right-bracket (param $tos i32) (result i32)
-    (i32.store (i32.const 0x208a0 (; = body(STATE) ;)) (i32.const 1))
+    (i32.store (i32.const 0x208b0 (; = body(STATE) ;)) (i32.const 1))
     (local.get $tos))
-  (data (i32.const 0x20a14) "\08\0a\02\00" "\01" "]  " "\b4\00\00\00")
-  (elem (i32.const 0xb4) $right-bracket)
+  (data (i32.const 0x20a24) "\18\0a\02\00" "\01" "]  " "\b5\00\00\00")
+  (elem (i32.const 0xb5) $right-bracket)
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2082,7 +2098,7 @@
               ;; It's a number. Are we compiling?
               (then 
                 (local.set $number)
-                (if (i32.load (i32.const 0x208a0 (; = body(STATE) ;)))
+                (if (i32.load (i32.const 0x208b0 (; = body(STATE) ;)))
                   (then
                     ;; We're compiling. Pop it off the stack and 
                     ;; add it to the compiled list
@@ -2098,7 +2114,7 @@
             ;; Name found in the dictionary. 
             ;; Are we compiling and is the word non-immediate?
             (if (i32.and
-                  (i32.load (i32.const 0x208a0 (; = body(STATE) ;)))
+                  (i32.load (i32.const 0x208b0 (; = body(STATE) ;)))
                   (i32.ne (local.get $FINDResult) (i32.const 1)))
               (then
                 ;; We're compiling a non-immediate. 
@@ -2137,7 +2153,7 @@
     (global.set $tos (local.get $tos))
     (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
     (global.set $sourceID (i32.const 0))
-    (i32.store (i32.const 0x208a0 (; = body(STATE) ;)) (i32.const 0))
+    (i32.store (i32.const 0x208b0 (; = body(STATE) ;)) (i32.const 0))
     (unreachable))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2158,9 +2174,9 @@
   (global $sourceID (mut i32) (i32.const 0))
 
   ;; Dictionary pointers
-  (global $latest (mut i32) (i32.const 0x20a14))
-  (global $here (mut i32) (i32.const 0x20a20))
-  (global $nextTableIndex (mut i32) (i32.const 0xb5))
+  (global $latest (mut i32) (i32.const 0x20a24))
+  (global $here (mut i32) (i32.const 0x20a30))
+  (global $nextTableIndex (mut i32) (i32.const 0xb6))
 
   ;; Pictured output pointer
   (global $po (mut i32) (i32.const -1))
@@ -2688,7 +2704,7 @@
 
   (func $ensureCompiling (param $tos i32) (result i32)
     (local.get $tos) 
-    (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x208a0 (; = body(STATE) ;))))
+    (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x208b0 (; = body(STATE) ;))))
       (call $fail (i32.const 0x2002e (; = str("word not supported in interpret mode") ;)))))
 
   ;; LEB128 with fixed 4 bytes (with padding bytes)
@@ -2958,7 +2974,7 @@
         ;; Show prompt
         (if (i32.eqz (local.get $silent))
           (then
-            (if (i32.ge_s (i32.load (i32.const 0x208a0 (; = body(STATE) ;))) (i32.const 0))
+            (if (i32.ge_s (i32.load (i32.const 0x208b0 (; = body(STATE) ;))) (i32.const 0))
               (then
                 ;; Write ok
                 (call $shell_emit (i32.const 111))

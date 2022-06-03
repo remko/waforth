@@ -691,17 +691,17 @@ T{ PARSE-NAME-TEST abcde           abcde
 \ T{ ' DUP IS DEFER2 -> }T
 \ T{ 1 DEFER2 -> 1 1 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING HOLDS  (Forth 2012)
+\ -----------------------------------------------------------------------------
+TESTING HOLDS  (Forth 2012)
 
-\ : HTEST S" Testing HOLDS" ;
-\ : HTEST2 S" works" ;
-\ : HTEST3 S" Testing HOLDS works 123" ;
-\ T{ 0 0 <#  HTEST HOLDS #> HTEST S= -> TRUE }T
-\ T{ 123 0 <# #S BL HOLD HTEST2 HOLDS BL HOLD HTEST HOLDS #>
-\    HTEST3 S= -> TRUE }T
-\ T{ : HLD HOLDS ; -> }T
-\ T{ 0 0 <#  HTEST HLD #> HTEST S= -> TRUE }T
+: HTEST S" Testing HOLDS" ;
+: HTEST2 S" works" ;
+: HTEST3 S" Testing HOLDS works 123" ;
+T{ 0 0 <#  HTEST HOLDS #> HTEST S= -> TRUE }T
+T{ 123 0 <# #S BL HOLD HTEST2 HOLDS BL HOLD HTEST HOLDS #>
+   HTEST3 S= -> TRUE }T
+T{ : HLD HOLDS ; -> }T
+T{ 0 0 <#  HTEST HLD #> HTEST S= -> TRUE }T
 
 \ -----------------------------------------------------------------------------
 TESTING REFILL SOURCE-ID
