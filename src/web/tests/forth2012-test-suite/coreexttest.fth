@@ -320,19 +320,19 @@ T{ MAX-INT MAX-INT MAX-INT WITHIN -> FALSE }T
 \ T{ : AG0 701 BEGIN DUP 7 MOD 0= IF EXIT THEN 1+ AGAIN ; -> }T
 \ T{ AG0 -> 707 }T
 
-\ \ -----------------------------------------------------------------------------
-\ TESTING MARKER   (contributed by James Bowman)
+\ -----------------------------------------------------------------------------
+TESTING MARKER   (contributed by James Bowman)
 
-\ T{ : MA? BL WORD FIND NIP 0<> ; -> }T
-\ T{ MARKER MA0 -> }T
-\ T{ : MA1 111 ; -> }T
-\ T{ MARKER MA2 -> }T
-\ T{ : MA1 222 ; -> }T
-\ T{ MA? MA0 MA? MA1 MA? MA2 -> TRUE TRUE TRUE }T
-\ T{ MA1 MA2 MA1 -> 222 111 }T
-\ T{ MA? MA0 MA? MA1 MA? MA2 -> TRUE TRUE FALSE }T
-\ T{ MA0 -> }T
-\ T{ MA? MA0 MA? MA1 MA? MA2 -> FALSE FALSE FALSE }T
+T{ : MA? BL WORD FIND NIP 0<> ; -> }T
+T{ MARKER MA0 -> }T
+T{ : MA1 111 ; -> }T
+T{ MARKER MA2 -> }T
+T{ : MA1 222 ; -> }T
+T{ MA? MA0 MA? MA1 MA? MA2 -> TRUE TRUE TRUE }T
+T{ MA1 MA2 MA1 -> 222 111 }T
+T{ MA? MA0 MA? MA1 MA? MA2 -> TRUE TRUE FALSE }T
+T{ MA0 -> }T
+T{ MA? MA0 MA? MA1 MA? MA2 -> FALSE FALSE FALSE }T
 
 \ -----------------------------------------------------------------------------
 TESTING ?DO
