@@ -10,8 +10,8 @@
 
 #define CORE_TABLE_EXPORT_INDEX 0
 #define CORE_MEMORY_EXPORT_INDEX 1
-#define CORE_ERROR_EXPORT_INDEX 6
-#define CORE_RUN_EXPORT_INDEX 7
+#define CORE_RUN_EXPORT_INDEX 2
+#define CORE_ERROR_EXPORT_INDEX 9
 
 #define ERR_UNKNOWN 0x1
 #define ERR_QUIT 0x2
@@ -213,6 +213,8 @@ int main(int argc, char *argv_main[]) {
       wasm_trap_delete(trap);
       break;
     default:
+      printf("unknown error: %d\n", err_results.data[0].of.i32);
+      print_trap(trap);
       assert(false);
     }
   }

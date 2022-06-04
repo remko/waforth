@@ -67,6 +67,10 @@ waforth_core.h: waforth_core.wasm
 package: waforth
 	tar czf waforth-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforth
 
+.PHONY: check
+check:
+	echo "" | ./waforth
+	
 .PHONY: clean
 clean:
 	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.tgz

@@ -2067,6 +2067,63 @@
   ;; Interpreter
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+  ;; Run the interpreter loop, until no more user input is available (or until
+  ;; execution is aborted using QUIT)
+  (func $run (export "run") (param $silent i32)
+    (local $state i32)
+    (local $tos i32)
+
+    ;; Load the top-of-stack (TOS) pointer as a local, and thread it through the execution.
+    ;; The global TOS pointer will not be accurate until it is reset at the end of the loop,
+    ;; at abort time, or at shell `call` time.
+    ;;
+    ;; Put the local value on the WASM operand stack, so it is threaded through the loop.
+    (local.tee $tos (global.get $tos))
+
+    ;; In case a trap occurs, make sure the error is set to an unknown error.
+    ;; We'll reset the error to a real value later if no trap occurs.
+    (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
+
+    ;; Start looping until there is no more input
+    (block $endLoop (param i32) (result i32)
+      (loop $loop (param i32) (result i32)
+        ;; Fill the input buffer with user input
+        (call $REFILL)
+        (br_if $endLoop (i32.eqz (call $pop)))
+
+        ;; Run the interpreter loop on the entire input buffer
+        (local.set $tos (call $interpret))
+
+        ;; Check for stack underflow
+        (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
+          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
+
+        ;; Show prompt
+        (if (i32.eqz (local.get $silent))
+          (then
+            (if (i32.ge_s (i32.load (i32.const 0x208b0 (; = body(STATE) ;))) (i32.const 0))
+              (then
+                ;; Write ok
+                (call $shell_emit (i32.const 111))
+                (call $shell_emit (i32.const 107)))
+              (else
+                ;; Write error
+                (call $shell_emit (i32.const 101))
+                (call $shell_emit (i32.const 114))
+                (call $shell_emit (i32.const 114))
+                (call $shell_emit (i32.const 111))
+                (call $shell_emit (i32.const 114))))
+            (call $shell_emit (i32.const 10))))
+        (local.get $tos)
+        (br $loop)))
+      
+      ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
+      (global.set $tos)
+
+      ;; End of input was reached
+      (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
+
+
   ;; Interpret the string in the input buffer word by word, until 
   ;; the end of the input buffer is reached.
   ;;
@@ -2940,62 +2997,6 @@
   ;; API Functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-  ;; Run the interpreter loop, until no more user input is available (or until
-  ;; execution is aborted using QUIT)
-  (func $run (export "run") (param $silent i32)
-    (local $state i32)
-    (local $tos i32)
-
-    ;; Load the top-of-stack (TOS) pointer as a local, and thread it through the execution.
-    ;; The global TOS pointer will not be accurate until it is reset at the end of the loop,
-    ;; at abort time, or at shell `call` time.
-    ;;
-    ;; Put the local value on the WASM operand stack, so it is threaded through the loop.
-    (local.tee $tos (global.get $tos))
-
-    ;; In case a trap occurs, make sure the error is set to an unknown error.
-    ;; We'll reset the error to a real value later if no trap occurs.
-    (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
-
-    ;; Start looping until there is no more input
-    (block $endLoop (param i32) (result i32)
-      (loop $loop (param i32) (result i32)
-        ;; Fill the input buffer with user input
-        (call $REFILL)
-        (br_if $endLoop (i32.eqz (call $pop)))
-
-        ;; Run the interpreter loop on the entire input buffer
-        (local.set $tos (call $interpret))
-
-        ;; Check for stack underflow
-        (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
-
-        ;; Show prompt
-        (if (i32.eqz (local.get $silent))
-          (then
-            (if (i32.ge_s (i32.load (i32.const 0x208b0 (; = body(STATE) ;))) (i32.const 0))
-              (then
-                ;; Write ok
-                (call $shell_emit (i32.const 111))
-                (call $shell_emit (i32.const 107)))
-              (else
-                ;; Write error
-                (call $shell_emit (i32.const 101))
-                (call $shell_emit (i32.const 114))
-                (call $shell_emit (i32.const 114))
-                (call $shell_emit (i32.const 111))
-                (call $shell_emit (i32.const 114))))
-            (call $shell_emit (i32.const 10))))
-        (local.get $tos)
-        (br $loop)))
-      
-      ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
-      (global.set $tos)
-
-      ;; End of input was reached
-      (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
-
   (func (export "push") (param $v i32)
     (global.set $tos (call $push (global.get $tos) (local.get $v))))
 
