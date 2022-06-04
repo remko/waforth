@@ -18,8 +18,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
       - run: |
-          make -C src/standalone install-deps package check
+          make -C src/standalone install-deps package
           shasum src/standalone/waforth*
+      - run: make -C src/standalone check
       - name: "Upload artifacts"
         run: |
           ls -l src/standalone
