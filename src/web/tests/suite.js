@@ -1578,6 +1578,25 @@ function loadTests() {
       });
     });
 
+    describe("DEFER", () => {
+      it("should work", () => {
+        run("DEFER DEFER1");
+        run("' * ' DEFER1 DEFER!");
+        run("2 3 DEFER1");
+        expect(stackValues()).to.eql([6]);
+      });
+    });
+
+    describe("IS", () => {
+      it("should work compiled", () => {
+        run("DEFER DEFER1");
+        run(": IS-DEFER1 IS DEFER1 ;");
+        run("' - IS-DEFER1");
+        run("1 2 DEFER1");
+        expect(stackValues()).to.eql([-1]);
+      });
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);
