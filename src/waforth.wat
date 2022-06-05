@@ -1395,33 +1395,7 @@
 
   ;; [6.2.1725](https://forth-standard.org/standard/core/IS)
   (func $IS (param $tos i32) (result i32)
-    (local $xtp i32)
-    (local $btos i32)
-    (local.set $xtp 
-      (i32.add
-        (call $body (drop (call $find! (call $parseName))))
-        (i32.const 4)))
-    (if (result i32) (i32.eqz (i32.load (i32.const 0x2092c (; = body(STATE) ;))))
-      (then
-        (i32.store (local.get $xtp)
-          (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-        (local.get $btos))
-      (else
-        (call $emitSetLocal (i32.const 0)) ;; Save tos currently on operand stack
-
-        ;; Push parameter pointer on operand stack
-        (call $emitConst (local.get $xtp))
-
-        ;; Pop value from stack & push on operand stack
-        (call $emitGetLocal (i32.const 0))
-        (call $emitConst (i32.const 4))
-        (call $emitSub)
-        (call $emitTeeLocal (i32.const 0))
-        (call $emitLoad)
-
-        (call $emitStore)
-        (call $emitGetLocal (i32.const 0)) ;; Put tos on operand stack again
-        (local.get $tos))))
+    (call $to (local.get $tos)))
   (data (i32.const 0x20690) "\80\06\02\00" "\82" (; F_IMMEDIATE ;) "IS " "\79\00\00\00")
   (elem (i32.const 0x79) $IS)
 
@@ -1916,14 +1890,8 @@
 
   ;; [6.2.2295](https://forth-standard.org/standard/core/TO)
   (func $TO (param $tos i32) (result i32)
-    (local $v i32)
-    (local $xt i32)
-    (local $btos i32)
-    (local.set $xt (drop (call $find! (call $parseName))))
-    (i32.store (i32.add (call $body (local.get $xt)) (i32.const 4)) 
-      (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-    (local.get $btos))
-  (data (i32.const 0x20950) "\40\09\02\00" "\02" "TO " "\a6\00\00\00")
+    (call $to (local.get $tos)))
+  (data (i32.const 0x20950) "\40\09\02\00" "\82" (; F_IMMEDIATE ;) "TO " "\a6\00\00\00")
   (elem (i32.const 0xa6) $TO)
 
   ;; [6.2.2298](https://forth-standard.org/standard/core/TRUE)
@@ -2876,6 +2844,35 @@
         (call $shell_emit (i32.load8_u (local.get $p)))
         (local.set $p (i32.add (local.get $p) (i32.const 1)))
         (br $loop))))
+
+  (func $to (param $tos i32) (result i32)
+    (local $dp i32)
+    (local $btos i32)
+    (local.set $dp 
+      (i32.add
+        (call $body (drop (call $find! (call $parseName))))
+        (i32.const 4)))
+    (if (result i32) (i32.eqz (i32.load (i32.const 0x2092c (; = body(STATE) ;))))
+      (then
+        (i32.store (local.get $dp)
+          (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
+        (local.get $btos))
+      (else
+        (call $emitSetLocal (i32.const 0)) ;; Save tos currently on operand stack
+
+        ;; Push parameter pointer on operand stack
+        (call $emitConst (local.get $dp))
+
+        ;; Pop value from stack & push on operand stack
+        (call $emitGetLocal (i32.const 0))
+        (call $emitConst (i32.const 4))
+        (call $emitSub)
+        (call $emitTeeLocal (i32.const 0))
+        (call $emitLoad)
+
+        (call $emitStore)
+        (call $emitGetLocal (i32.const 0)) ;; Put tos on operand stack again
+        (local.get $tos))))
 
   (func $ensureCompiling (param $tos i32) (result i32)
     (local.get $tos) 

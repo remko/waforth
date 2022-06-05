@@ -414,8 +414,8 @@ T{ : VD1 VAL1 ; -> }T
 T{ VD1 -> 222 }T
 T{ : VD2 TO VAL2 ; -> }T
 T{ VAL2 -> -999 }T
-\ T{ -333 VD2 -> }T
-\ T{ VAL2 -> -333 }T
+T{ -333 VD2 -> }T
+T{ VAL2 -> -333 }T
 T{ VAL1 -> 222 }T
 T{ 123 VALUE VAL3 IMMEDIATE VAL3 -> 123 }T
 T{ : VD3 VAL3 LITERAL ; VD3 -> 123 }T
