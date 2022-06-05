@@ -526,21 +526,21 @@ T{ : Q DUP+ COMPILE, ; -> }T
 T{ : AS1 [ Q ] ; -> }T
 T{ 123 AS1 -> 246 }T
 
-\ \ -----------------------------------------------------------------------------
-\ \ Cannot automatically test SAVE-INPUT and RESTORE-INPUT from a console source
+\ -----------------------------------------------------------------------------
+\ Cannot automatically test SAVE-INPUT and RESTORE-INPUT from a console source
 
-\ TESTING SAVE-INPUT and RESTORE-INPUT with a string source
+TESTING SAVE-INPUT and RESTORE-INPUT with a string source
 
-\ VARIABLE SI_INC 0 SI_INC !
+VARIABLE SI_INC 0 SI_INC !
 
-\ : SI1
-\    SI_INC @ >IN +!
-\    15 SI_INC !
-\ ;
+: SI1
+   SI_INC @ >IN +!
+   15 SI_INC !
+;
 
-\ : S$ S" SAVE-INPUT SI1 RESTORE-INPUT 12345" ;
+: S$ S" SAVE-INPUT SI1 RESTORE-INPUT 12345" ;
 
-\ T{ S$ EVALUATE SI_INC @ -> 0 2345 15 }T
+T{ S$ EVALUATE SI_INC @ -> 0 2345 15 }T
 
 \ -----------------------------------------------------------------------------
 TESTING .(

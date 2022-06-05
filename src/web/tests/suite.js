@@ -1597,6 +1597,16 @@ function loadTests() {
       });
     });
 
+    describe("SAVE-INPUT/RESTORE-INPUT", () => {
+      it("should work", () => {
+        run("VARIABLE SI_INC 0 SI_INC !");
+        run(": SI1 SI_INC @ >IN +!  15 SI_INC ! ;");
+        run(': S$ S" SAVE-INPUT SI1 RESTORE-INPUT 12345" ;');
+        run("S$ EVALUATE SI_INC @");
+        expect(stackValues()).to.eql([0, 2345, 15]);
+      });
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);
