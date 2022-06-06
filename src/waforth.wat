@@ -1304,13 +1304,11 @@
           (local.tee $n1 (i64.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))))
           (local.tee $n2 (i64.extend_i32_s (local.tee $n2_32 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))))))
     (local.set $q (i32.wrap_i64 (i64.div_s (local.get $n1) (local.get $n2))))
-    (if 
-        (i32.and 
-          (i32.ne (local.get $mod (i32.const 0))) 
-          (i64.lt_s (i64.xor (local.get $n1) (local.get $n2)) (i64.const 0)))
-      (then
-        (local.set $q (i32.sub (local.get $q) (i32.const 1)))
-        (local.set $mod (i32.add (local.get $mod) (local.get $n2_32)))))
+    (block
+      (br_if 0 (i32.eqz (local.get $mod)))
+      (br_if 0 (i64.ge_s (i64.xor (local.get $n1) (local.get $n2)) (i64.const 0)))
+      (local.set $q (i32.sub (local.get $q) (i32.const 1)))
+      (local.set $mod (i32.add (local.get $mod) (local.get $n2_32))))
     (i32.store (local.get $bbbtos) (local.get $mod))
     (i32.store (i32.sub (local.get $tos) (i32.const 8)) (local.get $q))
     (local.get $btos))
@@ -2251,19 +2249,20 @@
                 (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
           (else 
             ;; Name found in the dictionary. 
-            ;; Are we compiling and is the word non-immediate?
-            (if (i32.and
-                  (i32.load (i32.const 0x2092c (; = body(STATE) ;)))
-                  (i32.ne (local.get $FINDResult) (i32.const 1)))
-              (then
-                ;; We're compiling a non-immediate. 
-                ;; Compile the execution of the word into the current compilation body.
-                (local.set $tos (call $compileExecute (local.get $tos) (local.get $FINDToken))))
-              (else
-                ;; We're not compiling, or this is an immediate word
-                ;; Execute the word.
-                (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))))
-          (br $loop)))
+            (block
+              ;; Are we interpreting?
+              (br_if 0 (i32.eqz (i32.load (i32.const 0x2092c (; = body(STATE) ;)))))
+              ;; Is the word immediate?
+              (br_if 0 (i32.eq (local.get $FINDResult) (i32.const 1)))
+
+              ;; We're compiling a non-immediate. 
+              ;; Compile the execution of the word into the current compilation body.
+              (local.set $tos (call $compileExecute (local.get $tos) (local.get $FINDToken)))
+              (br $loop))
+            ;; We're interpreting, or this is an immediate word
+            ;; Execute the word.
+            (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))
+        (br $loop)))
     (local.get $tos))
 
   ;; Execute the given execution token
@@ -2396,8 +2395,9 @@
       (call $leb128-4p (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
     ;; Write a name section (if we're ending the code for the current dictionary entry)
-    (if (i32.eq (i32.load (call $body (global.get $latest)))
-                (global.get $nextTableIndex))
+    (if (i32.eq 
+          (i32.load (call $body (global.get $latest))) 
+          (global.get $nextTableIndex))
       (then
         (local.set $nameLength (i32.and (i32.load8_u (i32.add (global.get $latest) (i32.const 4)))
                                         (i32.const 0x1f (; = LENGTH_MASK ;))))
@@ -2608,12 +2608,11 @@
     (local $btos i32)
     (block $endLoop
       (loop $loop
+        (br_if $endLoop (i32.le_u (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;))))
         (br_if $endLoop 
-          (i32.or
-            (i32.le_u (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-            (i32.ne 
-              (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
-              (i32.or (global.get $branchNesting) (i32.const 0x80000000 (; dest bit ;))))))
+          (i32.ne 
+            (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
+            (i32.or (global.get $branchNesting) (i32.const 0x80000000 (; dest bit ;)))))
         (call $emitEnd)
         (global.set $branchNesting (i32.sub (global.get $branchNesting) (i32.const 1)))
         (local.set $tos (local.get $btos))))
@@ -2662,15 +2661,16 @@
     (call $emit1v (i32.const 0x21) (local.get $n))
     (global.set $lastEmitWasGetTOS (i32.eqz (local.get $n))))
   (func $emitGetLocal (param $n i32)
-    (if (i32.or (i32.ne (local.get $n) (i32.const 0)) (i32.eqz (global.get $lastEmitWasGetTOS)))
-      (then
-        (call $emit1v (i32.const 0x20) (local.get $n)))
-      (else
-        ;; In case we have a TOS get after a TOS set, replace the previous one with tee.
-        ;; Doesn't seem to have much of a performance impact, but this makes the code a little bit shorter, 
-        ;; and easier to step through.
-        (i32.store8 (i32.sub (global.get $cp) (i32.const 2)) (i32.const 0x22))))
-        (global.set $lastEmitWasGetTOS (i32.const 0)))
+    (block
+      (br_if 0 (local.get $n))
+      (br_if 0 (i32.eqz (global.get $lastEmitWasGetTOS)))
+      ;; In case we have a TOS get after a TOS set, replace the previous one with tee.
+      ;; Doesn't seem to have much of a performance impact, but this makes the code a little bit shorter, 
+      ;; and easier to step through.
+      (i32.store8 (i32.sub (global.get $cp) (i32.const 2)) (i32.const 0x22))
+      (global.set $lastEmitWasGetTOS (i32.const 0))
+      (return))
+    (call $emit1v (i32.const 0x20) (local.get $n)))
   (func $emitTeeLocal (param $n i32) (call $emit1v (i32.const 0x22) (local.get $n)))
   (func $emitAdd (call $emit0 (i32.const 0x6a)))
   (func $emitSub (call $emit0 (i32.const 0x6b)))
@@ -2912,15 +2912,17 @@
     (loop $loop
       (local.set $byte (i32.and (i32.const 0x7F) (local.get $value)))
       (local.set $value (i32.shr_s (local.get $value) (i32.const 7)))
-      (if (i32.or (i32.and (i32.eqz (local.get $value)) 
-                            (i32.eqz (i32.and (local.get $byte) (i32.const 0x40))))
-                  (i32.and (i32.eq (local.get $value) (i32.const -1))
-                            (i32.eq (i32.and (local.get $byte) (i32.const 0x40))
-                                    (i32.const 0x40))))
-        (then
-          (local.set $more (i32.const 0)))
-        (else
-          (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))))
+      (block $next
+        (block
+          (br_if 0 (i32.and 
+              (i32.eqz (local.get $value)) 
+              (i32.eqz (i32.and (local.get $byte) (i32.const 0x40)))))
+          (br_if 0 (i32.and 
+              (i32.eq (local.get $value) (i32.const -1))
+              (i32.eq (i32.and (local.get $byte) (i32.const 0x40)) (i32.const 0x40))))
+          (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))
+          (br $next))
+        (local.set $more (i32.const 0)))
       (i32.store8 (local.get $p) (local.get $byte))
       (local.set $p (i32.add (local.get $p) (i32.const 1)))
       (br_if $loop (local.get $more)))
@@ -3066,22 +3068,21 @@
     (local $entryLF i32)
     (local.set $entryP (global.get $latest))
     (loop $loop
-      (if 
+      (block
+        (br_if 0 
           (i32.and 
-            (i32.eqz
-              (i32.and 
-                (local.tee $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
-                (i32.const 0x20 (; = F_HIDDEN ;))))
+            (local.tee $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
+            (i32.const 0x20 (; = F_HIDDEN ;))))
+        (br_if 0 
+          (i32.eqz
             (call $stringEqual 
               (local.get $addr) (local.get $len)
-              (i32.add (local.get $entryP) (i32.const 5)) (i32.and (local.get $entryLF) (i32.const 0x1f (; = LENGTH_MASK ;)))))
-        (then
-          (return
-            (local.get $entryP)
-            (select 
-              (i32.const -1)
-              (i32.const 1)
-              (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))))))
+              (i32.add (local.get $entryP) (i32.const 5)) (i32.and (local.get $entryLF) (i32.const 0x1f (; = LENGTH_MASK ;))))))
+        (local.get $entryP)
+        (if (result i32) (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x80 (; = F_IMMEDIATE ;))))
+          (then (i32.const -1))
+          (else (i32.const 1)))
+        (return))
       (local.set $entryP (i32.load (local.get $entryP)))
       (br_if $loop (local.get $entryP)))
     (i32.const 0) (i32.const 0))
