@@ -5,7 +5,7 @@
 [![Build](https://github.com/remko/waforth/actions/workflows/build.yml/badge.svg)](https://github.com/remko/waforth/actions/workflows/build.yml)
 
 
-WAForth is a small bootstrapping Forth interpreter and dynamic compiler for
+WAForth is a small but complete bootstrapping Forth interpreter and dynamic compiler for
 [WebAssembly](https://webassembly.org). You can see it in action
 [in an interactive Forth console](https://mko.re/waforth/), and in [a Logo-like Turtle graphics language](https://mko.re/thurtle/).
 
@@ -148,12 +148,10 @@ Here are some of the goals (and non-goals) of WAForth:
 - ✅ **Simplicity**: Keep the code as simple and clean as possible. Raw WebAssembly requires more effort to maintain than code in a high level language, so avoid complexity if you can.
 - ✅ **Completeness**: Implement a complete (and correct) Forth system, following the [ANS Standard](http://lars.nocrew.org/dpans/dpans.htm), including all [ANS Core words](http://lars.nocrew.org/dpans/dpans6.htm#6.1).
 - ❓ **Speed**: If some speed gains can be gotten without paying much in simplicity (e.g. better design of the system, more efficient implementation of words, simple compiler improvements, ...), then I do it. However, generating the most efficient code would require a smart compiler, and a smart compiler would introduce a lot of complexity if implemented in raw WebAssembly, so speed is not an ultimate goal. Although the low level of WebAssembly gives some speed advantages, the design of the system will cause execution to consist almost exclusively of indirect calls to small functions, so there will be languages targeting WebAssembly that run faster.
-- ❌ **Binary size**: Since the entire system is written in raw WebAssembly, and since one of the main goals is simplicity, the resulting binary size is naturally quite small (±12k). However, I don't do any special efforts to save bytes here and there in the code (or the generated code) if it makes things more complex.
-- ❌ **Ease of use**: Like most Forths, I currently don't do much effort to provide functionality to make Forth programming easy and safe (helpful errors, stacktraces, strict bounds checks, ...). However, the compiler emits debug information to help step through the WebAssembly code of words, and I hope to add more debugging aids to the compiler in the future (if it doesn't add too much complexity)
+- ❓ **Binary size**: Since the entire system is written in raw WebAssembly, and since one of the main goals is simplicity, the resulting binary size is naturally quite small (±12k). However, I don't do any special efforts to save bytes here and there in the code (or the generated code) if it makes things more complex.
+- ❓ **Ease of use**: Like most Forths, I currently don't do much effort to provide functionality to make Forth programming easy and safe (helpful errors, stacktraces, strict bounds checks, ...). However, the compiler emits debug information to help step through the WebAssembly code of words, and I hope to add more debugging aids to the compiler in the future (if it doesn't add too much complexity)
 
-![Debugger view of a compiled
-word](doc/debugger.png "Debugger view of a
-compiled word")
+![Debugger view of a compiled word](doc/debugger.png "Debugger view of a compiled word")
 
 ## Development
 
