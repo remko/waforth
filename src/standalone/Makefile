@@ -1,6 +1,13 @@
 UNAME_S=$(shell uname -s)
 UNAME_P=$(shell uname -p)
 
+ifeq (, $(shell which gtar))
+TAR := tar
+else
+# bsd-tar corrupts files on GitHub: https://github.com/actions/virtual-environments/issues/2619
+TAR := gtar
+endif
+
 .DEFAULT_GOAL := all
 
 ################################################
@@ -65,7 +72,7 @@ waforth_core.h: waforth_core.wasm
 
 .PHONY: package
 package: waforth
-	tar czf waforth-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforth
+	$(TAR) czf waforth-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforth
 
 .PHONY: check
 check:
