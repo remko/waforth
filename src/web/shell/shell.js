@@ -23,15 +23,29 @@ consoleEl.addEventListener("click", () => {
 
 let currentConsoleEl;
 let currentConsoleElIsInput = false;
-function output(s, isInput) {
+let outputBuffer = [];
+function flush() {
+  if (outputBuffer.length == 0) {
+    return;
+  }
+  currentConsoleEl.appendChild(document.createTextNode(outputBuffer.join("")));
+  outputBuffer = [];
+  document.querySelector(".cursor").scrollIntoView(false);
+}
+function output(s, isInput, forceFlush = false) {
+  if (currentConsoleEl != null && currentConsoleElIsInput !== isInput) {
+    flush();
+  }
   if (currentConsoleEl == null || currentConsoleElIsInput !== isInput) {
     currentConsoleEl = document.createElement("span");
     currentConsoleEl.className = isInput ? "in" : "out";
     currentConsoleElIsInput = isInput;
     consoleEl.insertBefore(currentConsoleEl, cursorEl);
   }
-  currentConsoleEl.appendChild(document.createTextNode(s));
-  document.querySelector(".cursor").scrollIntoView(false);
+  outputBuffer.push(s);
+  if (forceFlush || isInput || s.endsWith("\n")) {
+    flush();
+  }
 }
 function unoutput(isInput) {
   if (
@@ -99,7 +113,7 @@ forth.onEmit = (c) => {
 
 clearConsole();
 
-output("Loading core ... ", false);
+output("Loading core ... ", false, true);
 forth.load().then(
   () => {
     clearConsole();
