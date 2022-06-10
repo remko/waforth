@@ -17,13 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
-      - run: |
-          make -C src/standalone install-deps package
-          shasum src/standalone/waforth*
+      - run: make -C src/standalone install-deps package
       - run: make -C src/standalone check
       - name: "Upload artifacts"
         run: |
-          ls -l src/standalone
           for f in src/standalone/waforth-*.tgz; do
             curl --fail \
               -H "Authorization: token $GITHUB_TOKEN" \
