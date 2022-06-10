@@ -96,7 +96,8 @@ function startConsole() {
       inputbuffer = [];
     }
     if (newInputBuffer.length > 0) {
-      output(newInputBuffer.join(""));
+      output(newInputBuffer.join(""), true);
+      flush();
     }
     inputbuffer = newInputBuffer;
   });
