@@ -22,9 +22,12 @@ all built-in words comes down to 14k (7k gzipped), with an extra 15k (7k gzipped
 and encoding overhead.
 
 WAForth implements all [ANS Core
-Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1) (and passes
-[Forth 200x Test Suite](https://forth-standard.org/standard/testsuite)
-core word tests), and many [ANS Core Extension Words](http://lars.nocrew.org/dpans/dpans6.htm#6.2).
+Words](http://lars.nocrew.org/dpans/dpans6.htm#6.1) (and passes [Forth 200x
+Test Suite](https://forth-standard.org/standard/testsuite) core word tests),
+and many [ANS Core Extension
+Words](http://lars.nocrew.org/dpans/dpans6.htm#6.2). You can get the complete
+list of supported words [from the interactive
+console](https://mko.re/waforth/?p=WORDS).
 
 You can read more about the internals and the design of WAForth in the [Design
 document](doc/Design.md).
