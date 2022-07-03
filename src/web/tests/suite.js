@@ -1153,6 +1153,31 @@ function loadTests() {
       });
     });
 
+    describe('S\\"', () => {
+      it("should work", () => {
+        run(': FOO S\\" Foo \\"\\n B\\x61r\\m" ;');
+        run("FOO");
+        expect(stackValues()[1]).to.eql(12);
+        expect(getString(stackValues()[0], stackValues()[1])).to.eql(
+          'Foo "\n Bar\r\n'
+        );
+      });
+
+      it("should work with \\x", () => {
+        run(': FOO S\\" \\x6F" ;');
+        run("FOO");
+        expect(stackValues()[1]).to.eql(1);
+        expect(getString(stackValues()[0], stackValues()[1])).to.eql("o");
+      });
+
+      it("should work without escapes", () => {
+        run(': FOO S\\" Foo Bar" ;');
+        run("FOO");
+        expect(stackValues()[1]).to.eql(7);
+        expect(getString(stackValues()[0], stackValues()[1])).to.eql("Foo Bar");
+      });
+    });
+
     describe("TYPE", () => {
       it("should work", () => {
         run(': FOO S" Foo Bar" TYPE ;');
@@ -1685,6 +1710,7 @@ and again: -9876`);
           .include(`On the next 2 lines you should see First then Second messages:
 First message via .( 
 Second message via ."`);
+        expect(output).to.include("One line...\nanotherLine\n");
         run("#ERRORS @");
         if (tosValue() !== 0) {
           assert.fail(output);
