@@ -47,6 +47,7 @@ function output(s, isInput, forceFlush = false) {
     flush();
   }
 }
+
 function unoutput(isInput) {
   if (
     currentConsoleElIsInput !== isInput ||
@@ -57,6 +58,7 @@ function unoutput(isInput) {
   }
   currentConsoleEl.lastChild.remove();
 }
+
 function startConsole() {
   let inputbuffer = [];
   document.addEventListener("keydown", (ev) => {
@@ -102,6 +104,7 @@ function startConsole() {
     inputbuffer = newInputBuffer;
   });
 }
+
 function clearConsole() {
   consoleEl.innerHTML = `<span class='header'><a target='_blank' href='https://github.com/remko/waforth'>WAForth (${version})</a>\n</span><span class="cursor"> </span><input type="text">`;
   inputEl = document.querySelector("input");
@@ -119,6 +122,27 @@ forth.load().then(
   () => {
     clearConsole();
     startConsole();
+
+    // Parse query string
+    const qs = {};
+    for (const p of window.location.search
+      .substring(window.location.search.indexOf("?") + 1)
+      .replace(/\+/, " ")
+      .split("&")) {
+      const j = p.indexOf("=");
+      if (j > 0) {
+        qs[decodeURIComponent(p.substring(0, j))] = decodeURIComponent(
+          p.substring(j + 1)
+        );
+      }
+    }
+    if (qs.p != null) {
+      for (const command of qs.p.split("\n")) {
+        output(command, true);
+        output(" ", true);
+        forth.interpret(command);
+      }
+    }
   },
   (e) => {
     console.error(e);
