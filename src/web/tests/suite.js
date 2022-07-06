@@ -45,7 +45,7 @@ function loadTests() {
       return x;
     });
 
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     function dumpTable() {
       for (let i = 0; i < core.table.length; ++i) {
         console.log("table", i, core.table.get(i));
@@ -72,7 +72,7 @@ function loadTests() {
       }
     }
 
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     function dumpWord(w) {
       let end = here();
       let p = latest();

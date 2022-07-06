@@ -6,13 +6,13 @@ const isSafari =
 
 const PAD_OFFSET = 400;
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 const arrayToBase64 =
   typeof Buffer === "undefined"
     ? function arrayToBase64(bytes: Uint8Array) {
-        var binary = "";
-        var len = bytes.byteLength;
-        for (var i = 0; i < len; i++) {
+        let binary = "";
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
           binary += String.fromCharCode(bytes[i]);
         }
         return window.btoa(binary);
@@ -101,8 +101,6 @@ class WAForth {
    * Needs to be called before interpret().
    */
   async load() {
-    let table: WebAssembly.Table;
-    let memory: WebAssembly.Memory;
     this.#buffer = "";
 
     const instance = await WebAssembly.instantiate(wasmModule, {
@@ -117,6 +115,7 @@ class WAForth {
           }
         },
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         read: (addr: number, length: number): number => {
           let input: string;
           const i = this.#buffer!.indexOf("\n");
@@ -153,7 +152,7 @@ class WAForth {
           if (isSafari) {
             // On Safari, using the original Uint8Array triggers a bug.
             // Taking an element-by-element copy of the data first.
-            let dataCopy = [];
+            const dataCopy = [];
             for (let i = 0; i < length; ++i) {
               dataCopy.push(data[i]);
             }
@@ -161,7 +160,7 @@ class WAForth {
           }
           // console.log("Load", arrayToBase64(data));
           try {
-            var module = new WebAssembly.Module(data);
+            const module = new WebAssembly.Module(data);
             new WebAssembly.Instance(module, {
               env: { table, memory },
             });
@@ -189,8 +188,8 @@ class WAForth {
       },
     });
     this.core = instance.instance;
-    table = this.core.exports.table as WebAssembly.Table;
-    memory = this.core.exports.memory as WebAssembly.Memory;
+    const table = this.core.exports.table as WebAssembly.Table;
+    const memory = this.core.exports.memory as WebAssembly.Memory;
   }
 
   memory(): WebAssembly.Memory {
@@ -215,6 +214,7 @@ class WAForth {
     (this.core!.exports.push as any)(n);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   pushString(s: string, offset = 0): number {
     const addr = this.here() + PAD_OFFSET;
     saveString(s, this.memory(), addr);

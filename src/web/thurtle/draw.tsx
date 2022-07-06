@@ -28,11 +28,11 @@ export default async function draw({
 }) {
   // Initialize state
   let rotation = 270;
-  let position = { x: 0, y: 0 };
-  let boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  const position = { x: 0, y: 0 };
+  const boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   let pen = PenState.Down;
   let visible = true;
-  let paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
+  const paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
 
   function updatePosition(x: number, y: number) {
     position.x = x;

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
+/* eslint @typescript-eslint/no-var-requires:0 */
 
 const esbuild = require("esbuild");
 const path = require("path");

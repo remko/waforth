@@ -5,7 +5,9 @@ env:
 extends:
   - 'eslint:recommended'
   - 'plugin:react/recommended'
-  - "plugin:react-hooks/recommended"
+  - 'plugin:react-hooks/recommended'
+  - 'plugin:@typescript-eslint/recommended'
+parser: '@typescript-eslint/parser'
 parserOptions:
   ecmaFeatures:
     jsx: true
@@ -14,6 +16,7 @@ parserOptions:
 plugins:
   - prettier
   - react
+  - '@typescript-eslint'
 settings:
   react:
     version: detect
@@ -21,3 +24,6 @@ rules:
   "prettier/prettier": "error"  
   react/display-name: 0
   react/prop-types: 0
+  "@typescript-eslint/explicit-module-boundary-types": 0
+  "@typescript-eslint/no-explicit-any": 0
+  "@typescript-eslint/no-non-null-assertion": 0

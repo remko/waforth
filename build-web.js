@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
+/* eslint @typescript-eslint/no-var-requires:0 */
 
 const esbuild = require("esbuild");
 const path = require("path");
@@ -7,7 +8,13 @@ const fs = require("fs");
 const { createServer } = require("http");
 const { wasmTextPlugin } = require("./scripts/esbuild/wasm-text");
 
-function withWatcher(config, handleBuildFinished = () => {}, port = 8880) {
+function withWatcher(
+  config,
+  handleBuildFinished = () => {
+    /* do nothing */
+  },
+  port = 8880
+) {
   const watchClients = [];
   createServer((req, res) => {
     return watchClients.push(

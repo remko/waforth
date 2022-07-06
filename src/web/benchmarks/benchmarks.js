@@ -7,7 +7,7 @@ import sieveJS from "./sieve/sieve.js";
 import update from "immutability-helper";
 import "./benchmarks.css";
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 const jsx = React;
 
 ////////////////////////////////////////////////////////////////////////////////

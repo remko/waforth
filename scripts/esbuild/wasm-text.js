@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* eslint @typescript-eslint/no-var-requires:0 */
 
 const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);

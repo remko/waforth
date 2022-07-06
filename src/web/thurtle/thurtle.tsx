@@ -423,7 +423,7 @@ function save(ev: MouseEvent, forceSaveAs?: boolean) {
   let name = programsEl.value;
   const program = getProgram(name);
   if (program?.isExample || forceSaveAs) {
-    let title = program?.isExample ? name + " (Copy)" : name;
+    const title = program?.isExample ? name + " (Copy)" : name;
     const newName = window.prompt("Program name", title);
     if (newName == null) {
       return;

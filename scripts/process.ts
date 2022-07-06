@@ -141,8 +141,6 @@ function parseDataElement(line: string): DataElement | null {
 
 const wat_file = "src/waforth.wat";
 
-const args = process.argv.slice(2);
-
 let lines = fs.readFileSync(wat_file).toString().split("\n");
 
 const updateValues = true;
@@ -152,10 +150,10 @@ const updateValues = true;
 ////////////////////////////////////////////////////////////////////////
 
 const stringElements: StringElement[] = [];
-let dictElements: DictElement[] = [];
+const dictElements: DictElement[] = [];
 const definitions: Record<string, number> = {};
 let currentFunc: string;
-for (let line of lines) {
+for (const line of lines) {
   // Parse function name
   let m = line.match(/\s*\(func ([^\s]+)\s/);
   if (m != null) {
@@ -281,7 +279,7 @@ function serializeStringData(el: StringElement): string {
   return `  (data (i32.const ${offset}) "${len}" "${escapeString(el.string)}")`;
 }
 
-let newLines = [];
+const newLines = [];
 for (const line of lines) {
   const dataElement = parseDataElement(line);
   if (dataElement != null) {
@@ -402,10 +400,10 @@ if (updateValues) {
     );
 
     let m = line.match(
-      /(.*\(global ([^\s]+) \(mut i32\) \(i32.const )([^\)\s]+)(\).*)/
+      /(.*\(global ([^\s]+) \(mut i32\) \(i32.const )([^)\s]+)(\).*)/
     );
     if (m != null) {
-      const [prefix, global, val, suffix] = m.slice(1);
+      const [prefix, global, , suffix] = m.slice(1);
       if (global === "$here") {
         line = prefix + "0x" + here.toString(16) + suffix;
       } else if (global === "$latest") {
@@ -424,7 +422,7 @@ if (updateValues) {
       line = m[1] + "0x" + nextTableIndex.toString(16) + m[3];
     }
 
-    m = line.match(/\s*\(elem \(i32.const ([^\)]+)\) ([^\)]+)\)/);
+    m = line.match(/\s*\(elem \(i32.const ([^)]+)\) ([^)]+)\)/);
     if (m != null) {
       const func = m[2];
       const el = dictElements.find((e) => e.func === func);

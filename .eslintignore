@@ -3,3 +3,4 @@ build/
 dist/
 src/web/benchmarks/sieve/sieve-c.js
 src/standalone/wasm-micro-runtime
+
