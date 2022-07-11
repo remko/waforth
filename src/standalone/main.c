@@ -46,7 +46,7 @@ void print_trap(wasm_trap_t *trap) {
 ////////////////////////////////////////////////////////////////////////////////
 
 wasm_trap_t *emit_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
-  printf("%c", args->data[0].of.i32);
+  putchar(args->data[0].of.i32);
   return NULL;
 }
 
