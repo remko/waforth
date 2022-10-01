@@ -64,7 +64,7 @@ engines have [known issues](https://github.com/remko/waforth/issues/6#issue-3268
 
 You can embed WAForth in any JavaScript application. 
 
-A [simple example](https://github.com/remko/waforth/blob/master/src/web/examples/prompt/prompt.ts) to illustrate starting WAForth, and binding JavaScript functions:
+A [simple example](https://github.com/remko/waforth/blob/master/src/web/examples/prompt/prompt.ts) ([CodePen](https://codepen.io/mko-re/pen/gOzzmXZ)) to illustrate starting WAForth, and binding JavaScript functions:
 
 ```typescript
 import WAForth from "waforth";
