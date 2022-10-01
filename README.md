@@ -78,7 +78,7 @@ import WAForth from "waforth";
   // Initialize WAForth
   const forth = new WAForth();
   forth.onEmit = (c) =>
-    log.appendChild(document.createTextNode(String.fromCharCode(c)));
+    log.appendChild(document.createTextNode(c));
   await forth.load();
 
   // Bind "prompt" call to a function that pops up a JavaScript 
