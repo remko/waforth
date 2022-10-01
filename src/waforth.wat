@@ -1792,8 +1792,8 @@
         (local.set $c (i32.load8_s (local.get $p)))
         (local.set $p (i32.add (local.get $p) (i32.const 1)))
         (br_if $endOfInput (i32.eq (local.get $c) (i32.const 0xa)))
-        (br_if $endOfInput (i32.eq (local.get $c) (i32.const 0x22 (; = '"';))))
-        (if (i32.eq (local.get $c) (i32.const 0x5c (; = '\';)))
+        (br_if $endOfInput (i32.eq (local.get $c) (i32.const 0x22 (; = '"' ;))))
+        (if (i32.eq (local.get $c) (i32.const 0x5c (; = '\\' ;)))
           (then
             ;; Read next character
             (br_if $endOfInput (i32.eq (local.get $p) (local.get $end)))
@@ -1812,7 +1812,7 @@
             (else (if (i32.eq (local.get $c) (i32.const 0x76 (; = 'v' ;))) (then (local.set $c (i32.const 0x0b)))
             (else (if (i32.eq (local.get $c) (i32.const 0x7a (; = 'z' ;))) (then (local.set $c (i32.const 0x00)))
             (else (if (i32.eq (local.get $c) (i32.const 0x22 (; = '"' ;))) (then (local.set $c (i32.const 0x22)))
-            (else (if (i32.eq (local.get $c) (i32.const 0x5c (; = '\' ;))) (then (local.set $c (i32.const 0x5c)))
+            (else (if (i32.eq (local.get $c) (i32.const 0x5c (; = '\\' ;))) (then (local.set $c (i32.const 0x5c)))
             (else (if (i32.eq (local.get $c) (i32.const 0x6d (; = 'm' ;))) 
               (then 
                 (i32.store8 (local.get $tp) (i32.const 0x0d))

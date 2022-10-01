@@ -45,7 +45,7 @@ type StringElement = {
 type DataElement = DictElement | StringElement;
 
 function unescapeString(s: string) {
-  return s.replace(/\\(..)/, (str: string, ...args: any[]) => {
+  return s.replace(/\\(..)/g, (str: string, ...args: any[]) => {
     return String.fromCharCode(parseInt(args[0], 16));
   });
 }
@@ -71,7 +71,7 @@ function unpack(s: string): number {
 }
 
 function pack(n: number) {
-  const acc = [];
+  const acc: number[] = [];
   while (n > 0) {
     acc.push(n % 256);
     n = Math.floor(n / 256);
@@ -246,7 +246,7 @@ function serializeWordData(el: DictElement): string {
   l += ` "${pack(el.prev)}"`;
   l += ` "${flagsLen}"`;
   if (el.flags !== 0) {
-    const flags = [];
+    const flags: string[] = [];
     if (el.flags & 0x20) {
       flags.push("F_HIDDEN");
     }
@@ -279,7 +279,7 @@ function serializeStringData(el: StringElement): string {
   return `  (data (i32.const ${offset}) "${len}" "${escapeString(el.string)}")`;
 }
 
-const newLines = [];
+const newLines: string[] = [];
 for (const line of lines) {
   const dataElement = parseDataElement(line);
   if (dataElement != null) {
