@@ -59,7 +59,7 @@ class WAForth {
   /**
    * Callback that is called when a character needs to be emitted.
    *
-   * `c` is the ASCII code of the character to be emitted.
+   * `c` is the single-character string that is emitted
    */
   onEmit?: (c: string) => void;
   key: () => number;
