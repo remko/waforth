@@ -41,6 +41,7 @@ enum ErrorCode {
   Quit = 0x2, // QUIT was called
   Abort = 0x3, // ABORT or ABORT" was called
   EOI = 0x4, // No more input
+  Bye = 0x5, // BYE was called
 }
 
 /**

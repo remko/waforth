@@ -17,6 +17,7 @@
 #define ERR_QUIT 0x2
 #define ERR_ABORT 0x3
 #define ERR_EOI 0x4
+#define ERR_BYE 0x5
 
 wasm_memory_t *memory;
 wasm_table_t *table;
@@ -205,6 +206,11 @@ int main(int argc, char *argv_main[]) {
       break;
     case ERR_EOI:
       assert(trap == NULL);
+      stopped = true;
+      break;
+    case ERR_BYE:
+      assert(trap != NULL);
+      wasm_trap_delete(trap);
       stopped = true;
       break;
     case ERR_UNKNOWN:
