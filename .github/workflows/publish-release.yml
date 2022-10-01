@@ -24,6 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
+      - run: sudo apt-get update
       - run: sudo apt-get install awscli
       - run: yarnpkg build
       - name: aws s3 sync
