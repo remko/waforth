@@ -115,6 +115,10 @@ const INDEX_TEMPLATE = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="shortcut icon" href="/waforth/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/waforth/favicon.ico" type="image/x-icon" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#000000" />
+    <link rel="apple-touch-icon" href="/waforth/apple-touch-icon.png" />
     <link href="/waforth/dist/$BASE.css" rel="stylesheet" />
     <title>$TITLE</title>
   </head>
