@@ -45,13 +45,15 @@ type StringElement = {
 type DataElement = DictElement | StringElement;
 
 function unescapeString(s: string) {
-  return s.replace(/\\(..)/g, (str: string, ...args: any[]) => {
-    return String.fromCharCode(parseInt(args[0], 16));
-  });
+  return s
+    .replace(/\\n/g, "\n")
+    .replace(/\\(..)/g, (str: string, ...args: any[]) => {
+      return String.fromCharCode(parseInt(args[0], 16));
+    });
 }
 
 function escapeString(s: string) {
-  return s.replace("\\", "\\5c").replace('"', "\\22");
+  return s.replace("\\", "\\5c").replace('"', "\\22").replace("\n", "\\n");
 }
 
 function unpack(s: string): number {
