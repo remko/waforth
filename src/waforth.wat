@@ -181,20 +181,6 @@
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Function types
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ;; A regular compiled word is a function with only the 
-  ;; top-of-stack pointer as parameter (and returns the new top-of-stack pointer)
-  ;; Arguments are passed via the stack.
-  (type $word (func (param i32) (result i32)))
-
-  ;; Words with the 'data' flag set also get a pointer to data passed
-  ;; as second parameter.
-  (type $dataWord (func (param i32) (param i32) (result i32)))
-
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Function table
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -217,6 +203,18 @@
   ;;   EXECUTE_DEFER_INDEX := 8
   ;;   END_DO_INDEX := 9
   (table (export "table") 0xbf funcref)
+
+  ;; The function table contains 2 type of entries for: entries for 
+  ;; regular compiled words, and entries for data words.
+
+  ;; A regular compiled word is a function with only the 
+  ;; top-of-stack pointer as parameter (and returns the new top-of-stack pointer)
+  ;; Arguments are passed via the stack.
+  (type $word (func (param i32) (result i32)))
+
+  ;; Words with the 'data' flag set also get a pointer to data passed
+  ;; as second parameter.
+  (type $dataWord (func (param i32) (param i32) (result i32)))
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2379,7 +2377,7 @@
     (local.get $tos))
   (data (i32.const 0x20ac0) "\b4\0a\02\00" "\01" "]  " "\be\00\00\00")
   (elem (i32.const 0xbe) $right-bracket)
-  
+
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter state
