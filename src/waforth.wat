@@ -31,6 +31,156 @@
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Interpreter
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; This is the main entry point of WAForth.
+  ;;
+  ;; Run the interpreter loop, until no more user input is available (or until
+  ;; execution is aborted using QUIT)
+  (func $run (export "run") (param $silent i32)
+    (local $state i32)
+    (local $tos i32)
+
+    ;; Load the top-of-stack (TOS) pointer as a local, and thread it through the execution.
+    ;; The global TOS pointer will not be accurate until it is reset at the end of the loop,
+    ;; at abort time, or at shell `call` time.
+    ;;
+    ;; Put the local value on the WASM operand stack, so it is threaded through the loop.
+    (local.tee $tos (global.get $tos))
+
+    ;; In case a trap occurs, make sure the error is set to an unknown error.
+    ;; We'll reset the error to a real value later if no trap occurs.
+    (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
+
+    ;; Start looping until there is no more input
+    ;; The loop has the threaded TOS local as parameter and return value
+    (block $endLoop (param i32) (result i32)
+      (loop $loop (param i32) (result i32)
+        ;; Fill the input buffer with user input
+        (call $REFILL)
+        (br_if $endLoop (i32.eqz (call $pop)))
+
+        ;; Run the interpreter loop on the entire input buffer
+        (local.set $tos (call $interpret))
+
+        ;; Check for stack underflow
+        (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
+          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
+
+        ;; Show prompt
+        (if (i32.eqz (local.get $silent))
+          (then
+            (if (i32.ge_s (i32.load (i32.const 0x2094c (; = body(STATE) ;))) (i32.const 0))
+              (then (call $ctype (i32.const 0x20091 (; = str("ok\n") ;))))
+              (else (call $ctype (i32.const 0x20095 (; = str("error\n") ;)))))))
+        (local.get $tos)
+        (br $loop)))
+      
+      ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
+      (global.set $tos)
+
+      ;; End of input was reached
+      (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
+
+
+  ;; Interpret the string in the input buffer word by word, until 
+  ;; the end of the input buffer is reached.
+  ;;
+  ;; Traps if a word was not found in the dictionary (and isn't a number).
+  (func $interpret (param $tos i32) (result i32)
+    (local $FINDResult i32)
+    (local $FINDToken i32)
+    (local $error i32)
+    (local $number i32)
+    (local $wordAddr i32)
+    (local $wordLen i32)
+    (local.set $error (i32.const 0))
+    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
+    (block $endLoop 
+      (loop $loop
+        ;; Parse the next name in the input stream
+        (local.set $wordAddr (local.set $wordLen (call $parseName)))
+
+        ;; No more input. Break the loop.
+        (br_if $endLoop (i32.eqz (local.get $wordLen)))
+
+        ;; Search the name in the dictionary
+        (local.set $FINDToken (local.set $FINDResult 
+          (call $find (local.get $wordAddr) (local.get $wordLen))))
+        (if (i32.eqz (local.get $FINDResult))
+          (then 
+            ;; Name is not in the dictionary. Is it a number?
+            (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
+              ;; It's a number. Are we compiling?
+              (then 
+                (local.set $number)
+                (if (i32.load (i32.const 0x2094c (; = body(STATE) ;)))
+                  (then
+                    ;; We're compiling. Pop it off the stack and 
+                    ;; add it to the compiled list
+                    (local.set $tos (call $compilePushConst (local.get $tos) (local.get $number))))
+                  (else 
+                    ;; We're not compiling. Put the number on the stack.
+                    (local.set $tos (call $push (local.get $tos) (local.get $number))))))
+              ;; It's not a number either. Fail.
+              (else 
+                (drop)
+                (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
+          (else 
+            ;; Name found in the dictionary. 
+            (block
+              ;; Are we interpreting?
+              (br_if 0 (i32.eqz (i32.load (i32.const 0x2094c (; = body(STATE) ;)))))
+              ;; Is the word immediate?
+              (br_if 0 (i32.eq (local.get $FINDResult) (i32.const 1)))
+
+              ;; We're compiling a non-immediate. 
+              ;; Compile the execution of the word into the current compilation body.
+              (local.set $tos (call $compileExecute (local.get $tos) (local.get $FINDToken)))
+              (br $loop))
+            ;; We're interpreting, or this is an immediate word
+            ;; Execute the word.
+            (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))
+        (br $loop)))
+    (local.get $tos))
+
+  ;; Execute the given execution token
+  (func $execute (param $tos i32) (param $xt i32) (result i32)
+    (local $body i32)
+
+    ;; Get the table index of the dictionary entry
+    (local.set $body (call $body (local.get $xt)))
+
+    ;; Perform an indirect call to the table index
+    (if (result i32) (i32.and 
+          (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
+          (i32.const 0x40 (; = F_DATA ;)))
+      (then
+        ;; A data word gets the pointer to the dictionary entry's data field 
+        ;; as extra parameter
+        (call_indirect 
+          (type $dataWord) 
+          (local.get $tos)
+          (i32.add (local.get $body) (i32.const 4))
+          (i32.load (local.get $body))))
+      (else
+        (call_indirect (type $word) (local.get $tos) (i32.load (local.get $body))))))
+
+  ;; The standard Forth QUIT behavior.
+  ;; Empty the return stack, reset the input source, and enter interpretation state.
+  ;; Normally also runs the actual interpretation loop (i.e. $run), but we cannot do
+  ;; this in WebAssembly without nesting. We therefore trap back to the system, which
+  ;; will just call $run again.
+  (func $quit (param $tos i32) (result i32)
+    (global.set $tos (local.get $tos))
+    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
+    (global.set $sourceID (i32.const 0))
+    (i32.store (i32.const 0x2094c (; = body(STATE) ;)) (i32.const 0))
+    (unreachable))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Function types
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2229,148 +2379,7 @@
     (local.get $tos))
   (data (i32.const 0x20ac0) "\b4\0a\02\00" "\01" "]  " "\be\00\00\00")
   (elem (i32.const 0xbe) $right-bracket)
-
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Interpreter
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ;; Run the interpreter loop, until no more user input is available (or until
-  ;; execution is aborted using QUIT)
-  (func $run (export "run") (param $silent i32)
-    (local $state i32)
-    (local $tos i32)
-
-    ;; Load the top-of-stack (TOS) pointer as a local, and thread it through the execution.
-    ;; The global TOS pointer will not be accurate until it is reset at the end of the loop,
-    ;; at abort time, or at shell `call` time.
-    ;;
-    ;; Put the local value on the WASM operand stack, so it is threaded through the loop.
-    (local.tee $tos (global.get $tos))
-
-    ;; In case a trap occurs, make sure the error is set to an unknown error.
-    ;; We'll reset the error to a real value later if no trap occurs.
-    (global.set $error (i32.const 0x1 (; = ERR_UNKNOWN ;)))
-
-    ;; Start looping until there is no more input
-    (block $endLoop (param i32) (result i32)
-      (loop $loop (param i32) (result i32)
-        ;; Fill the input buffer with user input
-        (call $REFILL)
-        (br_if $endLoop (i32.eqz (call $pop)))
-
-        ;; Run the interpreter loop on the entire input buffer
-        (local.set $tos (call $interpret))
-
-        ;; Check for stack underflow
-        (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
-
-        ;; Show prompt
-        (if (i32.eqz (local.get $silent))
-          (then
-            (if (i32.ge_s (i32.load (i32.const 0x2094c (; = body(STATE) ;))) (i32.const 0))
-              (then (call $ctype (i32.const 0x20091 (; = str("ok\n") ;))))
-              (else (call $ctype (i32.const 0x20095 (; = str("error\n") ;)))))))
-        (local.get $tos)
-        (br $loop)))
-      
-      ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
-      (global.set $tos)
-
-      ;; End of input was reached
-      (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
-
-
-  ;; Interpret the string in the input buffer word by word, until 
-  ;; the end of the input buffer is reached.
-  ;;
-  ;; Traps if a word was not found in the dictionary (and isn't a number).
-  (func $interpret (param $tos i32) (result i32)
-    (local $FINDResult i32)
-    (local $FINDToken i32)
-    (local $error i32)
-    (local $number i32)
-    (local $wordAddr i32)
-    (local $wordLen i32)
-    (local.set $error (i32.const 0))
-    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-    (block $endLoop 
-      (loop $loop
-        ;; Parse the next name in the input stream
-        (local.set $wordAddr (local.set $wordLen (call $parseName)))
-
-        ;; No more input. Break the loop.
-        (br_if $endLoop (i32.eqz (local.get $wordLen)))
-
-        ;; Search the name in the dictionary
-        (local.set $FINDToken (local.set $FINDResult 
-          (call $find (local.get $wordAddr) (local.get $wordLen))))
-        (if (i32.eqz (local.get $FINDResult))
-          (then 
-            ;; Name is not in the dictionary. Is it a number?
-            (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
-              ;; It's a number. Are we compiling?
-              (then 
-                (local.set $number)
-                (if (i32.load (i32.const 0x2094c (; = body(STATE) ;)))
-                  (then
-                    ;; We're compiling. Pop it off the stack and 
-                    ;; add it to the compiled list
-                    (local.set $tos (call $compilePushConst (local.get $tos) (local.get $number))))
-                  (else 
-                    ;; We're not compiling. Put the number on the stack.
-                    (local.set $tos (call $push (local.get $tos) (local.get $number))))))
-              ;; It's not a number either. Fail.
-              (else 
-                (drop)
-                (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
-          (else 
-            ;; Name found in the dictionary. 
-            (block
-              ;; Are we interpreting?
-              (br_if 0 (i32.eqz (i32.load (i32.const 0x2094c (; = body(STATE) ;)))))
-              ;; Is the word immediate?
-              (br_if 0 (i32.eq (local.get $FINDResult) (i32.const 1)))
-
-              ;; We're compiling a non-immediate. 
-              ;; Compile the execution of the word into the current compilation body.
-              (local.set $tos (call $compileExecute (local.get $tos) (local.get $FINDToken)))
-              (br $loop))
-            ;; We're interpreting, or this is an immediate word
-            ;; Execute the word.
-            (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))
-        (br $loop)))
-    (local.get $tos))
-
-  ;; Execute the given execution token
-  (func $execute (param $tos i32) (param $xt i32) (result i32)
-    (local $body i32)
-
-    ;; Get the table index of the dictionary entry
-    (local.set $body (call $body (local.get $xt)))
-
-    ;; Perform an indirect call to the table index
-    (if (result i32) (i32.and 
-          (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
-          (i32.const 0x40 (; = F_DATA ;)))
-      (then
-        ;; A data word gets the pointer to the dictionary entry's data field 
-        ;; as extra parameter
-        (call_indirect 
-          (type $dataWord) 
-          (local.get $tos)
-          (i32.add (local.get $body) (i32.const 4))
-          (i32.load (local.get $body))))
-      (else
-        (call_indirect (type $word) (local.get $tos) (i32.load (local.get $body))))))
-
-  (func $quit (param $tos i32) (result i32)
-    (global.set $tos (local.get $tos))
-    (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-    (global.set $sourceID (i32.const 0))
-    (i32.store (i32.const 0x2094c (; = body(STATE) ;)) (i32.const 0))
-    (unreachable))
+  
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter state
@@ -2408,6 +2417,7 @@
   ;;   ERR_EOI :=     0x4   (No more user input received)
   ;;   ERR_BYE :=     0x5   (BYE called)
   (global $error (mut i32) (i32.const 0x0))
+
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
@@ -3199,6 +3209,7 @@
       (then)
       (else (call $U._ (local.get $v) (local.get $base))))
     (call $shell_emit (call $numberToChar (local.get $m))))
+
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; API Functions
