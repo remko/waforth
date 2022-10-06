@@ -33,12 +33,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "./build-web.js",
-    "dev": "./build-web.js --watch --development",
-    "test": "./test-web.js",
-    "test-watch": "./test-web.js --watch",
+    "build": "node build-web.js",
+    "dev": "node build-web.js --watch --development",
+    "test": "node test-web.js",
+    "test-watch": "node test-web.js --watch",
     "lint": "eslint . && tsc --noEmit",
-    "prepare": "./build-package.js"
+    "prepare": "node build-package.js"
   },
   "keywords": [
     "forth",
