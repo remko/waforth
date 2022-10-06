@@ -6,12 +6,14 @@ runs:
     with:
       node-version: 17
       cache: 'yarn'
-  # We depend on a more recent version, not available in current Ubuntu (20.04). Should be available in 22.04
+  # We depend on a more recent version, not available in current Ubuntu (20.04).
   # - run: sudo apt-get install wabt
   - run: |
       if [ "$RUNNER_OS" == "Linux" ]; then
-        curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.29/wabt-1.0.29-ubuntu.tar.gz | tar xvz -C /tmp
-        sudo mv /tmp/wabt-1.0.29/bin/* /usr/local/bin
+        curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30-ubuntu.tar.gz | tar xvz -C /tmp
+        sudo mv /tmp/wabt-1.0.30/bin/* /usr/local/bin
+        sudo mv /tmp/wabt-1.0.30/include/* /usr/local/include
+        sudo mv /tmp/wabt-1.0.30/lib/*.a /usr/local/lib
       else
         brew install wabt
       fi
