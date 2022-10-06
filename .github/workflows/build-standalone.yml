@@ -10,10 +10,14 @@ jobs:
   build-standalone:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-18.04]
+        os: [macos-latest, ubuntu-18.04, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
       - run: make -C src/standalone install-deps all
+        # TODO: Windows support
+        if: runner.os != 'Windows'
       - run: make -C src/standalone check
+        # TODO: Windows support
+        if: runner.os != 'Windows'

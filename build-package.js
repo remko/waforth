@@ -23,7 +23,9 @@ let buildConfig = {
 
 esbuild.build(buildConfig).then(
   () => {
-    execSync("./node_modules/.bin/tsc --project tsconfig.package.json");
+    execSync(
+      "node node_modules/typescript/bin/tsc --project tsconfig.package.json"
+    );
   },
   () => process.exit(1)
 );
