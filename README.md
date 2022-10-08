@@ -39,9 +39,9 @@ document](doc/Design.md).
 <figcaption><em><a href="https://mko.re/waforth/">WAForth console</a></em></figcaption>
 </div>
 
-<div align="center" style="margin-top: 2em">
+<div align="center">
 <div>
-<a href="https://mko.re/thurtle/"><img style="width: 550px" src="https://raw.githubusercontent.com/remko/waforth/master/doc/thurtle.png" alt="Thurtle program"></a>
+<a href="https://mko.re/thurtle/"><img style="width: 550px; margin-top: 1.5em;" src="https://raw.githubusercontent.com/remko/waforth/master/doc/thurtle.png" alt="Thurtle program"></a>
 </div>
 <figcaption><em>WAForth integrated in <a href="https://mko.re/thurtle/">Thurtle</a>, a <a href="https://en.wikipedia.org/wiki/Turtle_graphics">turtle graphics</a> programming environment using Forth</em></figcaption>
 </div>
@@ -59,6 +59,12 @@ WebAssembly engine that supports the
 [WebAssembly C API](https://github.com/WebAssembly/wasm-c-api) (although some
 engines have [known issues](https://github.com/remko/waforth/issues/6#issue-326830993)).
 
+<div align="center">
+<div>
+<a href="https://mko.re/thurtle/"><img style="width: 550px;" src="https://raw.githubusercontent.com/remko/waforth/master/doc/standalone.png" alt="Thurtle program"></a>
+</div>
+<figcaption><em>Standalone WAForth shell executable</em></figcaption>
+</div>
 
 ## Using WAForth in a JavaScript application
 

@@ -15,9 +15,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
-      - run: make -C src/standalone install-deps all
-        # TODO: Windows support
-        if: runner.os != 'Windows'
+      - run: make -C src/standalone install-deps package
       - run: make -C src/standalone check
-        # TODO: Windows support
-        if: runner.os != 'Windows'

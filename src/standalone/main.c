@@ -1,8 +1,12 @@
-#include <stdio.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#include <windows.h>
+#else
 #include <termios.h>
+#endif
 
 #include "waforth_core.h"
 #include "wasm.h"
+#include <stdio.h>
 
 #ifndef VERSION
 #define VERSION "dev"
@@ -63,6 +67,19 @@ wasm_trap_t *read_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
 }
 
 wasm_trap_t *key_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+  if (h == NULL) {
+    return trap_from_string("no console");
+  }
+  DWORD mode;
+  GetConsoleMode(h, &mode);
+  SetConsoleMode(h, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
+  TCHAR ch = 0;
+  DWORD cc;
+  ReadConsole(h, &ch, 1, &cc, NULL);
+  SetConsoleMode(h, mode);
+#else
   struct termios old, current;
   tcgetattr(0, &old);
   current = old;
@@ -71,6 +88,7 @@ wasm_trap_t *key_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   tcsetattr(0, TCSANOW, &current);
   char ch = getchar();
   tcsetattr(0, TCSANOW, &old);
+#endif
   results->data[0].kind = WASM_I32;
   results->data[0].of.i32 = ch;
   return NULL;

@@ -1,0 +1,28 @@
+#pragma code_page(65001)
+
+id ICON "icon.ico"
+
+// See https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+1 VERSIONINFO
+FILEVERSION VERSION_TUPLE
+PRODUCTVERSION VERSION_TUPLE
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "0409FDE9"
+    BEGIN
+      VALUE "CompanyName", "Remko Tronçon"
+      VALUE "FileDescription", "WAForth"
+      VALUE "FileVersion", VERSION_STRING
+      VALUE "InternalName", "waforth"
+      VALUE "LegalCopyright", "© 2022 Remko Tronçon"
+      VALUE "OriginalFilename", "waforth.exe"
+      VALUE "ProductName", "WAForth"
+      VALUE "ProductVersion", VERSION_STRING
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 65001
+  END
+END
