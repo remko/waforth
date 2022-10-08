@@ -76,8 +76,11 @@ package: waforth
 
 .PHONY: check
 check:
-	echo "" | ./waforth
+	-rm -f test.out
+	echo ": MAIN 1 2 3 + .S ; MAIN" | ./waforth | tee test.out
+	grep "1 5 ok" test.out
+	rm test.out
 	
 .PHONY: clean
 clean:
-	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.tgz
+	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.tgz *.zip test.out
