@@ -52,14 +52,11 @@ wasm_trap_t *emit_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
 }
 
 wasm_trap_t *read_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
-  int n = 0;
   char *addr = &wasm_memory_data(memory)[args->data[0].of.i32];
   size_t len = args->data[1].of.i32;
-  while (!(n = getline(&addr, &len, stdin))) {
-  }
-  if (n < 0) {
-    n = 0;
-  }
+  *addr = 0;
+  fgets(addr, len, stdin);
+  int n = strlen(addr);
   results->data[0].kind = WASM_I32;
   results->data[0].of.i32 = n;
   return NULL;

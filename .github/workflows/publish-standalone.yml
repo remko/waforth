@@ -21,7 +21,7 @@ jobs:
       - run: make -C src/standalone check
       - name: "Upload artifacts"
         run: |
-          for f in src/standalone/waforth-*.tgz; do
+          for f in `find src/standalone -name 'waforth-*.tgz' -o -name 'waforth-*.zip'`; do
             curl --fail \
               -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: $(file -b --mime-type $f)" \
