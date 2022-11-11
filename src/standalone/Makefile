@@ -47,9 +47,14 @@ endif
 UNAME_S=$(shell uname -s)
 UNAME_P=$(shell uname -p)
 ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_P),arm)
+WASMTIME_DIR=wasmtime-v1.0.1-aarch64-macos-c-api
+PACKAGE_SUFFIX=arm64-macos
+else
 WASMTIME_DIR=wasmtime-v1.0.1-x86_64-macos-c-api
-WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.1/wasmtime-v1.0.1-x86_64-macos-c-api.tar.xz
 PACKAGE_SUFFIX=x86_64-macos
+endif
+WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.1/$(WASMTIME_DIR).tar.xz
 else
 WASMTIME_DIR=wasmtime-v1.0.1-x86_64-linux-c-api
 WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.1/wasmtime-v1.0.1-x86_64-linux-c-api.tar.xz
