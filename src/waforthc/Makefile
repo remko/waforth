@@ -30,9 +30,6 @@ all: waforthc
 waforthc: $(OBJECTS)
 	$(CXX) -o $@ $^ $(LIBS)
 
-reproducer: reproducer.o
-	$(CXX) -o $@ $^ $(LIBS)
-
 waforthc.o: waforth_core.h waforth_rt.h
 
 %.o: %.cpp
