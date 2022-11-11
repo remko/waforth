@@ -3225,9 +3225,4 @@
   (func (export "tos") (result i32) (global.get $tos))
   (func (export "here") (result i32) (global.get $here))
   (func (export "error") (result i32) (global.get $error))
-
-  ;; Used for experiments
-  (func (export "set_state") (param $latest i32) (param $here i32)
-    (global.set $latest (local.get $latest))
-    (global.set $here (local.get $here)))
 )
