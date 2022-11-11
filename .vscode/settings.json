@@ -10,7 +10,11 @@
     "**/node_modules": true
   },
   "files.associations": {
-    "*.fr": "forth"
+    "*.fr": "forth",
+    "__locale": "c",
+    "ios": "c",
+    "vector": "cpp",
+    "*.ipp": "cpp"
   },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -37,6 +41,9 @@
     "editor.formatOnSave": true
   },
   "[c]": {
+    "editor.formatOnSave": true
+  },
+  "[cpp]": {
     "editor.formatOnSave": true
   }
 }

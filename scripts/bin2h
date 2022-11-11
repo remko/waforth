@@ -13,5 +13,5 @@ const bs = [];
 for (const b of inf) {
   bs.push(`0x${b.toString(16)}`);
 }
-const out = `unsigned char ${name}[] = { ${bs.join(", ")} };\n`;
+const out = `static unsigned char ${name}[] = { ${bs.join(", ")} };\n`;
 fs.writeFileSync(outfn, out);
