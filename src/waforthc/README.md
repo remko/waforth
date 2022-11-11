@@ -1,8 +1,9 @@
-# `waforthc`: Forth native compiler
+# `waforthc`: (WebAssembly-based) Forth native compiler
 
-`waforthc` takes a Forth file as input, and produces a native binary as output. 
-
-The compiler runs [WAForth](https://github.com/remko/waforth) to compile the Forth code to WebAssembly, combines the generated WebAssembly modules with the WAForth core to create a new Forth system that includes all the precompiled code, and then compiles the resulting WebAssembly module to native code using a combination of [WABT](https://github.com/WebAssembly/wabt)'s WebAssembly-to-C compiler and the platform's C compiler. For more details, see the *How it works* section.
+`waforthc` uses [WAForth](https://github.com/remko/waforth), 
+[WABT](https://github.com/WebAssembly/wabt), and the host's C compiler to compile a Forth program into a native executable. WebAssembly is used as the host 
+runtime platform and intermediate representation during compilation, and then compiled into an executable
+that no longer contains any WebAssembly infrastructure. See [*How it works*](#how-it-works) for more details.
 
 ## Download
 
@@ -37,6 +38,14 @@ interpreter, with the compiled functions available:
     ok
     BYE↩
 
+Instead of an interactive shell that accepts user input, you can also tell `waforthc` to make the executable run a fixed script when it is started:
+
+    $ waforthc --output=hello --init=SAY_HELLO hello.fs↩
+    Compiling word... Compiled! Running compiled word from within compiler: Hello, Forth
+
+    $ ./hello↩
+    Hello, Forth
+
 Contrary to the [standalone native WAForth](https://github.com/remko/waforth/tree/master/src/standalone), the resulting binary does not contain a WebAssembly engine, and therefore the compiler infrastructure is no longer available:
 
     $ ls -l hello↩
@@ -46,37 +55,30 @@ Contrary to the [standalone native WAForth](https://github.com/remko/waforth/tre
     : SAY_BYE ." Bye" CR ;
     Compilation is not available in native compiled mode
 
-Instead of an interactive shell that accepts user input, you can also tell `waforthc` to make the executable run a fixed script when it is started:
-
-    $ waforthc --output=hello --init=SAY_HELLO hello.fs↩
-    Compiling word... Compiled! Running compiled word from within compiler: Hello, Forth
-
-    $ ./hello↩
-    Hello, Forth
-
-
 ## How it works
+
+The `waforthc` compiler ([`waforthc.cpp`](https://github.com/remko/waforth/blob/master/src/waforthc/waforthc.cpp)) works as follows:
 
 - `waforthc` runs an embedded [WAForth WebAssembly module](https://github.com/remko/waforth/blob/master/src/waforth.wat) using the 
   [WABT](https://github.com/WebAssembly/wabt) reference WebAssembly interpreter, with the given Forth input program as input.
-- WAForth will generate new WebAssembly modules for each compiled word. When a new generated WebAssembly module is loaded into the WebAssembly runtime,
-  `waforthc` keeps track of the raw binary form of the word.
-- When WAForth is finished running the input program, some state is queried from the runtime, so it can be restored later:
-    - The pointer to the dictionary entry of the compiled word (aka `latest`).
+- While interpreting/compiling, WAForth generates new WebAssembly modules for each compiled word. When a new generated WebAssembly
+  module is loaded into the WebAssembly runtime, `waforthc` keeps track of the raw binary form of the word.
+- When WAForth is finished running the input program, some state is extracted from the runtime, so it can be restored later:
+    - The current pointer to the dictionary entry of the compiled word (aka `latest`).
     - All the data between the initial data stack pointer and the current data stack pointer (which includes new dictionary entries, new strings, and
       any data stored in the data area)
-- A new WAForth WebAssembly module is created, which replicates the state of the runtime after running the input program:
+- A new WAForth WebAssembly module is constructed, which replicates the state of the runtime after running the input program:
     - The IR representation of the embedded WAForth module is loaded using WABT's module reader
     - The IR representation of every raw binary WebAssembly module generated during compilation is 
       loaded using WABT's module reader. Every module contains 1 function (with 1 corresponding entry into the shared table). 
     - The function and table entry of each of these modules are appended to the WAForth module. 
       The index of the function is updated accordingly in the new module
-    - A data segment is appended to the module, containing the entire data stack portion recorded after compilation
-    - The global variables that contain the end-of-datastack pointer (`here`) and the pointer to the latest dictionary entry (`latest`) is
-      updated
-- The resulting WebAssembly module (containing the entire WAForth system, including all the newly compiled words and strings) is converted to
-  C using WABT's WebAssembly-to-C convertor. Some auxiliary files are also generated to provide implementations of the I/O methods, and to drive
-  the core's run loop.
+    - A data segment is appended to the new WAForth module, containing the entire data stack portion recorded after compilation
+    - The initializer expression of the global variables that contain the end-of-datastack pointer (`here`) and the pointer 
+      to the latest dictionary entry (`latest`) are updated to reflect the new values
+- The resulting WebAssembly module (containing the entire WAForth system, including all the newly compiled words and data) is converted to
+  C using WABT's WebAssembly-to-C convertor. A [C runtime file](https://github.com/remko/waforth/blob/master/src/waforthc/rt.c) is also 
+  generated to provide implementations of the I/O methods, and to drive the core's run loop.
   If an initial program is given to `waforthc`, this is also included statically into the source code, and used as the input for the new
   WAForth system (instead of the default, standard input).
 - The resulting C program is compiled into a native executable using the platform's C compiler (`gcc`).
@@ -84,9 +86,11 @@ Instead of an interactive shell that accepts user input, you can also tell `wafo
 
 ## Future work
 
-Currently, all the compiler does is combine the modules generated by WAForth into a single module. It should be easy to do some post-processing on the resulting module for optimizing the result:
+Currently, all the compiler does is combine the modules generated by WAForth into a single module. It should be easy to do some post-processing on the resulting module to optimize the result:
 
 - Compiled words use indirect calls to call other words. This causes significant execution overhead. Since in the resulting binary, all words are in the same WebAssembly module, all indirect calls in the generated modules can be replaced by direct calls.
 
 - A dead-code elimination pass could remove unnecessary words from the
   WAForth core.
+
+Instead of compiling the resulting module to native, it can also be used in e.g. the web environment. 

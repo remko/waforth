@@ -66,6 +66,12 @@ engines have [known issues](https://github.com/remko/waforth/issues/6#issue-3268
 <figcaption><em>Standalone WAForth shell executable</em></figcaption>
 </div>
 
+## Native compiler
+
+[`waforthc`](https://github.com/remko/waforth/tree/master/src/waforthc) uses WAForth to compile a Forth program into a native executable.
+WebAssembly is used as the host runtime platform and intermediate representation during compilation, and then compiled into an executable
+that no longer contains any WebAssembly infrastructure.
+
 ## Using WAForth in a JavaScript application
 
 You can embed WAForth in any JavaScript application. 
