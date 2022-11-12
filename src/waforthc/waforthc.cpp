@@ -375,12 +375,12 @@ int main(int argc, char *argv[]) {
   bpo::positional_options_description p;
   p.add("input", 1);
   bpo::variables_map vm;
-  bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-  if (vm.count("help")) {
-    std::cout << desc << "\n";
-    return 0;
-  }
   try {
+    bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    if (vm.count("help")) {
+      std::cout << desc << "\n";
+      return 0;
+    }
     bpo::notify(vm);
   } catch (const bpo::error &e) {
     std::cout << e.what();
