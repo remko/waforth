@@ -9,7 +9,9 @@ runs:
   - if: runner.os == 'macOS'
     run: brew install wabt
     shell: bash
-  - run: sudo apt-get install libboost-dev libboost-filesystem-dev libboost-program-options-dev
+  - if: runner.os == 'Linux'
+    run: sudo apt-get install libboost-dev libboost-filesystem-dev libboost-program-options-dev
+    shell: bash
   - if: runner.os == 'Linux'
     run: |
       curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30-ubuntu.tar.gz | tar xvz -C /tmp
