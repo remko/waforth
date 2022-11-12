@@ -7,7 +7,12 @@ const path = require("path");
 const infn = process.argv[2];
 const outfn = process.argv[3];
 
-const name = path.basename(outfn).split(".").slice(0, -1).join(".");
+const name = path
+  .basename(outfn)
+  .split(".")
+  .slice(0, -1)
+  .join(".")
+  .replace(/-/g, "_");
 const inf = fs.readFileSync(infn);
 const bs = [];
 for (const b of inf) {

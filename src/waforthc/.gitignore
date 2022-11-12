@@ -1,5 +1,4 @@
 /waforthc
-/waforth_core.h
-/waforth_rt.h
+/waforth_*.h
 /_waforth*
 /hello

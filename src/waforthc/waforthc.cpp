@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -25,14 +26,9 @@
 
 #include "waforth_core.h"
 #include "waforth_rt.h"
-
-// Passed by compiler command line. Defaults for IntelliSense
-#ifndef WABT_WASM_RT_IMPL_INCLUDE_DIR
-#define WABT_WASM_RT_IMPL_INCLUDE_DIR ""
-#endif
-#ifndef WABT_WASM_RT_IMPL_LIB_DIR
-#define WABT_WASM_RT_IMPL_LIB_DIR ""
-#endif
+#include "waforth_wabt_wasm-rt-impl_c.h"
+#include "waforth_wabt_wasm-rt-impl_h.h"
+#include "waforth_wabt_wasm-rt_h.h"
 
 namespace bp = boost::process;
 namespace bpo = boost::program_options;
@@ -54,15 +50,17 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
   CHECK_RESULT(ApplyNames(&mod));
   // CHECK_RESULT(wabt::ResolveNamesModule(&mod, &errors));
 
-  defer _(nullptr, [](...) {
-    fs::remove("_waforth_rt.c");
-    fs::remove("_waforth_config.h");
-    fs::remove("_waforth.c");
-    fs::remove("_waforth.h");
-  });
+  std::ostringstream wds;
+  wds << "waforthc." << rand();
+  auto wd = fs::temp_directory_path() / wds.str();
+  defer _(nullptr, [=](...) { fs::remove_all(wd); });
+  if (!fs::exists(wd) && !fs::create_directory(wd)) {
+    std::cerr << "error creating working directory " << wd << std::endl;
+    return wabt::Result::Error;
+  }
 
   {
-    std::ofstream inith("_waforth_config.h");
+    std::ofstream inith(wd / "_waforth_config.h");
     inith << "static uint8_t waforth_init[] = {";
     for (int i = 0; i < init.size(); ++i) {
       inith << (int)init[i];
@@ -76,19 +74,16 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
   {
     wabt::WriteCOptions wcopt;
     wcopt.module_name = "waforth";
-    wabt::FileStream c_stream("_waforth.c");
-    wabt::FileStream h_stream("_waforth.h");
+    wabt::FileStream c_stream((wd / "_waforth.c").string());
+    wabt::FileStream h_stream((wd / "_waforth.h").string());
     CHECK_RESULT(WriteC(&c_stream, &h_stream, "_waforth.h", &mod, wcopt));
-    wabt::FileStream rt_stream("_waforth_rt.c");
-    rt_stream.WriteData(waforth_rt, sizeof(waforth_rt));
+    wabt::FileStream((wd / "_waforth_rt.c").string()).WriteData(waforth_rt, sizeof(waforth_rt));
+    wabt::FileStream((wd / "wasm-rt-impl.c").string()).WriteData(waforth_wabt_wasm_rt_impl_c, sizeof(waforth_wabt_wasm_rt_impl_c));
+    wabt::FileStream((wd / "wasm-rt-impl.h").string()).WriteData(waforth_wabt_wasm_rt_impl_h, sizeof(waforth_wabt_wasm_rt_impl_h));
+    wabt::FileStream((wd / "wasm-rt.h").string()).WriteData(waforth_wabt_wasm_rt_h, sizeof(waforth_wabt_wasm_rt_h));
   }
 
-  // std::cout << "gcc"
-  //           << " -o " << outfile << " -I" WABT_WASM_RT_IMPL_INCLUDE_DIR << " _waforth_rt.c _waforth.c -L" WABT_WASM_RT_IMPL_LIB_DIR "
-  //           -lwasm-rt-impl"
-  //           << std::endl;
-  bp::child c(bp::search_path("gcc"), "-o", outfile, "-I" WABT_WASM_RT_IMPL_INCLUDE_DIR, "_waforth_rt.c", "_waforth.c",
-              "-L" WABT_WASM_RT_IMPL_LIB_DIR, "-lwasm-rt-impl");
+  bp::child c(bp::search_path("gcc"), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string());
   c.wait();
   int result = c.exit_code();
   if (result != 0) {

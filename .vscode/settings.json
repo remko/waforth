@@ -14,7 +14,8 @@
     "__locale": "c",
     "ios": "c",
     "vector": "cpp",
-    "*.ipp": "cpp"
+    "*.ipp": "cpp",
+    "filesystem": "cpp"
   },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <termios.h>
 
-#include <wasm-rt-impl.h>
+#include "wasm-rt-impl.h"
 
 #include "_waforth.h"
 #include "_waforth_config.h"
@@ -13,7 +13,7 @@
 #define ERR_EOI 0x4
 #define ERR_BYE 0x5
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 size_t initOffset = 0;
 
