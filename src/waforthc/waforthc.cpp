@@ -45,7 +45,8 @@ static std::unique_ptr<wabt::FileStream> stderrStream;
 /**
  * Compiles a WASM module to a native file named `outfile`.
  */
-wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const std::string &outfile) {
+wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const std::string &outfile, const std::string &cc,
+                             const std::vector<std::string> &cflags) {
   CHECK_RESULT(GenerateNames(&mod));
   CHECK_RESULT(ApplyNames(&mod));
   // CHECK_RESULT(wabt::ResolveNamesModule(&mod, &errors));
@@ -83,7 +84,9 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
     wabt::FileStream((wd / "wasm-rt.h").string()).WriteData(waforth_wabt_wasm_rt_h, sizeof(waforth_wabt_wasm_rt_h));
   }
 
-  bp::child c(bp::search_path("gcc"), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string(), "-lm");
+  std::ostringstream cmd;
+  bp::child c(bp::search_path(cc), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string(),
+              bp::args(cflags));
   c.wait();
   int result = c.exit_code();
   if (result != 0) {
@@ -324,7 +327,8 @@ wabt::Result compileToModule(std::vector<wabt::Module> &words, const std::vector
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wabt::Result main_(const std::string &infile, const std::string &outfile, const std::string &init, wabt::Errors &errors) {
+wabt::Result main_(const std::string &infile, const std::string &outfile, const std::string &init, const std::string &cc,
+                   const std::vector<std::string> &cflags, wabt::Errors &errors) {
   stderrStream = wabt::FileStream::CreateStderr();
 
   std::vector<uint8_t> in;
@@ -346,7 +350,7 @@ wabt::Result main_(const std::string &infile, const std::string &outfile, const 
   if (boost::ends_with(outfile, ".wasm")) {
     CHECK_RESULT(writeModule(outfile, compiled));
   } else {
-    CHECK_RESULT(compileToNative(compiled, init, outfile));
+    CHECK_RESULT(compileToNative(compiled, init, outfile, cc, cflags));
   }
 
   return wabt::Result::Ok;
@@ -356,11 +360,15 @@ int main(int argc, char *argv[]) {
   std::string outfile;
   std::string infile;
   std::string init;
+  std::string cc;
+  std::vector<std::string> ccflags;
 
   bpo::options_description desc("Options");
   desc.add_options()("help", "Show this help message")(
       "output,o", bpo::value<std::string>(&outfile)->default_value("out"),
       "Output file\nIf `arg` ends with .wasm, the result will be a WebAssembly module. Otherwise, the result will be a native executable.")(
+      "cc", bpo::value<std::string>(&cc)->default_value("gcc"), "C compiler")("ccflag", bpo::value<std::vector<std::string>>(&ccflags),
+                                                                              "C compiler flag")(
       "init", bpo::value<std::string>(&init),
       "Initialization program\nIf specified, PROGRAM will be executed when the resulting executable is run. Otherwise, the resulting executable will "
       "start an interactive session.")("input", bpo::value<std::string>(&infile)->required(), "Input file");
@@ -379,8 +387,10 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  ccflags.push_back("-lm");
+
   wabt::Errors errors;
-  if (!Succeeded(main_(infile, outfile, init, errors))) {
+  if (!Succeeded(main_(infile, outfile, init, cc, ccflags, errors))) {
     FormatErrorsToFile(errors, wabt::Location::Type::Binary);
     return -1;
   }

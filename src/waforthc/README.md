@@ -55,6 +55,10 @@ Contrary to the [standalone native WAForth](https://github.com/remko/waforth/tre
     : SAY_BYE ." Bye" CR ;
     Compilation is not available in native compiled mode
 
+If you have a cross-compiling C compiler, you can also cross-compile your Forth program to a different architecture:
+
+    $ waforthc --cc=arm-linux-gnueabi-gcc --ccflag=-static --output=hello --init=SAY_HELLO hello.fs↩
+
 ## How it works
 
 The `waforthc` compiler ([`waforthc.cpp`](https://github.com/remko/waforth/blob/master/src/waforthc/waforthc.cpp)) works as follows:
