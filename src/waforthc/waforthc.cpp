@@ -40,6 +40,10 @@ using defer = std::shared_ptr<void>;
 static wabt::Features features;
 static std::unique_ptr<wabt::FileStream> stderrStream;
 
+#ifndef VERSION
+#define VERSION "dev"
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -363,22 +367,29 @@ int main(int argc, char *argv[]) {
   std::string cc;
   std::vector<std::string> ccflags;
 
-  bpo::options_description desc("Options");
-  desc.add_options()("help", "Show this help message")(
+  bpo::options_description odesc("Options");
+  odesc.add_options()("help", "Show this help message")(
       "output,o", bpo::value<std::string>(&outfile)->default_value("out"),
       "Output file\nIf `arg` ends with .wasm, the result will be a WebAssembly module. Otherwise, the result will be a native executable.")(
       "cc", bpo::value<std::string>(&cc)->default_value("gcc"), "C compiler")("ccflag", bpo::value<std::vector<std::string>>(&ccflags),
                                                                               "C compiler flag")(
       "init", bpo::value<std::string>(&init),
       "Initialization program\nIf specified, PROGRAM will be executed when the resulting executable is run. Otherwise, the resulting executable will "
-      "start an interactive session.")("input", bpo::value<std::string>(&infile)->required(), "Input file");
+      "start an interactive session.");
+  bpo::options_description idesc("Options");
+  idesc.add_options()("input", bpo::value<std::string>(&infile)->required(), "Input file");
+  bpo::options_description desc;
+  desc.add(odesc).add(idesc);
+
   bpo::positional_options_description p;
   p.add("input", 1);
   bpo::variables_map vm;
   try {
     bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
     if (vm.count("help")) {
-      std::cout << desc << "\n";
+      std::cout << "waforthc " << VERSION << std::endl << std::endl;
+      std::cout << "Usage: " << argv[0] << " [OPTION]... INPUT_FILE" << std::endl << std::endl;
+      std::cout << odesc << std::endl;
       return 0;
     }
     bpo::notify(vm);

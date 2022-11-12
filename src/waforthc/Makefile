@@ -86,6 +86,8 @@ waforth_wabt_wasm-rt_h.h: $(WABT_WASM2C_SRC_DIR)/wasm-rt.h
 waforth_core.wasm: ../waforth.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
+.PHONY: package
+
 .PHONY: check
 check:
 	-rm -f test test.out
