@@ -1,0 +1,19 @@
+name: Build waforthc
+
+on:
+  # push:
+  # pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-waforthc:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-18.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup
+      # - run: make -C src/standalone install-deps package
+      # - run: make -C src/standalone check

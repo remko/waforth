@@ -22,6 +22,13 @@ runs:
     run: |
       curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30-windows.tar.gz | tar xvz -C /c/tools
       cp /c/tools/wabt-1.0.30/bin/* /c/Windows/system32
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30.tar.xz | tar xvJ -C /tmp
+      mv /tmp/wabt-1.0.30/wasm2c /c/tools/wasm2c
+    shell: bash
+  - if: runner.os == 'Linux' || runner.os == 'macOS'
+    run: |
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30.tar.xz | tar xvJ -C /tmp
+      sudo mv /tmp/wabt-1.0.30/wasm2c /usr/local/wasm2c 
     shell: bash
   - run: yarnpkg --pure-lockfile
     shell: bash
