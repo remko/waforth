@@ -71,8 +71,14 @@ package: waforth
 
 endif
 endif
-CFLAGS:=-I$(WASMTIME_DIR)/include $(CFLAGS)
+CFLAGS:= -I$(WASMTIME_DIR)/include $(CFLAGS)
 LIBS:=$(WASMTIME_DIR)/lib/libwasmtime.a $(LIBS)
+
+ifeq ($(DEBUG),1)
+CFLAGS := $(CFLAGS) -g
+else
+CFLAGS := $(CFLAGS) -O2
+endif
 
 ################################################
 
@@ -86,7 +92,7 @@ OBJECTS=main.o $(RESOURCE_OBJECTS)
 all: waforth
 
 waforth: $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS)
 
 main.o: waforth_core.h
 
@@ -114,4 +120,4 @@ check:
 	
 .PHONY: clean
 clean:
-	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.tgz *.zip test.out
+	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.exe *.tgz *.zip test.out
