@@ -26,7 +26,7 @@ void Z_shellZ_emit(struct Z_shell_instance_t *mod, u32 c) {
 }
 
 u32 Z_shellZ_read(struct Z_shell_instance_t *mod, u32 addr_, u32 len_) {
-  unsigned long len = len_;
+  size_t len = len_;
   char *addr = (char *)&mod->memory->data[addr_];
   int n = 0;
   if (sizeof(waforth_init) == 0) {
