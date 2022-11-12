@@ -107,6 +107,10 @@ check:
 	echo ": MAIN 1 2 3 + .S ; MAIN" | ./waforth | tee test.out
 	grep "1 5 ok" test.out
 	rm test.out
+	./waforth ../examples/hello.fs | tee test.out
+	grep "Hello, Forth" test.out
+	rm test.out
+
 	
 .PHONY: clean
 clean:

@@ -27,6 +27,8 @@ wasm_memory_t *memory;
 wasm_table_t *table;
 wasm_store_t *store;
 
+FILE *input;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Utility
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +61,7 @@ wasm_trap_t *read_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   char *addr = &wasm_memory_data(memory)[args->data[0].of.i32];
   size_t len = args->data[1].of.i32;
   *addr = 0;
-  fgets(addr, len, stdin);
+  fgets(addr, len, input);
   int n = strlen(addr);
   results->data[0].kind = WASM_I32;
   results->data[0].of.i32 = n;
@@ -125,7 +127,13 @@ wasm_trap_t *call_cb(void *env, const wasm_val_vec_t *args, wasm_val_vec_t *resu
 // Main
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv_main[]) {
+int main(int argc, char *argv[]) {
+  if (argc >= 2) {
+    input = fopen(argv[1], "r");
+  } else {
+    input = stdin;
+  }
+
   wasm_engine_t *engine = wasm_engine_new();
   store = wasm_store_new(engine);
   wasm_byte_vec_t core = {.data = (wasm_byte_t *)waforth_core, .size = sizeof(waforth_core)};
@@ -200,8 +208,11 @@ int main(int argc, char *argv_main[]) {
     return -1;
   }
 
-  printf("WAForth (" VERSION ")\n");
-  wasm_val_t run_as[1] = {WASM_I32_VAL(0)};
+  if (input == stdin) {
+    printf("WAForth (" VERSION ")\n");
+  }
+
+  wasm_val_t run_as[1] = {WASM_I32_VAL(input != stdin)};
   wasm_val_vec_t run_args = WASM_ARRAY_VEC(run_as);
   wasm_val_vec_t run_results = WASM_EMPTY_VEC;
 
@@ -250,5 +261,10 @@ int main(int argc, char *argv_main[]) {
   wasm_module_delete(module);
   wasm_store_delete(store);
   wasm_engine_delete(engine);
+
+  if (input != stdin) {
+    fclose(input);
+  }
+
   return 0;
 }
