@@ -46,10 +46,14 @@ Instead of an interactive shell that accepts user input, you can also tell `wafo
     $ ./hello↩
     Hello, Forth
 
+If you want an optimized binary, you can pass extra C compiler flags to the build:
+
+    $ waforthc --ccflag=-O2 --output=hello --init=SAY_HELLO hello.fs↩
+
 Contrary to the [standalone native WAForth](https://github.com/remko/waforth/tree/master/src/standalone), the resulting binary does not contain a WebAssembly engine, and therefore the compiler infrastructure is no longer available:
 
     $ ls -l hello↩
-    -rwxr-xr-x 1 remko remko 159k Nov 11 13:18 hello
+    -rwxr-xr-x 1 remko remko 116k Nov 11 13:18 hello
 
     $ ./hello↩
     : SAY_BYE ." Bye" CR ;
@@ -57,7 +61,7 @@ Contrary to the [standalone native WAForth](https://github.com/remko/waforth/tre
 
 If you have a cross-compiling C compiler, you can also cross-compile your Forth program to a different architecture:
 
-    $ waforthc --cc=arm-linux-gnueabi-gcc --ccflag=-static --output=hello --init=SAY_HELLO hello.fs↩
+    $ waforthc --cc=arm-linux-gnueabi-gcc --ccflag=-static --ccflag=-O2 --output=hello --init=SAY_HELLO hello.fs↩
 
 ## How it works
 
