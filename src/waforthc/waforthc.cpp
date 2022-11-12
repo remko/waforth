@@ -83,7 +83,7 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
     wabt::FileStream((wd / "wasm-rt.h").string()).WriteData(waforth_wabt_wasm_rt_h, sizeof(waforth_wabt_wasm_rt_h));
   }
 
-  bp::child c(bp::search_path("gcc"), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string());
+  bp::child c(bp::search_path("gcc"), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string(), "-lm");
   c.wait();
   int result = c.exit_code();
   if (result != 0) {
@@ -283,12 +283,12 @@ wabt::Result compileToModule(std::vector<wabt::Module> &words, const std::vector
   auto dsf = wabt::MakeUnique<wabt::DataSegmentModuleField>();
   wabt::DataSegment &ds = dsf->data_segment;
   ds.memory_var = wabt::Var(0, wabt::Location());
-  ds.offset.push_back(MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset)));
+  ds.offset.push_back(wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset)));
   ds.data = data;
   compiled.AppendField(std::move(dsf));
 
-  compiled.globals[HERE_GLOBAL_INDEX]->init_expr = wabt::ExprList{MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset + data.size()))};
-  compiled.globals[LATEST_GLOBAL_INDEX]->init_expr = wabt::ExprList{MakeUnique<wabt::ConstExpr>(wabt::Const::I32(latest))};
+  compiled.globals[HERE_GLOBAL_INDEX]->init_expr = wabt::ExprList{wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset + data.size()))};
+  compiled.globals[LATEST_GLOBAL_INDEX]->init_expr = wabt::ExprList{wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(latest))};
 
   for (auto &word : words) {
     assert(word.funcs.size() == 1);
