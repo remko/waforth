@@ -70,9 +70,9 @@ package: waforth
 	$(TAR) czf waforth-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforth
 
 endif
-endif
 CFLAGS:= -I$(WASMTIME_DIR)/include $(CFLAGS)
 LIBS:=$(WASMTIME_DIR)/lib/libwasmtime.a $(LIBS)
+endif
 
 ifeq ($(DEBUG),1)
 CFLAGS := $(CFLAGS) -g
