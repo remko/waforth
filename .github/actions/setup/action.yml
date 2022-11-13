@@ -7,10 +7,7 @@ runs:
       node-version: 17
       cache: 'yarn'
   - if: runner.os == 'macOS'
-    run: brew install wabt boost
-    shell: bash
-  - if: runner.os == 'Linux'
-    run: sudo apt-get install libboost-dev libboost-filesystem-dev libboost-program-options-dev
+    run: brew install wabt
     shell: bash
   - if: runner.os == 'Linux'
     run: |
@@ -25,9 +22,5 @@ runs:
       mv /tmp/wabt-1.0.30 /c/tools/wabt
       cp /c/tools/wabt/bin/* /c/Windows/system32
     shell: bash
-  - if: runner.os == 'Windows'
-    run: |
-      C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-boost
-    shell: cmd
   - run: yarnpkg --pure-lockfile
     shell: bash

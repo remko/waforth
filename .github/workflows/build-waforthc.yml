@@ -15,5 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
+
+      - if: runner.os == 'macOS'
+        run: brew install boost
+        shell: bash
+      - if: runner.os == 'Linux'
+        run: sudo apt-get install libboost-dev libboost-filesystem-dev libboost-program-options-dev
+        shell: bash
+      - if: runner.os == 'Windows'
+        run: C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-boost
+        shell: cmd
+
       - run: make -C src/waforthc package
       - run: make -C src/waforthc check
