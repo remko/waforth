@@ -82,7 +82,7 @@ export default class Editor {
       }
       parentEl.appendChild(document.createTextNode(v));
 
-      if (v === ":") {
+      if (v === ":" || v === "CONSTANT" || v === "VARIABLE" || v === "VALUE") {
         nextIsDefinition = true;
       } else if (v === "(") {
         inComment = true;
