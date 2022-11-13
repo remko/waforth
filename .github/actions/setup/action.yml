@@ -21,8 +21,13 @@ runs:
     shell: bash
   - if: runner.os == 'Windows'
     run: |
-      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30-windows.tar.gz | tar xvz -C /c/tools
-      cp /c/tools/wabt-1.0.30/bin/* /c/Windows/system32
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.30/wabt-1.0.30-windows.tar.gz | tar xvz -C /tmp
+      mv /tmp/wabt-1.0.30 /c/tools/wabt
+      cp /c/tools/wabt/bin/* /c/Windows/system32
     shell: bash
+  - if: runner.os == 'Windows'
+    run: |
+      C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-boost
+    shell: cmd
   - run: yarnpkg --pure-lockfile
     shell: bash

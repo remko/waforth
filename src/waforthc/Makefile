@@ -3,6 +3,10 @@
 VERSION?=$(shell cat ../../package.json | grep '"version"' | sed -e 's/.*:.*"\(.*\)".*/\1/')
 
 ifeq ($(OS),Windows_NT)
+CXX = g++
+WABT_DIR = /c/tools/wabt
+BOOST_LIB_DIR = /mingw64/lib
+BOOST_INCLUDE_DIR = /mingw64/include
 package: waforthc
 	7z a -tzip waforthc-v$(VERSION)-windows.zip waforthc.exe
 else # $(OS)
@@ -33,18 +37,19 @@ BOOST_INCLUDE_DIR = /usr/include
 BOOST_LIB_DIR := /usr/lib/$(shell gcc -dumpmachine)
 PACKAGE_SUFFIX=x86_64-linux
 endif # $(UNAME_S)
+package: waforthc
+	$(TAR) czf waforthc-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforthc
+endif # $(OS)
+
 WABT_INCLUDE_DIR := $(WABT_DIR)/include
 WABT_LIB_DIR := $(WABT_DIR)/lib
 WABT_DATA_DIR = $(WABT_DIR)/share/wabt
+
 LIBS := \
 	$(WABT_LIB_DIR)/libwabt.a \
 	$(BOOST_LIB_DIR)/libboost_filesystem.a \
 	$(BOOST_LIB_DIR)/libboost_program_options.a \
 	$(LIBS)
-package: waforthc
-	$(TAR) czf waforthc-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforthc
-endif # $(OS)
-
 CPPFLAGS := -I$(WABT_INCLUDE_DIR) -I$(BOOST_INCLUDE_DIR)
 
 ifeq ($(DEBUG),1)
