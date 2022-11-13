@@ -20,24 +20,27 @@ PACKAGE_SUFFIX=arm64-macos
 else
 PACKAGE_SUFFIX=x86_64-macos
 endif
-# FIXME: When new WABT 1.0.31 is released, we can update this to standard paths
 HOMEBREW_DIR = $(shell brew --prefix)
-WABT_INCLUDE_DIR := $(HOME)/Downloads/src/wabt/include
-WABT_LIB_DIR := $(HOME)/Downloads/src/wabt/build
-WABT_WASM2C_SRC_DIR = $(HOME)/Downloads/src/wabt/wasm2c
+# FIXME: When new WABT 1.0.31 is released, we can update this to standard paths
+WABT_DIR = /usr/local/wabt
 BOOST_INCLUDE_DIR := $(HOMEBREW_DIR)/include
 BOOST_LIB_DIR := $(HOMEBREW_DIR)/lib
 LIBS := -mmacosx-version-min=13.0 
 CXXFLAGS := -std=c++17
 else # $(UNAME_S)
-WABT_INCLUDE_DIR := /usr/local/wabt/include
-WABT_LIB_DIR := /usr/local/wabt/lib
-WABT_WASM2C_SRC_DIR = /usr/local/wasm2c
+WABT_DIR = /usr/local/wabt
 BOOST_INCLUDE_DIR = /usr/include
-BOOST_LIB_DIR := /usr/lib/x86_64-linux-gnu
+BOOST_LIB_DIR := /usr/lib/$(shell gcc -dumpmachine)
 PACKAGE_SUFFIX=x86_64-linux
 endif # $(UNAME_S)
-LIBS := -L$(WABT_LIB_DIR) -lwabt $(BOOST_LIB_DIR)/libboost_filesystem.a $(BOOST_LIB_DIR)/libboost_program_options.a $(LIBS)
+WABT_INCLUDE_DIR := $(WABT_DIR)/include
+WABT_LIB_DIR := $(WABT_DIR)/lib
+WABT_DATA_DIR = $(WABT_DIR)/share/wabt
+LIBS := \
+	$(WABT_LIB_DIR)/libwabt.a \
+	$(BOOST_LIB_DIR)/libboost_filesystem.a \
+	$(BOOST_LIB_DIR)/libboost_program_options.a \
+	$(LIBS)
 package: waforthc
 	$(TAR) czf waforthc-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforthc
 endif # $(OS)
@@ -74,13 +77,13 @@ waforth_core.h: waforth_core.wasm
 waforth_rt.h: rt.c
 	$(BIN2H) $< $@
 
-waforth_wabt_wasm-rt-impl_c.h: $(WABT_WASM2C_SRC_DIR)/wasm-rt-impl.c
+waforth_wabt_wasm-rt-impl_c.h: $(WABT_DATA_DIR)/wasm2c/wasm-rt-impl.c
 	$(BIN2H) $< $@
 
-waforth_wabt_wasm-rt-impl_h.h: $(WABT_WASM2C_SRC_DIR)/wasm-rt-impl.h
+waforth_wabt_wasm-rt-impl_h.h: $(WABT_DATA_DIR)/wasm2c/wasm-rt-impl.h
 	$(BIN2H) $< $@
 
-waforth_wabt_wasm-rt_h.h: $(WABT_WASM2C_SRC_DIR)/wasm-rt.h
+waforth_wabt_wasm-rt_h.h: $(WABT_INCLUDE_DIR)/wasm-rt.h
 	$(BIN2H) $< $@
 
 waforth_core.wasm: ../waforth.wat
