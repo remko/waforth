@@ -10,7 +10,7 @@ jobs:
   build-waforthc:
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
