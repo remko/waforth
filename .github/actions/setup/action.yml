@@ -25,6 +25,7 @@ runs:
       curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.31/wabt-1.0.31.tar.xz | tar xvJ -C /tmp
       mkdir -p /c/tools/wabt/share/wabt
       mv /tmp/wabt-1.0.31/wasm2c /c/tools/wabt/share/wabt
+      ls /c/tools/wabt/share/wabt/wasm2c
       echo "Done"
     shell: bash
   - run: yarnpkg --pure-lockfile
