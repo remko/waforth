@@ -4,11 +4,14 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/process.hpp>
-#include <boost/program_options.hpp>
 #include <wabt/apply-names.h>
 #include <wabt/binary-reader-ir.h>
 #include <wabt/binary-reader.h>
@@ -30,8 +33,6 @@
 #include "waforth_wabt_wasm-rt-impl_h.h"
 #include "waforth_wabt_wasm-rt_h.h"
 
-namespace bp = boost::process;
-namespace bpo = boost::program_options;
 namespace fs = std::filesystem;
 namespace wabti = wabt::interp;
 
@@ -43,6 +44,66 @@ static std::unique_ptr<wabt::FileStream> stderrStream;
 #ifndef VERSION
 #define VERSION "dev"
 #endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool endsWith(const std::string &x, const std::string &y) {
+  return x.size() >= y.size() && x.compare(x.size() - y.size(), std::string::npos, y) == 0;
+}
+
+int runChild(const std::vector<std::string> &cmd) {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  std::ostringstream cmdss;
+  for (const i = 0; i < cmd.size(); ++i) {
+    if (i > 0) {
+      cmdss << " ";
+    }
+    auto arg = cmd[i];
+    // TODO: Escape
+    cmds << arg;
+  }
+  auto cmdss = cmds.str();
+
+  STARTUPINFO si;
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  PROCESS_INFORMATION pi;
+  ZeroMemory(&pi, sizeof(pi));
+  if (!CreateProcess(NULL, cmds.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+    std::cerr << "CreateProcess failed: %d" << GetLastError() << std::endl;
+    return -1;
+  }
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  DWORD ret;
+  GetExitCodeProcess(pi.hProcess, &ret);
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+  return ret;
+}
+#else
+  std::vector<const char *> argsp;
+  for (const auto &arg : cmd) {
+    argsp.push_back(arg.c_str());
+  }
+  argsp.push_back(nullptr);
+  auto pid = fork();
+  if (pid == 0) {
+    if (execvp(argsp[0], (char **)&argsp[0]) == -1) {
+      std::cerr << "execvp() error" << std::endl;
+      return -1;
+    }
+    return 0;
+  }
+  int status;
+  waitpid(pid, &status, 0);
+  if (WIFEXITED(status)) {
+    return WEXITSTATUS(status);
+  } else {
+    return -1;
+  }
+  return 0;
+#endif
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -88,16 +149,12 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
     wabt::FileStream((wd / "wasm-rt.h").string()).WriteData(waforth_wabt_wasm_rt_h, sizeof(waforth_wabt_wasm_rt_h));
   }
 
-  std::ostringstream cmd;
-  bp::child c(bp::search_path(cc), "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string(),
-              bp::args(cflags));
-  c.wait();
-  int result = c.exit_code();
-  if (result != 0) {
+  std::vector<std::string> cmd = {cc, "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string()};
+  cmd.insert(cmd.end(), cflags.begin(), cflags.end());
+  if (runChild(cmd) != 0) {
     std::cerr << "error compiling";
     return wabt::Result::Error;
   }
-
   return wabt::Result::Ok;
 }
 
@@ -351,7 +408,7 @@ wabt::Result main_(const std::string &infile, const std::string &outfile, const 
   wabt::Module compiled;
   CHECK_RESULT(compileToModule(words, rresult.data, rresult.dataOffset, rresult.latest, compiled, errors));
 
-  if (boost::ends_with(outfile, ".wasm")) {
+  if (endsWith(outfile, ".wasm")) {
     CHECK_RESULT(writeModule(outfile, compiled));
   } else {
     CHECK_RESULT(compileToNative(compiled, init, outfile, cc, cflags));
@@ -360,44 +417,70 @@ wabt::Result main_(const std::string &infile, const std::string &outfile, const 
   return wabt::Result::Ok;
 }
 
+const char help[] = "waforthc " VERSION R"(
+
+Usage: waforthc [OPTION]... INPUT_FILE
+
+Options:
+  --help                     Show this help message
+  --output=FILE              Output file (default: "out")
+                             If `arg` ends with .wasm, the result will be a 
+                             WebAssembly module. Otherwise, the result will be 
+                             a native executable.
+  --cc=CC                    C compiler (default: "gcc")
+  --ccflag=FLAG              C compiler flag
+  --init=PROGRAM             Initialization program
+                             If specified, PROGRAM will be executed when the 
+                             resulting executable is run. Otherwise, the 
+                             resulting executable will start an interactive 
+                             session.
+)";
+
+std::pair<std::string, std::string> splitOption(const std::string &s) {
+  auto i = s.find("=");
+  if (i == std::string::npos) {
+    return std::make_pair(s, "");
+  }
+  return std::make_pair(s.substr(0, i), s.substr(i + 1));
+}
+
 int main(int argc, char *argv[]) {
-  std::string outfile;
+  std::string outfile("out");
   std::string infile;
   std::string init;
-  std::string cc;
+  std::string cc("gcc");
   std::vector<std::string> ccflags;
-
-  bpo::options_description odesc("Options");
-  odesc.add_options()("help", "Show this help message")(
-      "output,o", bpo::value<std::string>(&outfile)->default_value("out"),
-      "Output file\nIf `arg` ends with .wasm, the result will be a WebAssembly module. Otherwise, the result will be a native executable.")(
-      "cc", bpo::value<std::string>(&cc)->default_value("gcc"), "C compiler")("ccflag", bpo::value<std::vector<std::string>>(&ccflags),
-                                                                              "C compiler flag")(
-      "init", bpo::value<std::string>(&init),
-      "Initialization program\nIf specified, PROGRAM will be executed when the resulting executable is run. Otherwise, the resulting executable will "
-      "start an interactive session.");
-  bpo::options_description idesc("Options");
-  idesc.add_options()("input", bpo::value<std::string>(&infile)->required(), "Input file");
-  bpo::options_description desc;
-  desc.add(odesc).add(idesc);
-
-  bpo::positional_options_description p;
-  p.add("input", 1);
-  bpo::variables_map vm;
-  try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-    if (vm.count("help")) {
-      std::cout << "waforthc " << VERSION << std::endl << std::endl;
-      std::cout << "Usage: " << argv[0] << " [OPTION]... INPUT_FILE" << std::endl << std::endl;
-      std::cout << odesc << std::endl;
-      return 0;
+  for (int i = 1; i < argc; ++i) {
+    std::string arg(argv[i]);
+    if (arg.size() >= 0 && arg[0] == '-') {
+      auto opt = splitOption(arg);
+      if (opt.first == "--help") {
+        std::cout << help;
+        return 0;
+      } else if (opt.first == "--output") {
+        outfile = opt.second;
+      } else if (opt.first == "--init") {
+        init = opt.second;
+      } else if (opt.first == "--cc") {
+        cc = opt.second;
+      } else if (opt.first == "--ccflag") {
+        ccflags.push_back(opt.second);
+      } else {
+        std::cerr << "unrecognized option: " << arg << std::endl;
+        return -1;
+      }
+    } else {
+      if (!infile.empty()) {
+        std::cerr << "only 1 input file supported" << std::endl;
+        return -1;
+      }
+      infile = arg;
     }
-    bpo::notify(vm);
-  } catch (const bpo::error &e) {
-    std::cout << e.what();
-    return -1;
   }
-
+  if (infile.empty()) {
+    std::cout << help;
+    return 0;
+  }
   ccflags.push_back("-lm");
 
   wabt::Errors errors;

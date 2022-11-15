@@ -10,21 +10,21 @@ jobs:
   build-waforthc:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-18.04, windows-latest]
+        os: [ubuntu-18.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
 
-      - if: runner.os == 'macOS'
-        run: brew install boost
+      - if: runner.os == 'macOS' || runner.os == 'Windows'
+        run: make -C src/waforthc package
         shell: bash
       - if: runner.os == 'Linux'
-        run: sudo apt-get install libboost-dev libboost-filesystem-dev libboost-program-options-dev
+        run: |
+          make -C src/waforthc package \
+            WABT_INCLUDE_DIR=/usr/local/include \
+            WABT_LIB_DIR=/usr/local/lib \
+            WABT_DATA_DIR=/usr/local/share/wabt
         shell: bash
-      - if: runner.os == 'Windows'
-        run: C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-boost
-        shell: cmd
 
-      - run: make -C src/waforthc package
       - run: make -C src/waforthc check
