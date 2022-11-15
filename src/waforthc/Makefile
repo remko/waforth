@@ -32,7 +32,6 @@ WABT_INCLUDE_DIR = $(WABT_DIR)/include
 WABT_LIB_DIR = $(WABT_DIR)/lib
 WABT_DATA_DIR = $(WABT_DIR)/share/wabt
 LIBS := -mmacosx-version-min=13.0 
-CXXFLAGS := -std=c++17
 else # $(UNAME_S)
 GCC_TARGET_MACHINE = $(shell gcc -dumpmachine)
 WABT_INCLUDE_DIR ?= /usr/lib/include
@@ -44,10 +43,11 @@ package: waforthc
 	$(TAR) czf waforthc-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforthc
 endif # $(OS)
 
+CPPFLAGS := -I$(WABT_INCLUDE_DIR) 
+CXXFLAGS := -std=c++17 $(CXXFLAGS)
 LIBS := \
 	$(WABT_LIB_DIR)/libwabt.a \
 	$(LIBS)
-CPPFLAGS := -I$(WABT_INCLUDE_DIR) 
 
 ifeq ($(DEBUG),1)
 CXXFLAGS := $(CXXFLAGS) -g
