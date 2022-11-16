@@ -129,7 +129,7 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
   {
     std::ofstream inith(wd / "_waforth_config.h");
     inith << "static uint8_t waforth_init[] = {";
-    for (int i = 0; i < init.size(); ++i) {
+    for (size_t i = 0; i < init.size(); ++i) {
       inith << (int)init[i];
       if (i != init.size() - 1) {
         inith << ",";

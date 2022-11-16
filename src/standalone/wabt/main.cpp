@@ -20,11 +20,6 @@ namespace wabti = wabt::interp;
 #define VERSION "dev"
 #endif
 
-#define CORE_RUN_EXPORT_INDEX 0
-#define CORE_TABLE_EXPORT_INDEX 1
-#define CORE_MEMORY_EXPORT_INDEX 2
-#define CORE_ERROR_EXPORT_INDEX 9
-
 #define ERR_UNKNOWN 0x1
 #define ERR_QUIT 0x2
 #define ERR_ABORT 0x3

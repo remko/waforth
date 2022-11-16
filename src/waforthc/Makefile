@@ -25,9 +25,7 @@ PACKAGE_SUFFIX=arm64-macos
 else
 PACKAGE_SUFFIX=x86_64-macos
 endif
-HOMEBREW_DIR = $(shell brew --prefix)
-# FIXME: When new WABT 1.0.31 is released, we can update this to standard paths
-WABT_DIR = /usr/local/wabt
+WABT_DIR = $(shell brew --prefix)
 WABT_INCLUDE_DIR = $(WABT_DIR)/include
 WABT_LIB_DIR = $(WABT_DIR)/lib
 WABT_DATA_DIR = $(WABT_DIR)/share/wabt
@@ -43,8 +41,7 @@ package: waforthc
 	$(TAR) czf waforthc-v$(VERSION)-$(PACKAGE_SUFFIX).tgz waforthc
 endif # $(OS)
 
-CPPFLAGS := -I$(WABT_INCLUDE_DIR) 
-CXXFLAGS := -std=c++17 $(CXXFLAGS)
+CXXFLAGS := -DVERSION='"$(VERSION)"' -Wall -std=c++17 -I$(WABT_INCLUDE_DIR) $(CXXFLAGS)
 LIBS := \
 	$(WABT_LIB_DIR)/libwabt.a \
 	$(LIBS)
@@ -54,12 +51,16 @@ CXXFLAGS := $(CXXFLAGS) -g
 else
 CXXFLAGS := $(CXXFLAGS) -O2
 endif
+ifeq ($(ASAN),1)
+CXXFLAGS := $(CXXFLAGS) -fsanitize=address -fno-omit-frame-pointer
+endif
+
+# FIXME: Remove this when WABT #2071 is merged
+CXXFLAGS := -DNDEBUG=1 $(CXXFLAGS)
 
 BIN2H=../../scripts/bin2h
 WAT2WASM=wat2wasm
 WAT2WASM_FLAGS=--debug-names
-
-CPPFLAGS:=-DVERSION='"$(VERSION)"' $(CPPFLAGS)
 
 OBJECTS := waforthc.o
 

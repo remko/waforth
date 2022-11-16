@@ -79,6 +79,9 @@ CFLAGS := $(CFLAGS) -g
 else
 CFLAGS := $(CFLAGS) -O2
 endif
+ifeq ($(ASAN),1)
+CFLAGS := $(CFLAGS) -fsanitize=address -fno-omit-frame-pointer
+endif
 
 ################################################
 
@@ -86,7 +89,7 @@ BIN2H=../../scripts/bin2h
 WAT2WASM=wat2wasm
 WAT2WASM_FLAGS=--debug-names
 
-CFLAGS:=-DVERSION='"$(VERSION)"' $(CFLAGS)
+CFLAGS:=-Wall -DVERSION='"$(VERSION)"' $(CFLAGS)
 OBJECTS=main.o $(RESOURCE_OBJECTS)
 
 all: waforth
