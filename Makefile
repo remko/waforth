@@ -29,6 +29,10 @@ src/web/benchmarks/sieve/sieve-c.js:
 standalone:
 	$(MAKE) -C src/standalone
 
+.PHONY: waforthc
+waforthc:
+	$(MAKE) -C src/waforthc
+
 %.wasm: %.wat
 	$(WAT2WASM) $(WAT2WASM_FLAGS) -o $@ $<
 
