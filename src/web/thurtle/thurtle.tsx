@@ -458,7 +458,12 @@ async function getSVG(): Promise<{
   height: number;
 }> {
   const svgEl = <svg xmlns="http://www.w3.org/2000/svg" />;
-  await draw({ program: editor.getValue(), drawEl: svgEl, showTurtle: false });
+  await draw({
+    program: editor.getValue(),
+    drawEl: svgEl,
+    showTurtle: false,
+    jsx,
+  });
   const viewBox = svgEl.getAttribute("viewBox")!.split(" ");
   svgEl.setAttribute("width", parseInt(viewBox[2]) + "");
   svgEl.setAttribute("height", parseInt(viewBox[3]) + "");
@@ -540,10 +545,22 @@ document.addEventListener("keydown", (ev) => {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+function output(c: string) {
+  outputEl.appendChild(document.createTextNode(c));
+  if (c === "\n") {
+    outputEl.scrollTop = outputEl.scrollHeight;
+  }
+}
+
 async function run() {
   try {
     runButtonEl.disabled = true;
-    await draw({ program: editor.getValue(), drawEl: worldEl, outputEl });
+    await draw({
+      program: editor.getValue(),
+      drawEl: worldEl,
+      onEmit: output,
+      jsx,
+    });
     editor.focus();
   } catch (e) {
     console.error(e);
@@ -553,7 +570,7 @@ async function run() {
 }
 
 async function reset() {
-  await draw({ drawEl: worldEl, outputEl });
+  await draw({ drawEl: worldEl, onEmit: output, jsx });
 }
 
 /////////////////////////////////////////////////////////////////////////

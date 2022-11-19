@@ -36,12 +36,16 @@ function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
   }
 }
 
-enum ErrorCode {
+export enum ErrorCode {
   Unknown = 0x1, // Unknown error
   Quit = 0x2, // QUIT was called
   Abort = 0x3, // ABORT or ABORT" was called
   EOI = 0x4, // No more input
   Bye = 0x5, // BYE was called
+}
+
+export function isSuccess(code: ErrorCode) {
+  return code !== ErrorCode.Abort && code !== ErrorCode.Unknown;
 }
 
 /**
@@ -191,6 +195,7 @@ class WAForth {
     this.core = instance.instance;
     const table = this.core.exports.table as WebAssembly.Table;
     const memory = this.core.exports.memory as WebAssembly.Memory;
+    return this;
   }
 
   memory(): WebAssembly.Memory {

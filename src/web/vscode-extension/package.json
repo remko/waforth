@@ -1,0 +1,78 @@
+{
+  "name": "waforth-vscode-extension",
+  "version": "0.1.3",
+  "displayName": "WAForth",
+  "description": "WAForth interactive notebooks",
+  "categories": [
+    "Programming Languages",
+    "Notebooks"
+  ],
+  "keywords": [
+    "forth"
+  ],
+  "publisher": "remko",
+  "license": "MIT",
+  "repository": "github:remko/waforth",
+  "icon": "icon.png",
+  "main": "dist/extension.js",
+  "browser": "dist/extension.js",
+  "engines": {
+    "vscode": "^1.61.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "activationEvents": [
+    "onNotebook:waforth-notebook",
+    "onCommand:waforth-notebook.new"
+  ],
+  "contributes": {
+    "notebooks": [
+      {
+        "type": "waforth-notebook",
+        "displayName": "WAForth Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.wafnb"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "id": "waforth",
+        "aliases": [
+          "WAForth"
+        ],
+        "configuration": "./language/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "waforth",
+        "scopeName": "source.waforth",
+        "path": "./language/waforth.tmGrammar.json"
+      }
+    ],
+    "commands": [
+      {
+        "title": "WAForth: New Notebook",
+        "shortTitle": "WAForth Notebook",
+        "command": "waforth-notebook.new"
+      }
+    ],
+    "menus": {
+      "file/newFile": [
+        {
+          "command": "waforth-notebook.new"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "make prepackage"
+  }
+}

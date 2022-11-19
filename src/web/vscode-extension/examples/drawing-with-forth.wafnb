@@ -1,0 +1,109 @@
+{
+  "cells": [
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "# Drawing with Forth\n\nIn this tutorial, you'll learn basic Forth by drawing graphics with a turtle.\n\n| *VS Code Note:* Make sure you select the *Thurtle* kernel in the top right above to run this notebook\n\n## The stack\n\nForth is a stack-based language. Numbers are put on the stack, and words pop them off the stack (and put new ones on the stack) again.\nFor example, to take the sum of 8 and 14, put both numbers on the stack, and call `+`. To pop the result of the stack and print it out, use `.`:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "8 14 +\n."
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "## Drawing lines\n\nInstead of printing numbers to output, we can also draw lines.\n\nThe `FORWARD` word pops the number of the stack, and moves a turtle forward while drawing a line:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "200 FORWARD"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "Let's now also turn the turtle 90 degrees, and create a complete square:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "200 FORWARD\n90 RIGHT\n200 FORWARD\n90 RIGHT\n200 FORWARD\n90 RIGHT\n200 FORWARD\n90 RIGHT"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "## Creating your own words\n\nWe can create our own parameterized word that draws a square of the given size:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": ": SQUARE ( n -- )\n  DUP FORWARD\n  90 RIGHT\n  DUP FORWARD\n  90 RIGHT\n  DUP FORWARD\n  90 RIGHT\n  DUP FORWARD\n  90 RIGHT\n;\n\n500 SQUARE"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "## Loops\n\nForth also has loops using `DO` and `LOOP`:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": ": SQUARE ( n -- )\n  4 0 DO\n    DUP FORWARD\n    90 RIGHT\n  LOOP\n  DROP\n;\n\n250 SQUARE"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "# Combining words\n\nWe can create more complex figures by using the `SQUARE` word from above, and repeating it.\n\n| *Tip*: Play with the numbers in `FLOWER` to create variations of the flower "
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": ": SQUARE ( n -- )\n  4 0 DO\n    DUP FORWARD\n    90 RIGHT\n  LOOP\n  DROP\n;\n\n: FLOWER ( n -- )\n  24 0 DO\n    DUP SQUARE\n    15 RIGHT\n  LOOP\n  DROP\n;\n\n250 FLOWER"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "  4 0 DO\n    DUP FORWARD\n    90 RIGHT\n  LOOP\n  DROP\n;\n\n: FLOWER ( n -- )\n  24 0 DO\n    DUP SQUARE\n    15 RIGHT\n  LOOP\n  DROP\n;\n\n250 FLOWER"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "## Recursion\n\nWords can also call themselves:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": ": SPIRAL ( n -- )\n  DUP 1 < IF DROP EXIT THEN \n  DUP FORWARD\n  15 RIGHT\n  98 100 */ RECURSE\n;\n\n140 SPIRAL"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "We can make a small variation of the above recursive program, where the lines become longer instead of shorter.\nTo avoid hard-coding some constants in the code, we use the word `CONSTANT` to define a new constant (`ANGLE`) to turn.\n\n| *Tip*: Change the constant `ANGLE` to 91 and see what happens."
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "90 CONSTANT ANGLE\n\n: SPIRAL ( n -- )\n  DUP 800 > IF DROP EXIT THEN \n  DUP FORWARD\n  ANGLE RIGHT\n  10 +\n  RECURSE\n;\n\n1 SPIRAL"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "# Fractals\n\nYou can create more complex recursive drawings, called *fractals*. \n\nA famous fractal is the *Koch snowflake*.\n\n| *Tip*: Change the `DEPTH` constant to make a coarser or finer grained snowflake"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "730 CONSTANT LENGTH\n6   CONSTANT DEPTH\n\n: SIDE ( length depth -- )\n  DUP 0= IF \n    DROP FORWARD EXIT \n  THEN\n  SWAP 3 / SWAP 1-\n  2DUP RECURSE\n  60 LEFT 2DUP RECURSE\n  120 RIGHT 2DUP RECURSE\n  60 LEFT RECURSE\n;\n\n: SNOWFLAKE ( -- )\n  3 0 DO \n    LENGTH DEPTH SIDE\n    120 RIGHT\n  LOOP\n;\n\n1 SETPENSIZE\nSNOWFLAKE"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "You can also draw plants and trees using fractals:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "450 CONSTANT SIZE\n7   CONSTANT BRANCHES\n160 CONSTANT SPREAD\n\nVARIABLE RND\nHERE RND !\n\n: RANDOM ( -- n )\n  RND @ 75 * 74 + 65537 MOD\n  DUP RND !\n;\n\n: CHOOSE ( n1 -- n2 )\n  RANDOM 65537 */MOD SWAP DROP \n; \n\n: PLANT ( size angle -- )\n  OVER 10 < IF 2DROP EXIT THEN\n  DUP RIGHT\n  OVER FORWARD\n  BRANCHES 0 DO\n    OVER 2/\n    SPREAD CHOOSE SPREAD 2/ -\n    RECURSE\n  LOOP\n  PENUP SWAP BACKWARD PENDOWN\n  LEFT\n;\n  \n1 SETPENSIZE\nSIZE 0 PLANT"
+    }
+  ]
+}

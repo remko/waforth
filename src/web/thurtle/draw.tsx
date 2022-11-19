@@ -1,9 +1,8 @@
-import * as jsx from "./jsx";
-import WAForth from "waforth";
+import WAForth, { ErrorCode } from "waforth";
 import thurtleFS from "./thurtle.fs";
 import turtle from "./turtle.svg";
 
-const padding = 0.05;
+const padding = 0.025;
 
 enum PenState {
   Up = 0,
@@ -18,14 +17,16 @@ type Path = {
 export default async function draw({
   program,
   drawEl,
-  outputEl,
+  onEmit,
   showTurtle = true,
+  jsx,
 }: {
   program?: string;
   drawEl: SVGSVGElement;
-  outputEl?: HTMLElement;
+  onEmit?: (c: string) => void;
   showTurtle?: boolean;
-}) {
+  jsx: any;
+}): Promise<ErrorCode | null> {
   // Initialize state
   let rotation = 270;
   const position = { x: 0, y: 0 };
@@ -52,6 +53,7 @@ export default async function draw({
   }
 
   // Run program
+  let result: ErrorCode | null = null;
   if (program != null) {
     const forth = new WAForth();
     await forth.load();
@@ -97,15 +99,10 @@ export default async function draw({
     });
 
     forth.interpret(thurtleFS);
-    if (outputEl != null) {
-      forth.onEmit = (c) => {
-        outputEl.appendChild(document.createTextNode(c));
-        if (c === "\n") {
-          outputEl.scrollTop = outputEl.scrollHeight;
-        }
-      };
+    if (onEmit != null) {
+      forth.onEmit = onEmit;
     }
-    forth.interpret(program, true);
+    result = forth.interpret(program, true);
   }
 
   // Draw
@@ -119,6 +116,7 @@ export default async function draw({
       data-hook="turtle"
       width="50"
       height="50"
+      style={{}}
       href={turtle}
     />
   );
@@ -143,6 +141,23 @@ export default async function draw({
     } ${position.y - 25})`
   );
 
+  // If we have a turtle, expand the view so that the entire turtle is in sight
+  // This looks better than just adjusting the bounding box
+  if (showTurtle && visible) {
+    const extendX = Math.max(
+      boundingBox.minX - Math.min(boundingBox.minX, position.x - 25),
+      Math.max(boundingBox.maxX, position.x + 25) - boundingBox.maxX
+    );
+    const extendY = Math.max(
+      boundingBox.minY - Math.min(boundingBox.minY, position.y - 25),
+      Math.max(boundingBox.maxY, position.y + 25) - boundingBox.maxY
+    );
+    boundingBox.maxX += extendX;
+    boundingBox.minX -= extendX;
+    boundingBox.maxY += extendY;
+    boundingBox.minY -= extendY;
+  }
+
   const width = boundingBox.maxX - boundingBox.minX;
   const height = boundingBox.maxY - boundingBox.minY;
   if (width == 0 || height == 0) {
@@ -165,4 +180,6 @@ export default async function draw({
   if (showTurtle) {
     drawEl.appendChild(turtleEl);
   }
+
+  return result;
 }

@@ -1,0 +1,175 @@
+{
+  "fileTypes": ["f", "fs"],
+  "scopeName": "source.waforth",
+  "foldingStartMarker": "/\\*\\*|\\{\\s*$",
+  "foldingStopMarker": "\\*\\*/|^\\s*\\}",
+  "name": "WAForth",
+  "patterns": [
+    {
+      "include": "#constant"
+    },
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#string"
+    },
+    {
+      "include": "#word"
+    },
+    {
+      "include": "#variable"
+    },
+    {
+      "include": "#storage"
+    },
+    {
+      "include": "#word-def"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "match": "(?<=^|\\s)(\\\\[\\s\\S]*$)",
+          "name": "comment.line.backslash.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(\\.?\\( [^)]*\\))",
+          "name": "comment.line.parentheses.waforth"
+        }
+      ]
+    },
+    "constant": {
+      "patterns": [
+        {
+          "match": "(?i:(?<=^|\\s)(TRUE|FALSE|BL|PI|CELL|C/L|R/O|W/O|R/W)(?=\\s))",
+          "name": "constant.language.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)([$#%]?[-+]?[0-9]+(\\.[0-9]*e(-?[0-9]+)|\\.?[0-9a-fA-F]*))(?=\\s)",
+          "name": "constant.numeric.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(([&^]\\S)|((\"|')\\S(\"|')))(?=\\s)",
+          "name": "constant.character.waforth"
+        }
+      ]
+    },
+    "storage": {
+      "patterns": [
+        {
+          "comment": "",
+          "match": "(?<=^|\\s)(?i:(2CONSTANT|2VARIABLE|ALIAS|CONSTANT|CREATE-INTERPRET/COMPILE[:]?|CREATE|DEFER|FCONSTANT|FIELD|FVARIABLE|USER|VALUE|VARIABLE|VOCABULARY))(?=\\s)",
+          "name": "storage.type.waforth"
+        }
+      ]
+    },
+    "string": {
+      "patterns": [
+        {
+          "comment": "",
+          "match": "(?i:((?<=ABORT\" )|(?<=BREAK\" )|(?<=\\.\" )|(C\" )|(0\")|(S\\\\?\" )))[^\"]+\"",
+          "name": "string.quoted.double.waforth"
+        },
+        {
+          "comment": "",
+          "match": "(?i:((?<=INCLUDE)|(?<=NEEDS)|(?<=REQUIRE)|(?<=USE)))[ ]\\S+(?=\\s)",
+          "name": "string.unquoted.waforth"
+        }
+      ]
+    },
+    "variable": {
+      "patterns": [
+        {
+          "match": "\\b(?i:I|J)\\b",
+          "name": "variable.language.waforth"
+        }
+      ]
+    },
+    "word": {
+      "patterns": [
+        {
+          "match": "(?<=^|\\s)\\[(?i:(NIP|TUCK|ROT|SWAP|DUP|OVER|DROP|2SWAP|2DUP|2DROP|FNIP|FTUCK|FROT|FSWAP|FDUP|FOVER|FDROP|F2SWAP|F2DUP|F2DROP))\\](?=\\s)",
+          "name": "keyword.other.word.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)\\[(?i:(F+|F-|F*|F**|FSQRT|F/|F.S))\\](?=\\s)",
+          "name": "keyword.other.word.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)\\[(?i:(EXECUTE|ABORT|CATCH|C@|F@|>R|R>|!|/MOD|MOD))\\](?=\\s)",
+          "name": "keyword.other.word.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)\\[(?i:(\\?DO|\\+LOOP|AGAIN|BEGIN|DEFINED|DO|ELSE|ENDIF|FOR|IF|IFDEF|IFUNDEF|LOOP|NEXT|REPEAT|THEN|UNTIL|WHILE))\\](?=\\s)",
+          "name": "keyword.control.immediate.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(?i:(COMPILE-ONLY|IMMEDIATE|IS|RESTRICT|TO|WHAT'S|]))(?=\\s)",
+          "name": "keyword.operator.immediate.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(?i:(-DO|\\-LOOP|\\?DO|\\?LEAVE|\\+DO|\\+LOOP|ABORT\\\"|AGAIN|AHEAD|BEGIN|CASE|DO|ELSE|ENDCASE|ENDIF|ENDOF|ENDTRY\\-IFERROR|ENDTRY|FOR|IF|IFERROR|LEAVE|LOOP|NEXT|RECOVER|REPEAT|RESTORE|THEN|TRY|U\\-DO|U\\+DO|UNTIL|WHILE))(?=\\s)",
+          "name": "keyword.control.compile-only.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(?i:(\\?DUP-0=-IF|\\?DUP-IF|\\)|\\[|\\['\\]|\\[CHAR\\]|\\[COMPILE\\]|\\[IS\\]|\\[TO\\]|<COMPILATION|<INTERPRETATION|ASSERT\\(|ASSERT0\\(|ASSERT1\\(|ASSERT2\\(|ASSERT3\\(|COMPILATION>|DEFERS|DOES>|INTERPRETATION>|OF|POSTPONE))(?=\\s)",
+          "name": "keyword.other.compile-only.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(?i:('|<IS>|<TO>|CHAR|END-STRUCT|INCLUDE[D]?|LOAD|NEEDS|REQUIRE[D]?|REVISION|SEE|STRUCT|THRU|USE))(?=\\s)",
+          "name": "keyword.other.non-immediate.waforth"
+        },
+        {
+          "match": "(?<=^|\\s)(?i:(~~|BREAK:|BREAK\"|DBG))(?=\\s)",
+          "name": "keyword.other.warning.waforth"
+        }
+      ]
+    },
+    "word-def": {
+      "begin": "(^:|\\s:)\\s(\\S+)\\s|(?i:(:NONAME))",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.other.compile-only.waforth"
+        },
+        "2": {
+          "name": "entity.name.function.waforth"
+        },
+        "3": {
+          "name": "keyword.other.compile-only.waforth"
+        },
+        "4": {
+          "name": "keyword.other.word.waforth"
+        }
+      },
+      "end": "(;(?i:CODE)?)",
+      "endCaptures": {
+        "0": {
+          "name": "keyword.other.compile-only.waforth"
+        }
+      },
+      "name": "meta.block.waforth",
+      "patterns": [
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#word"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#storage"
+        }
+      ]
+    }
+  }
+}
