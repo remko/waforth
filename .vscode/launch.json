@@ -12,6 +12,19 @@
         "${workspaceFolder}/src/web/vscode-extension/examples"
       ],
       "outFiles": ["${workspaceFolder}/src/web/vscode-extension/dist/*.js"]
+    },
+    {
+      "name": "Run VS Code Extension (Web)",
+      "type": "extensionHost",
+      "debugWebWorkerHost": true,
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/src/web/vscode-extension",
+        "--extensionDevelopmentKind=web",
+        "${workspaceFolder}/src/web/vscode-extension/examples"
+      ],
+      "outFiles": ["${workspaceFolder}/src/web/vscode-extension/dist/*.js"]
     }
   ]
 }

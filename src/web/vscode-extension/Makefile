@@ -8,9 +8,8 @@ install-deps:
 .PHONY: prepackage
 prepackage: all LICENSE.txt icon.png
 
-
 .PHONY: package
-package: prepackage
+package:
 	vsce package
 
 .PHONY: publish

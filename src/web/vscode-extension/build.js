@@ -15,22 +15,35 @@ for (const arg of process.argv.slice(2)) {
   }
 }
 
-esbuild
-  .build({
-    bundle: true,
-    logLevel: "info",
-    entryPoints: [path.join(__dirname, "src/extension.ts")],
-    outfile: path.join(__dirname, "dist/extension.js"),
-    format: "cjs",
-    minify: !dev,
-    sourcemap: true,
-    platform: "node",
-    external: ["vscode"],
-    loader: {
-      ".wasm": "binary",
-      ".fs": "text",
-      ".svg": "dataurl",
-    },
-    plugins: [wasmTextPlugin({ debug: true })],
-  })
-  .catch(() => process.exit(1));
+const config = {
+  bundle: true,
+  logLevel: "info",
+  entryPoints: [path.join(__dirname, "src/extension.ts")],
+  format: "cjs",
+  minify: !dev,
+  sourcemap: true,
+  external: ["vscode"],
+  loader: {
+    ".wasm": "binary",
+    ".fs": "text",
+    ".svg": "dataurl",
+  },
+  plugins: [wasmTextPlugin({ debug: true })],
+};
+
+(async () => {
+  try {
+    await esbuild.build({
+      ...config,
+      outfile: path.join(__dirname, "dist/extension.js"),
+      platform: "node",
+    });
+    await esbuild.build({
+      ...config,
+      outfile: path.join(__dirname, "dist/extension.web.js"),
+      platform: "browser",
+    });
+  } catch (e) {
+    process.exit(1);
+  }
+})();

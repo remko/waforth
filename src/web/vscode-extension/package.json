@@ -1,6 +1,6 @@
 {
   "name": "waforth-vscode-extension",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "displayName": "WAForth",
   "description": "WAForth interactive notebooks",
   "categories": [
@@ -8,14 +8,15 @@
     "Notebooks"
   ],
   "keywords": [
-    "forth"
+    "forth",
+    "wafnb"
   ],
   "publisher": "remko",
   "license": "MIT",
   "repository": "github:remko/waforth",
   "icon": "icon.png",
   "main": "dist/extension.js",
-  "browser": "dist/extension.js",
+  "browser": "dist/extension.web.js",
   "engines": {
     "vscode": "^1.61.0"
   },
