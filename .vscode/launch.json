@@ -9,7 +9,7 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/src/web/vscode-extension",
-        "${workspaceFolder}/src/web/vscode-extension/examples"
+        "${workspaceFolder}/src/web/notebook/examples"
       ],
       "outFiles": ["${workspaceFolder}/src/web/vscode-extension/dist/*.js"]
     },
@@ -22,7 +22,7 @@
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/src/web/vscode-extension",
         "--extensionDevelopmentKind=web",
-        "${workspaceFolder}/src/web/vscode-extension/examples"
+        "${workspaceFolder}/src/web/notebook/examples"
       ],
       "outFiles": ["${workspaceFolder}/src/web/vscode-extension/dist/*.js"]
     }

@@ -155,12 +155,15 @@ forth.interpret(`
 `);
 ```
 
-## Visual Studio Code Notebooks
+## Notebooks
 
 The [WAForth Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=remko.waforth-vscode-extension) adds support
 for interactive Forth notebooks powered by WAForth. You can execute both text-based Forth code, as well as [Thurtle](https://mko.re/thurtle/) graphics.
 
 Because it is powered by WebAssembly, this extension works both in the desktop version of Visual Studio Code and in [the browser version of Visual Studio Code](https://code.visualstudio.com/docs/editor/vscode-web) (e.g. https://github.dev, https://vscode.dev).
+
+You can also convert the notebook into a lightweight self-contained page using [`wafnb2html`](https://github.com/remko/waforth/tree/master/src/web/notebook).
+An example can be seen [here](https://mko.re/wafnb/drawing-with-forth).
 
 <div align="center">
 <div>

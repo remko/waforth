@@ -3,7 +3,7 @@
     {
       "kind": 1,
       "language": "markdown",
-      "value": "# Drawing with Forth\n\nIn this tutorial, you'll learn basic Forth by drawing graphics with a turtle.\n\n> 💡 Click on the *Run* button next to the examples to run the code.\n\n## The stack\n\nForth is a stack-based language. Numbers are put on the stack, and words pop them off the stack (and put new ones on the stack) again.\nFor example, to take the sum of 8 and 14, put both numbers on the stack, and call `+`. To pop the result of the stack and print it out, use `.`:"
+      "value": "# Drawing with Forth\n\nIn this tutorial, you'll learn basic Forth by drawing graphics with a turtle.\n\n> 💡 Click the *Run* button next to the examples to run the code, or click the *Run* button at the top to run all the code on this page.\n\n## The stack\n\nForth is a stack-based language. Numbers are put on the stack, and words pop them off the stack (and put new ones on the stack) again.\nFor example, to take the sum of 8 and 14, put both numbers on the stack, and call `+`. To pop the result of the stack and print it out, use `.`:"
     },
     {
       "kind": 2,
@@ -88,7 +88,7 @@
     {
       "kind": 2,
       "language": "waforth",
-      "value": "730 CONSTANT LENGTH\n6   CONSTANT DEPTH\n\n: SIDE ( length depth -- )\n  DUP 0= IF \n    DROP FORWARD EXIT \n  THEN\n  SWAP 3 / SWAP 1-\n  2DUP RECURSE\n  60 LEFT 2DUP RECURSE\n  120 RIGHT 2DUP RECURSE\n  60 LEFT RECURSE\n;\n\n: SNOWFLAKE ( -- )\n  3 0 DO \n    LENGTH DEPTH SIDE\n    120 RIGHT\n  LOOP\n;\n\n1 SETPENSIZE\nSNOWFLAKE"
+      "value": "730 CONSTANT LENGTH\n3   CONSTANT DEPTH\n\n: SIDE ( length depth -- )\n  DUP 0= IF \n    DROP FORWARD EXIT \n  THEN\n  SWAP 3 / SWAP 1-\n  2DUP RECURSE\n  60 LEFT 2DUP RECURSE\n  120 RIGHT 2DUP RECURSE\n  60 LEFT RECURSE\n;\n\n: SNOWFLAKE ( -- )\n  3 0 DO \n    LENGTH DEPTH SIDE\n    120 RIGHT\n  LOOP\n;\n\n1 SETPENSIZE\nSNOWFLAKE"
     },
     {
       "kind": 1,

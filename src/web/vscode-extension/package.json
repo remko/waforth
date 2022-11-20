@@ -1,6 +1,6 @@
 {
   "name": "waforth-vscode-extension",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "displayName": "WAForth",
   "description": "WAForth interactive notebooks",
   "categories": [
