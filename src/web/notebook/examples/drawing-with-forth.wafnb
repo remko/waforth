@@ -53,17 +53,12 @@
     {
       "kind": 1,
       "language": "markdown",
-      "value": "# Combining words\n\nWe can create more complex figures by using the `SQUARE` word from above, and repeating it.\n\n| *Tip*: Play with the numbers in `FLOWER` to create variations of the flower "
+      "value": "## Combining words\n\nWe can create more complex figures by using the `SQUARE` word from above, and repeating it.\n\n| *Tip*: Play with the numbers in `FLOWER` to create variations of the flower "
     },
     {
       "kind": 2,
       "language": "waforth",
       "value": ": SQUARE ( n -- )\n  4 0 DO\n    DUP FORWARD\n    90 RIGHT\n  LOOP\n  DROP\n;\n\n: FLOWER ( n -- )\n  24 0 DO\n    DUP SQUARE\n    15 RIGHT\n  LOOP\n  DROP\n;\n\n250 FLOWER"
-    },
-    {
-      "kind": 2,
-      "language": "waforth",
-      "value": "  4 0 DO\n    DUP FORWARD\n    90 RIGHT\n  LOOP\n  DROP\n;\n\n: FLOWER ( n -- )\n  24 0 DO\n    DUP SQUARE\n    15 RIGHT\n  LOOP\n  DROP\n;\n\n250 FLOWER"
     },
     {
       "kind": 1,
@@ -88,7 +83,7 @@
     {
       "kind": 1,
       "language": "markdown",
-      "value": "# Fractals\n\nYou can create more complex recursive drawings, called *fractals*. \n\nA famous fractal is the *Koch snowflake*.\n\n| *Tip*: Change the `DEPTH` constant to make a coarser or finer grained snowflake"
+      "value": "## Fractals\n\nYou can create more complex recursive drawings, called *fractals*. \n\nA famous fractal is the *Koch snowflake*.\n\n| *Tip*: Change the `DEPTH` constant to make a coarser or finer grained snowflake"
     },
     {
       "kind": 2,

@@ -3,13 +3,7 @@
 
 const { createServer } = require("http");
 
-function withWatcher(
-  config,
-  handleBuildFinished = () => {
-    /* do nothing */
-  },
-  port = 8880
-) {
+function withWatcher(config, handleBuildFinished = undefined, port = 8880) {
   const watchClients = [];
   createServer((req, res) => {
     return watchClients.push(
@@ -31,7 +25,9 @@ function withWatcher(
         if (error) {
           console.error(error);
         } else {
-          await handleBuildFinished(result);
+          if (handleBuildFinished != null) {
+            await handleBuildFinished(result);
+          }
           watchClients.forEach((res) => res.write("data: update\n\n"));
           watchClients.length = 0;
         }

@@ -2,6 +2,11 @@ import * as vscode from "vscode";
 import WAForth, { ErrorCode, isSuccess } from "../../waforth";
 import draw from "../../thurtle/draw";
 import JSJSX from "thurtle/jsjsx";
+import {
+  parseNotebook,
+  Notebook,
+  serializeNotebook,
+} from "../../notebook/src/Notebook";
 
 export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -41,30 +46,15 @@ export function deactivate() {
 // Notebook Serializer
 //////////////////////////////////////////////////
 
-interface RawNotebookData {
-  cells: RawNotebookCell[];
-}
-
-interface RawNotebookCell {
-  language: string;
-  value: string;
-  kind: vscode.NotebookCellKind;
-  editable?: boolean;
-}
-
 export class NotebookSerializer implements vscode.NotebookSerializer {
   public readonly label: string = "WAForth Content Serializer";
 
   public async deserializeNotebook(
     data: Uint8Array
   ): Promise<vscode.NotebookData> {
-    const contents = new TextDecoder().decode(data);
-    if (contents.trim().length === 0) {
-      return new vscode.NotebookData([]);
-    }
-    let raw: RawNotebookData;
+    let raw: Notebook;
     try {
-      raw = <RawNotebookData>JSON.parse(contents);
+      raw = parseNotebook(new TextDecoder().decode(data));
     } catch (e) {
       vscode.window.showErrorMessage("Error parsing:", (e as any).message);
       raw = { cells: [] };
@@ -79,7 +69,7 @@ export class NotebookSerializer implements vscode.NotebookSerializer {
   public async serializeNotebook(
     data: vscode.NotebookData
   ): Promise<Uint8Array> {
-    const contents: RawNotebookData = { cells: [] };
+    const contents: Notebook = { cells: [] };
     for (const cell of data.cells) {
       contents.cells.push({
         kind: cell.kind,
@@ -87,12 +77,12 @@ export class NotebookSerializer implements vscode.NotebookSerializer {
         value: cell.value,
       });
     }
-    return new TextEncoder().encode(JSON.stringify(contents, undefined, 2));
+    return new TextEncoder().encode(serializeNotebook(contents));
   }
 }
 
 //////////////////////////////////////////////////
-// Notebook Serializer
+// Notebook Controller
 //////////////////////////////////////////////////
 
 async function createNotebookController(

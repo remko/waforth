@@ -1,0 +1,21 @@
+body {
+  font-family: sans-serif;
+}
+
+.content {
+  max-width: 40em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+code.raw-code-cell {
+  font-family: monospace;
+  padding: 0.5em 1em;
+  display: block;
+  white-space: pre;
+  background-color: #eee;
+}
+
+.editor {
+  flex: 1;
+}
