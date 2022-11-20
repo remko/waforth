@@ -2,6 +2,7 @@ import "./wafnb.css";
 import Editor from "../../thurtle/Editor";
 import * as jsx from "../../thurtle/jsx";
 import draw from "../../thurtle/draw";
+import { isSuccess } from "waforth";
 
 const runIcon = () => (
   <svg
@@ -59,6 +60,7 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
   const clear = () => {
     outputEl.innerHTML = "";
     clearEl.style.display = "none";
+    editor.el.style.borderColor = "#ced4da";
   };
   clears.push(clear);
 
@@ -84,6 +86,9 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
         outputEl.appendChild(consoleEl);
       }
       clearEl.style.display = "block";
+      editor.el.style.borderColor = isSuccess(result.result)
+        ? "rgb(60, 166, 60)"
+        : "rgb(208, 49, 49)";
     } catch (e) {
       alert((e as any).message);
     } finally {

@@ -161,7 +161,7 @@ async function createNotebookController(
           if (!drawResult.isEmpty) {
             svgEl.height = "300px";
             svgEl.style =
-              "background-color: rgb(221, 248, 221); border-radius: 10px;";
+              "background-color: rgb(221, 248, 221); border: thin solid rgb(171, 208, 166); border-radius: 10px;";
             execution.appendOutput(
               new vscode.NotebookCellOutput([
                 vscode.NotebookCellOutputItem.text(

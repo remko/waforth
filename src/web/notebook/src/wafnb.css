@@ -81,6 +81,7 @@ code.raw-code-cell {
 }
 
 .world {
+  border: thin solid rgb(171, 208, 166);
   background-color: rgb(221, 248, 221);
   border-radius: 10px;
   width: 100%;
