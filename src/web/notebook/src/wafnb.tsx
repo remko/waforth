@@ -50,6 +50,7 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
   n.appendChild(editor.el);
 
   const outputEl = <div class="output" />;
+  outputEl.style.display = "none";
   n.appendChild(outputEl);
 
   const setEnabled = (v: boolean) => {
@@ -58,6 +59,7 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
   setEnableds.push(setEnabled);
 
   const clear = () => {
+    outputEl.style.display = "none";
     outputEl.innerHTML = "";
     clearEl.style.display = "none";
     editor.el.style.borderColor = "#ced4da";
@@ -81,9 +83,11 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
       });
       if (!result.isEmpty) {
         outputEl.appendChild(worldEl);
+        outputEl.style.display = "flex";
       }
       if (consoleEl.childNodes.length > 0) {
         outputEl.appendChild(consoleEl);
+        outputEl.style.display = "flex";
       }
       clearEl.style.display = "block";
       editor.el.style.borderColor = isSuccess(result.result)

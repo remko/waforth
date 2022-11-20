@@ -3,7 +3,7 @@
     {
       "kind": 1,
       "language": "markdown",
-      "value": "# Drawing with Forth\n\nIn this tutorial, you'll learn basic Forth by drawing graphics with a turtle.\n\n> 💡 Click the *Run* button next to the examples to run the code, or click the *Run* button at the top to run all the code on this page.\n\n## The stack\n\nForth is a stack-based language. Numbers are put on the stack, and words pop them off the stack (and put new ones on the stack) again.\nFor example, to take the sum of 8 and 14, put both numbers on the stack, and call `+`. To pop the result of the stack and print it out, use `.`:"
+      "value": "# Drawing with Forth\n\nIn this tutorial, you'll learn basic Forth by drawing graphics with a turtle.\n\n> 💡 Click the *Run* button next to the examples to run the code, or click the *Run* button at the top to run all the code on this page.\n\n> ❕ This is not a real tutorial, but a demo of a [WAForth notebook](https://github.com/remko/waforth#notebooks), and perhaps a glimpse of what an interactive Forth tutorial using notebooks could look like. \n\n## The stack\n\nForth is a stack-based language. Numbers are put on the stack, and words pop them off the stack (and put new ones on the stack) again.\nFor example, to take the sum of 8 and 14, put both numbers on the stack, and call `+`. To pop the result of the stack and print it out, use `.`:"
     },
     {
       "kind": 2,

@@ -15,7 +15,8 @@ body {
 
 blockquote {
   border-radius: 0.5em;
-  padding: 0.5em 0.5em;
+  padding: 0.5em 1em;
+  margin: 1em 0;
   background-color: rgb(225, 242, 254);
   color: rgb(23, 70, 127);
 }
@@ -56,10 +57,12 @@ code.raw-code-cell {
 
 .code-cell {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25em;
 }
 
-.output {
+.code-cell .output {
+  flex: 1 1 15em;
   gap: 0.125em;
   display: flex;
   flex-direction: column;
@@ -75,7 +78,7 @@ code.raw-code-cell {
 }
 
 .code-cell .editor {
-  flex: 1;
+  flex: 1 1 15em;
   background-color: #eee;
   box-sizing: content-box;
 }
