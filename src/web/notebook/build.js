@@ -35,7 +35,7 @@ const buildConfig = {
 let nbBuildConfig = {
   ...buildConfig,
   outdir: path.join(__dirname, "dist"),
-  entryPoints: [path.join(__dirname, "src", "wafnb.ts")],
+  entryPoints: [path.join(__dirname, "src", "wafnb.tsx")],
   publicPath: "/dist",
   assetNames: "[name].txt",
   sourcemap: !!dev,
@@ -45,11 +45,20 @@ let nbBuildConfig = {
   },
 };
 
+const generatorOutFile = path.join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "dist",
+  "wafnb2html"
+);
+
 let generatorBuildConfig = {
   ...buildConfig,
   banner: { js: "#!/usr/bin/env node" },
   platform: "node",
-  outfile: path.join(__dirname, "dist", "wafnb2html"),
+  outfile: generatorOutFile,
   entryPoints: [path.join(__dirname, "src", "wafnb2html.mjs")],
   sourcemap: dev ? "inline" : undefined,
   loader: {
@@ -66,7 +75,7 @@ let generatorBuildConfig = {
 };
 
 function handleGeneratorBuildFinished(result) {
-  return fs.chmodSync(path.join(__dirname, "dist", "wafnb2html"), "755");
+  return fs.chmodSync(generatorOutFile, "755");
 }
 
 if (watch) {

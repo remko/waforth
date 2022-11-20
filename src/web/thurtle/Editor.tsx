@@ -26,8 +26,10 @@ export default class Editor {
   codeEl: HTMLElement;
   preEl: HTMLPreElement;
   el: HTMLDivElement;
+  autoResize: boolean;
 
-  constructor() {
+  constructor(autoResize = false) {
+    this.autoResize = autoResize;
     this.textEl = <textarea autofocus spellcheck={false}></textarea>;
     this.codeEl = <code class="language-forth" />;
     this.preEl = <pre aria-hidden="true">{this.codeEl}</pre>;
@@ -39,16 +41,22 @@ export default class Editor {
     );
     this.textEl.addEventListener("input", (ev) => {
       this.#setCode(this.textEl.value);
+      this.#updateHeight();
       this.#updateScroll();
     });
     this.textEl.addEventListener("scroll", () => {
       this.#updateScroll();
     });
+    this.#updateHeight();
   }
 
   setValue(v: string) {
     this.textEl.value = v;
     this.#setCode(v);
+    if (this.autoResize) {
+      // Hack, because the scrollHeight isn't set yet. Not sure what the proper solution is
+      window.setTimeout(() => this.#updateHeight(), 0);
+    }
   }
 
   #setCode(v: string) {
@@ -95,6 +103,13 @@ export default class Editor {
   #updateScroll() {
     this.preEl.scrollTop = this.textEl.scrollTop;
     this.preEl.scrollLeft = this.textEl.scrollLeft;
+  }
+
+  #updateHeight() {
+    if (this.autoResize) {
+      this.el.style.height = "0";
+      this.el.style.height = this.textEl.scrollHeight + "px";
+    }
   }
 
   getValue(): string {

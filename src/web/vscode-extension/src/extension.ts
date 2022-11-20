@@ -150,17 +150,15 @@ async function createNotebookController(
           const svgEl = jsx.createElement("svg", {
             xmlns: "http://www.w3.org/2000/svg",
           });
-          result = (await draw({
+          const drawResult = (await draw({
             program,
             drawEl: svgEl as any,
             onEmit: emit,
             showTurtle: true,
             jsx,
           }))!;
-          const paths = (svgEl._children as any[]).find(
-            (el) => el._tag === "g"
-          )._children;
-          if (paths.length > 1 || paths[0].d !== "M0 0") {
+          result = drawResult.result;
+          if (!drawResult.isEmpty) {
             svgEl.height = "300px";
             svgEl.style =
               "background-color: rgb(221, 248, 221); border-radius: 10px;";

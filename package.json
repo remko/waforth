@@ -32,6 +32,7 @@
   },
   "types": "dist/waforth.d.ts",
   "main": "dist/index.js",
+  "bin": "./src/web/notebook/dist/wafnb2html",
   "files": [
     "dist"
   ],
@@ -41,7 +42,7 @@
     "test": "node test-web.js",
     "test-watch": "node test-web.js --watch",
     "lint": "eslint . && tsc --noEmit",
-    "prepare": "node build-package.js"
+    "prepare": "node build-package.js && cd src/web/notebook && node build.js"
   },
   "keywords": [
     "forth",

@@ -50,7 +50,11 @@ export async function generate({
     })
   );
   let title: string | null = null;
-  let out = ["<div class='content'>"];
+  let out: string[] = [];
+  out.push(
+    "<div class='banner'>Powered by <a target='_blank' rel='noreferrer' href='https://github.com/remko/waforth'>WAForth</a></div>"
+  );
+  out.push("<div class='content' data-hook='content'>");
   for (const cell of nb.cells) {
     switch (cell.kind) {
       case 1:
@@ -83,6 +87,16 @@ export async function generate({
   }
   out.push("</div>");
 
-  out = [`<title>${escapeHTML(title ?? "")}</title>`, style, ...out, script];
+  out = [
+    `<html><head><meta charset="utf-8"><title>${escapeHTML(
+      title ?? ""
+    )}</title>`,
+    style,
+    "</head>",
+    "<body>",
+    ...out,
+    script,
+    "</body></html>",
+  ];
   return fs.promises.writeFile(outfile, out.join("\n"));
 }

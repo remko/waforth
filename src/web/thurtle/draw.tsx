@@ -26,13 +26,14 @@ export default async function draw({
   onEmit?: (c: string) => void;
   showTurtle?: boolean;
   jsx: any;
-}): Promise<ErrorCode | null> {
+}) {
   // Initialize state
   let rotation = 270;
   const position = { x: 0, y: 0 };
   const boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   let pen = PenState.Down;
   let visible = true;
+  let isEmpty = true;
   const paths: Array<Path> = [{ d: [`M${position.x} ${position.y}`] }];
 
   function updatePosition(x: number, y: number) {
@@ -53,7 +54,7 @@ export default async function draw({
   }
 
   // Run program
-  let result: ErrorCode | null = null;
+  let result = ErrorCode.Quit;
   if (program != null) {
     const forth = new WAForth();
     await forth.load();
@@ -65,6 +66,7 @@ export default async function draw({
       paths[paths.length - 1].d.push(
         [pen === PenState.Down ? "l" : "m", dx, dy].join(" ")
       );
+      isEmpty = isEmpty && pen !== PenState.Down;
       updatePosition(position.x + dx, position.y + dy);
     });
 
@@ -91,6 +93,7 @@ export default async function draw({
       paths[paths.length - 1].d.push(
         [pen === PenState.Down ? "l" : "M", x, y].join(" ")
       );
+      isEmpty = isEmpty && pen !== PenState.Down;
       updatePosition(x, y);
     });
 
@@ -181,5 +184,5 @@ export default async function draw({
     drawEl.appendChild(turtleEl);
   }
 
-  return result;
+  return { isEmpty, result };
 }

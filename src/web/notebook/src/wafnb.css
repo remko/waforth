@@ -1,11 +1,49 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: sans-serif;
+  color: rgb(33, 37, 41);
+}
+
+.text-cell code {
+  color: #d63384;
+}
+
+blockquote {
+  border-radius: 0.5em;
+  padding: 0.5em 0.5em;
+  background-color: rgb(225, 242, 254);
+  color: rgb(23, 70, 127);
+}
+
+blockquote p {
+  margin: 0;
+}
+
+.banner {
+  color: #aaa;
+  text-align: center;
+  font-size: 0.8em;
+  margin-top: 1em;
+}
+
+.banner a {
+  color: #aaa;
+}
+
+.banner a:hover {
+  color: #aaa;
 }
 
 .content {
-  max-width: 40em;
+  max-width: 45em;
   margin-left: auto;
   margin-right: auto;
+  padding: 0em 22px;
 }
 
 code.raw-code-cell {
@@ -16,6 +54,72 @@ code.raw-code-cell {
   background-color: #eee;
 }
 
-.editor {
+.code-cell {
+  display: flex;
+  gap: 0.25em;
+}
+
+.output {
+  gap: 0.125em;
+  display: flex;
+  flex-direction: column;
+}
+
+.console {
+  font-family: monospace;
+  background-color: #111;
+  color: white;
+  padding: 0.5em 1em;
+  border-radius: 0.25em;
+  margin: 0;
+}
+
+.code-cell .editor {
   flex: 1;
+  background-color: #eee;
+  box-sizing: content-box;
+}
+
+.world {
+  background-color: rgb(221, 248, 221);
+  border-radius: 10px;
+  width: 100%;
+  max-height: 15em;
+}
+
+.all-controls {
+  float: right;
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.controls {
+  float: left;
+  margin-left: -28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bi {
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: currentcolor;
+}
+
+.toolbutton {
+  display: inline-block;
+  border: none;
+  border-radius: 0.5em;
+  background: none;
+  color: #888;
+  height: 24px;
+  width: 24px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.toolbutton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: inherit;
 }

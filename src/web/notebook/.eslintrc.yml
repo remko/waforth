@@ -1,0 +1,7 @@
+rules: 
+  # Due to our custom JSX. There are probably better rules.
+  'react/react-in-jsx-scope': 0
+  '@typescript-eslint/no-unused-vars': 0
+  'react/no-unknown-property': 0
+  'react/no-unescaped-entities': 0
+  '@typescript-eslint/no-namespace': 0
