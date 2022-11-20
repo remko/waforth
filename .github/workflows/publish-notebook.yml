@@ -22,4 +22,4 @@ jobs:
           aws configure set region eu-central-1
           aws configure set aws_access_key_id ${{secrets.AWS_ACCESS_KEY_ID}}
           aws configure set aws_secret_access_key ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          aws s3 sync src/web/notebook/examples/drawing-with-forth.html s3://${{secrets.AWS_SITE_BUCKET}}/wafnb/drawing-with-forth/index.html
+          aws s3 cp src/web/notebook/examples/drawing-with-forth.html s3://${{secrets.AWS_SITE_BUCKET}}/wafnb/drawing-with-forth/index.html
