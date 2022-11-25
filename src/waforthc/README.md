@@ -7,7 +7,7 @@ that no longer contains any WebAssembly infrastructure. See [*How it works*](#ho
 
 ## Download
 
-*Binary releases are coming when WABT 1.0.31 is released*
+You can download a pre-built binary from [the Releases page](https://github.com/remko/waforth/releases).
 
 ## Usage example
 
