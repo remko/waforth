@@ -1,0 +1,47 @@
+name: Publish waforthc
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  publish-standalone:
+    needs: build
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup
+
+      - if: runner.os == 'macOS' || runner.os == 'Windows'
+        run: make -C src/waforthc package
+        shell: bash
+      - if: runner.os == 'Linux'
+        run: |
+          make -C src/waforthc package \
+            WABT_INCLUDE_DIR=/usr/local/include \
+            WABT_LIB_DIR=/usr/local/lib \
+            WABT_DATA_DIR=/usr/local/share/wabt
+        shell: bash
+
+      - run: make -C src/waforthc check
+
+      - name: "Upload artifacts"
+        run: |
+          for f in `find src/waforthc -name 'waforthc-*.tgz' -o -name 'waforthc-*.zip'`; do
+            curl --fail \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type $f)" \
+              --data-binary @$f \
+              "$RELEASE_ASSETS_UPLOAD_URL?name=$(basename $f)"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ASSETS_UPLOAD_URL: https://uploads.github.com/repos/${{ github.event.repository.full_name}}/releases/${{ github.event.release.id }}/assets
+        shell: bash
+
