@@ -68,7 +68,8 @@ engines have [known issues](https://github.com/remko/waforth/issues/6#issue-3268
 
 ## Native compiler
 
-[`waforthc`](https://github.com/remko/waforth/tree/master/src/waforthc) uses WAForth to compile a Forth program into a native executable.
+Besides just-in-time compilation (in a browser or native), WAForth can also be used to compile Forth ahead-of-time.
+[`waforthc`](https://github.com/remko/waforth/tree/master/src/waforthc) is a tool that uses WAForth to compile a Forth program into a native executable.
 WebAssembly is used as the host runtime platform and intermediate representation during compilation, and then compiled into an executable
 that no longer contains any WebAssembly infrastructure.
 
@@ -158,7 +159,8 @@ forth.interpret(`
 ## Notebooks
 
 The [WAForth Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=remko.waforth-vscode-extension) adds support
-for interactive Forth notebooks powered by WAForth. You can execute both text-based Forth code, as well as [Thurtle](https://mko.re/thurtle/) graphics.
+for interactive Forth notebooks powered by WAForth. Thes lets you create documents that combine rich text with executable Forth code.
+You can execute both text-based Forth code, as well as [Thurtle](https://mko.re/thurtle/) graphics.
 
 Because it is powered by WebAssembly, this extension works both in the desktop version of Visual Studio Code and in [the browser version of Visual Studio Code](https://code.visualstudio.com/docs/editor/vscode-web) (e.g. https://github.dev, https://vscode.dev).
 
