@@ -66,37 +66,48 @@ export default class Editor {
     }
 
     this.codeEl.innerText = "";
-    const vs = v.split(/(\s+)/);
     let nextIsDefinition = false;
-    let inComment = false;
-    for (const v of vs) {
-      let parentEl: HTMLElement = this.codeEl;
-      let cls: string | undefined;
-      if (inComment || v === "(") {
-        cls = "c-com";
-      } else if (!isNaN(v as any)) {
-        cls = "c-num";
-      } else if (nextIsDefinition && v.trim().length > 0) {
-        cls = "c-def";
-        nextIsDefinition = false;
-      } else {
-        cls = highlightClass[v];
-      }
-      if (cls != null) {
-        const spanEl = document.createElement("span");
-        spanEl.className = cls;
-        parentEl.appendChild(spanEl);
-        parentEl = spanEl;
-      }
-      parentEl.appendChild(document.createTextNode(v));
+    for (const vl of v.split("\n")) {
+      const vs = vl.split(/(\s+)/);
+      let inComment = false;
+      let inLineComment = false;
+      for (const v of vs) {
+        let parentEl: HTMLElement = this.codeEl;
+        let cls: string | undefined;
+        if (inComment || inLineComment || v === "(" || v === "\\") {
+          cls = "c-com";
+        } else if (!isNaN(v as any)) {
+          cls = "c-num";
+        } else if (nextIsDefinition && v.trim().length > 0) {
+          cls = "c-def";
+          nextIsDefinition = false;
+        } else {
+          cls = highlightClass[v];
+        }
+        if (cls != null) {
+          const spanEl = document.createElement("span");
+          spanEl.className = cls;
+          parentEl.appendChild(spanEl);
+          parentEl = spanEl;
+        }
+        parentEl.appendChild(document.createTextNode(v));
 
-      if (v === ":" || v === "CONSTANT" || v === "VARIABLE" || v === "VALUE") {
-        nextIsDefinition = true;
-      } else if (v === "(") {
-        inComment = true;
-      } else if (inComment && v === ")") {
-        inComment = false;
+        if (
+          v === ":" ||
+          v === "CONSTANT" ||
+          v === "VARIABLE" ||
+          v === "VALUE"
+        ) {
+          nextIsDefinition = true;
+        } else if (v === "(") {
+          inComment = true;
+        } else if (v === "\\") {
+          inLineComment = true;
+        } else if (inComment && v === ")") {
+          inComment = false;
+        }
       }
+      this.codeEl.appendChild(document.createTextNode("\n"));
     }
   }
 
