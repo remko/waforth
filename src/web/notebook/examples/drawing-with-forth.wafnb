@@ -118,7 +118,7 @@
     {
       "kind": 2,
       "language": "waforth",
-      "value": "\\ Define our graphical language\n: 🚜 : ; : 🚧 POSTPONE ; ; IMMEDIATE : ⤵️ RIGHT ; : ⬆️ FORWARD ; : ▶️ POSTPONE DO ; IMMEDIATE : 🔁 POSTPONE LOOP ; IMMEDIATE\n\n\\ Build the definition of a pentagram\n🚜 ⛤\n  18 ⤵️ \n  5 0 ▶️\n    450 ⬆️\n    144 ⤵️\n  🔁\n🚧\n\n\\ Draw a pentagram\n⛤"
+      "value": "\\ Define our graphical language\n: 🚜 : ; : 🚧 POSTPONE ; ; IMMEDIATE : ⤵️ RIGHT ; : ➡️ FORWARD ; : ▶️ POSTPONE DO ; IMMEDIATE : 🔁 POSTPONE LOOP ; IMMEDIATE\n\n\\ Build the definition of a pentagram\n🚜 ⛤\n  18 ⤵️ \n  5 0 ▶️\n    450 ➡️\n    144 ⤵️\n  🔁\n🚧\n\n\\ Draw a pentagram\n⛤"
     }
   ]
 }
