@@ -215,7 +215,7 @@ const rootEl = (
             xmlns="http://www.w3.org/2000/svg"
             data-hook="world"
           />
-          <form>
+          <form data-hook="output-container" style="display: none">
             <div class="form-group mt-2">
               <label>Output</label>
               <pre
@@ -371,6 +371,9 @@ const runButtonEl = rootEl.querySelector(
 const programsEl = rootEl.querySelector(
   "[data-hook=examples]"
 )! as HTMLSelectElement;
+const outputContainerEl = rootEl.querySelector(
+  "[data-hook=output-container]"
+) as HTMLFormElement;
 const outputEl = rootEl.querySelector(
   "pre[data-hook=output]"
 ) as HTMLPreElement;
@@ -546,12 +549,14 @@ document.addEventListener("keydown", (ev) => {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 const output = (c: string) => {
+  outputContainerEl.style.display = "block";
   outputEl.appendChild(document.createTextNode(c));
   outputEl.scrollTop = outputEl.scrollHeight;
 };
 
 async function run() {
   try {
+    outputContainerEl.style.display = "none";
     outputEl.innerHTML = "";
     runButtonEl.disabled = true;
     await draw({

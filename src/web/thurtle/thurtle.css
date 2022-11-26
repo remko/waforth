@@ -39,6 +39,8 @@
 
 .output {
   font-size: 0.75em;
+  background-color: #111;
+  color: white;
   overflow-y: auto;
   white-space: pre-wrap;
   height: calc(
