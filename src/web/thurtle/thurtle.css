@@ -39,7 +39,8 @@
 
 .output {
   font-size: 0.75em;
-  overflow: auto;
+  overflow-y: auto;
+  white-space: pre-wrap;
   height: calc(
     100vh - 438px
   ); /* hack because i can't figure out how to auto scale this */

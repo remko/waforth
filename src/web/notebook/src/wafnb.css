@@ -75,6 +75,7 @@ code.raw-code-cell {
   padding: 0.5em 1em;
   border-radius: 0.25em;
   margin: 0;
+  white-space: pre-wrap;
 }
 
 .code-cell .editor {
