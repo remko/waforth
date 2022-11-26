@@ -108,7 +108,7 @@ const rootEl = (
       </div>
     </nav>
     <div class="main d-flex flex-column p-2">
-      <div class="d-flex flex-row flex-grow-1">
+      <div class="d-flex flex-row flex-grow-1 h-100">
         <div class="left-pane d-flex flex-column">
           <div class="d-flex flex-row flex-wrap flex-md-nowrap pb-2">
             <select class="form-select" data-hook="examples"></select>
