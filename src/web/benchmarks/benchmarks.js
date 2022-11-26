@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import WAForth from "../waforth";
+import WAForth, { withCharacterBuffer } from "../waforth";
 import sieve from "../../examples/sieve.f";
 import sieveWasmModule from "./sieve/sieve.wat";
 import sieveJS from "./sieve/sieve.js";
@@ -18,9 +18,9 @@ const setup = [];
 
 const forth = new WAForth();
 let outputBuffer = [];
-forth.onEmit = (c) => {
+forth.onEmit = withCharacterBuffer((c) => {
   outputBuffer.push(c);
-};
+});
 setup.push(
   forth.load().then(() => {
     forth.interpret(sieve);

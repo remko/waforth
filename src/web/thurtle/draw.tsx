@@ -1,4 +1,4 @@
-import WAForth, { ErrorCode } from "waforth";
+import WAForth, { ErrorCode, withLineBuffer } from "waforth";
 import thurtleFS from "./thurtle.fs";
 import turtle from "./turtle.svg";
 
@@ -102,10 +102,16 @@ export default async function draw({
     });
 
     forth.interpret(thurtleFS);
-    if (onEmit != null) {
-      forth.onEmit = onEmit;
-    }
+    const output = withLineBuffer(
+      onEmit != null
+        ? onEmit
+        : () => {
+            /*ignore*/
+          }
+    );
+    forth.onEmit = output;
     result = forth.interpret(program, true);
+    output.flush();
   }
 
   // Draw

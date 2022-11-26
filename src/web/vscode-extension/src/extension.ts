@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import WAForth, { ErrorCode, isSuccess } from "../../waforth";
+import WAForth, { ErrorCode, isSuccess, withLineBuffer } from "../../waforth";
 import draw from "../../thurtle/draw";
 import JSJSX from "thurtle/jsjsx";
 import {
@@ -117,23 +117,12 @@ async function createNotebookController(
       execution.start(Date.now());
       execution.clearOutput();
       try {
-        let outputBuffer: string[] = [];
-        const flushOutputBuffer = () => {
-          if (outputBuffer.length === 0) {
-            return;
-          }
+        const output = (line: string) => {
           execution.appendOutput(
             new vscode.NotebookCellOutput([
-              vscode.NotebookCellOutputItem.text(outputBuffer.join("")),
+              vscode.NotebookCellOutputItem.text(line),
             ])
           );
-          outputBuffer = [];
-        };
-        const emit = (c: string) => {
-          outputBuffer.push(c);
-          if (c.endsWith("\n")) {
-            flushOutputBuffer();
-          }
         };
 
         let result: ErrorCode;
@@ -143,7 +132,7 @@ async function createNotebookController(
         }
         if (!turtleSupport) {
           const forth = stateful ? globalForth : await new WAForth().load();
-          forth.onEmit = emit;
+          forth.onEmit = withLineBuffer(output);
           result = forth.interpret(program, true);
         } else {
           const jsx = new JSJSX();
@@ -153,7 +142,7 @@ async function createNotebookController(
           const drawResult = (await draw({
             program,
             drawEl: svgEl as any,
-            onEmit: emit,
+            onEmit: output,
             showTurtle: true,
             jsx,
           }))!;
@@ -174,7 +163,6 @@ async function createNotebookController(
             );
           }
         }
-        flushOutputBuffer();
         execution.end(isSuccess(result), Date.now());
       } catch (e) {
         vscode.window.showErrorMessage((e as any).message);

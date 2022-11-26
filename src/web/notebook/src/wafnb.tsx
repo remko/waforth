@@ -2,7 +2,7 @@ import "./wafnb.css";
 import Editor from "../../thurtle/Editor";
 import * as jsx from "../../thurtle/jsx";
 import draw from "../../thurtle/draw";
-import { isSuccess } from "waforth";
+import { isSuccess, withLineBuffer } from "waforth";
 
 const runIcon = () => (
   <svg
@@ -76,7 +76,6 @@ for (const n of document.querySelectorAll("[data-hook=code-cell")) {
         program: editor.getValue(),
         drawEl: worldEl,
         onEmit: (c: string) => {
-          // TODO: Buffer lines
           consoleEl.appendChild(document.createTextNode(c));
         },
         jsx,

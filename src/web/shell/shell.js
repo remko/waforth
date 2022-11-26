@@ -1,6 +1,6 @@
 /* global WAFORTH_VERSION */
 
-import WAForth from "../waforth";
+import WAForth, { withCharacterBuffer } from "../waforth";
 import "./shell.css";
 
 const version =
@@ -111,9 +111,9 @@ function clearConsole() {
   cursorEl = document.querySelector(".cursor");
 }
 
-forth.onEmit = (c) => {
+forth.onEmit = withCharacterBuffer((c) => {
   output(c, false);
-};
+});
 
 clearConsole();
 

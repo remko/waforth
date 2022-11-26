@@ -80,7 +80,7 @@ You can embed WAForth in any JavaScript application.
 A [simple example](https://github.com/remko/waforth/blob/master/src/web/examples/prompt/prompt.ts) ([CodePen](https://codepen.io/mko-re/pen/gOzzmXZ)) to illustrate starting WAForth, and binding JavaScript functions:
 
 ```typescript
-import WAForth from "waforth";
+import WAForth, { withLineBuffer } from "waforth";
 
 (async () => {
   // Create the UI
@@ -90,8 +90,8 @@ import WAForth from "waforth";
 
   // Initialize WAForth
   const forth = new WAForth();
-  forth.onEmit = (c) =>
-    log.appendChild(document.createTextNode(c));
+  forth.onEmit = withLineBuffer((c) =>
+    log.appendChild(document.createTextNode(c)));
   await forth.load();
 
   // Bind "prompt" call to a function that pops up a JavaScript 

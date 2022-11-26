@@ -22,18 +22,78 @@ const arrayToBase64 =
       };
 
 function loadString(memory: WebAssembly.Memory, addr: number, len: number) {
-  return String.fromCharCode.apply(
-    null,
-    new Uint8Array(memory.buffer, addr, len) as any
-  );
+  return new TextDecoder().decode(new Uint8Array(memory.buffer, addr, len));
 }
 
 function saveString(s: string, memory: WebAssembly.Memory, addr: number) {
-  const len = s.length;
+  const encoded = new TextEncoder().encode(s);
+  const len = encoded.length;
   const a = new Uint8Array(memory.buffer, addr, len);
   for (let i = 0; i < len; ++i) {
-    a[i] = s.charCodeAt(i);
+    a[i] = encoded[i];
   }
+  return len;
+}
+
+/**
+ * Creates a function that accepts character codes in UTF-8 encoding, and calls
+ * the callback whenever a complete character is received.
+ */
+export function withCharacterBuffer(fn: (c: string) => void) {
+  let pending = 0;
+  let buffer: number[] = [];
+  const decoder = new TextDecoder();
+  return (c: number) => {
+    if (pending > 0) {
+      buffer.push(c);
+      pending -= 1;
+      if (pending == 0) {
+        fn(decoder.decode(Uint8Array.from(buffer)));
+        buffer = [];
+      }
+    } else {
+      if ((c & 0x80) === 0) {
+        fn(String.fromCharCode(c));
+      } else {
+        buffer = [c];
+        if ((c & 0xe0) === 0xc0) {
+          pending = 1;
+        } else if ((c & 0xf0) == 0xe0) {
+          pending = 2;
+        } else if ((c & 0xf8) == 0xf0) {
+          pending = 3;
+        } else if ((c & 0xfc) === 0xf8) {
+          pending = 4;
+        } else if ((c & 0xfe) == 0xfc) {
+          pending = 5;
+        }
+      }
+    }
+  };
+}
+
+/**
+ * Creates a function that accepts character codes in UTF-8 encoding, and calls
+ * the callback whenever a complete newline-delimited line is received.
+ *
+ * The resulting function also has a `flush()` function to flush any remaining output.
+ */
+export function withLineBuffer(fn: (c: string) => void) {
+  let buffer: number[] = [];
+  const flush = () => {
+    if (buffer.length > 0) {
+      fn(new TextDecoder().decode(Uint8Array.from(buffer)));
+      buffer = [];
+    }
+  };
+  const r = (c: number) => {
+    buffer.push(c);
+    if (c == 0xa) {
+      flush();
+    }
+  };
+  r.flush = flush;
+  return r;
 }
 
 export enum ErrorCode {
@@ -66,23 +126,12 @@ class WAForth {
    *
    * `c` is the single-character string that is emitted
    */
-  onEmit?: (c: string) => void;
+  onEmit?: (c: number) => void;
   key: () => number;
 
   constructor() {
     this.#fns = {};
-    this.onEmit = (() => {
-      // Default emit that logs to console
-      let buffer: string[] = [];
-      return (c: string) => {
-        if (c === "\n") {
-          console.log(buffer.join(""));
-          buffer = [];
-        } else {
-          buffer.push(c);
-        }
-      };
-    })();
+    this.onEmit = withLineBuffer(console.log);
 
     const keyBuffer: string[] = [];
     this.key = () => {
@@ -116,7 +165,7 @@ class WAForth {
 
         emit: (c: number) => {
           if (this.onEmit) {
-            this.onEmit(String.fromCharCode(c));
+            this.onEmit(c);
           }
         },
 
@@ -132,12 +181,11 @@ class WAForth {
             this.#buffer = this.#buffer!.substring(i + 1);
           }
           // console.log("read: %s (%d remaining)", input, this.#buffer!.length);
-          saveString(
+          return saveString(
             input,
             this.core!.exports.memory as WebAssembly.Memory,
             addr
           );
-          return input.length;
         },
 
         key: () => {
@@ -223,9 +271,9 @@ class WAForth {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   pushString(s: string, offset = 0): number {
     const addr = this.here() + PAD_OFFSET;
-    saveString(s, this.memory(), addr);
+    const len = saveString(s, this.memory(), addr);
     this.push(addr);
-    this.push(s.length);
+    this.push(len);
     return addr + PAD_OFFSET;
   }
 

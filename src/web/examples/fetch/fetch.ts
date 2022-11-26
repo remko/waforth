@@ -1,5 +1,5 @@
 import "./fetch.css";
-import WAForth from "waforth";
+import WAForth, { withLineBuffer } from "waforth";
 
 (async () => {
   // Create the UI
@@ -9,7 +9,9 @@ import WAForth from "waforth";
 
   // Initialize WAForth
   const forth = new WAForth();
-  forth.onEmit = (c) => log.appendChild(document.createTextNode(c));
+  forth.onEmit = withLineBuffer((c) =>
+    log.appendChild(document.createTextNode(c))
+  );
   await forth.load();
 
   // Bind async "ip?" call to a function that fetches your IP address

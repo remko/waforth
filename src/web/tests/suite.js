@@ -1,4 +1,4 @@
-import WAForth from "../waforth";
+import WAForth, { withCharacterBuffer, withLineBuffer } from "../waforth";
 import sieve from "../../examples/sieve.f";
 import forth2012TestSuiteTester from "./forth2012-test-suite/tester.fr";
 import forth2012TestSuiteUtilities from "./forth2012-test-suite/utilities.fth";
@@ -16,10 +16,10 @@ function loadTests() {
 
     beforeEach(() => {
       forth = new WAForth();
-      forth.onEmit = (c) => {
+      forth.onEmit = withCharacterBuffer((c) => {
         output = output + c;
         // console.log(output);
-      };
+      });
       let k = 0;
       const keyString =
         "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -1716,6 +1716,70 @@ Second message via ."`);
           assert.fail(output);
         }
       });
+    });
+  });
+
+  describe("withLineBuffer", () => {
+    let output, fn;
+    beforeEach(() => {
+      output = [];
+      fn = withLineBuffer((c) => {
+        output.push(c);
+      });
+    });
+
+    it("should output lines", () => {
+      Array.from(
+        new TextEncoder().encode("Hello world\nHow are you\nunbuffered")
+      ).map(fn);
+      expect(output).to.eql(["Hello world\n", "How are you\n"]);
+    });
+
+    it("should flush", () => {
+      Array.from(
+        new TextEncoder().encode("Hello world\nHow are you\nunbuffered")
+      ).map(fn);
+      fn.flush();
+      expect(output).to.eql(["Hello world\n", "How are you\n", "unbuffered"]);
+    });
+
+    it("should not flush empty buffer", () => {
+      Array.from(
+        new TextEncoder().encode("Hello world\nHow are you\nunbuffered")
+      ).map(fn);
+      fn.flush();
+      fn.flush();
+      expect(output).to.eql(["Hello world\n", "How are you\n", "unbuffered"]);
+    });
+
+    it("should support unicode", () => {
+      Array.from(new TextEncoder().encode("Hello \ud83c\udf0d.\n")).map(fn);
+      expect(output).to.eql(["Hello 🌍.\n"]);
+    });
+  });
+
+  describe("withCharacterBuffer", () => {
+    let output, fn;
+    beforeEach(() => {
+      output = [];
+      fn = withCharacterBuffer((c) => {
+        output.push(c);
+      });
+    });
+
+    it("should output characters", () => {
+      Array.from(new TextEncoder().encode("Hello")).map(fn);
+      expect(output).to.eql(["H", "e", "l", "l", "o"]);
+    });
+
+    it("should output utf-8 characters", () => {
+      Array.from(new TextEncoder().encode("🌍")).map(fn);
+      expect(output).to.eql(["🌍"]);
+    });
+
+    it("should not output incomplete utf-8 characters", () => {
+      [0xf0, 0x9f, 0x8c].map(fn);
+      expect(output).to.eql([]);
     });
   });
 }

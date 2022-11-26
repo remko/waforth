@@ -545,15 +545,14 @@ document.addEventListener("keydown", (ev) => {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-function output(c: string) {
+const output = (c: string) => {
   outputEl.appendChild(document.createTextNode(c));
-  if (c === "\n") {
-    outputEl.scrollTop = outputEl.scrollHeight;
-  }
-}
+  outputEl.scrollTop = outputEl.scrollHeight;
+};
 
 async function run() {
   try {
+    outputEl.innerHTML = "";
     runButtonEl.disabled = true;
     await draw({
       program: editor.getValue(),
