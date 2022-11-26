@@ -99,6 +99,26 @@
       "kind": 2,
       "language": "waforth",
       "value": "450 CONSTANT SIZE\n7   CONSTANT BRANCHES\n160 CONSTANT SPREAD\n\nVARIABLE RND\nHERE RND !\n\n: RANDOM ( -- n )\n  RND @ 75 * 74 + 65537 MOD\n  DUP RND !\n;\n\n: CHOOSE ( n1 -- n2 )\n  RANDOM 65537 */MOD SWAP DROP \n; \n\n: PLANT ( size angle -- )\n  OVER 10 < IF 2DROP EXIT THEN\n  DUP RIGHT\n  OVER FORWARD\n  BRANCHES 0 DO\n    OVER 2/\n    SPREAD CHOOSE SPREAD 2/ -\n    RECURSE\n  LOOP\n  PENUP SWAP BACKWARD PENDOWN\n  LEFT\n;\n  \n1 SETPENSIZE\nSIZE 0 PLANT"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "## Creating your own language\n\nForth also provides all the tools necessary to create your own language. \n\nFor example, if we want the Thurtle language to be more like Logo, we can define the `TO` and `END` keywords to replace the standard Forth words for starting and ending compilation:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": ": TO : ;\n: END POSTPONE ; ; IMMEDIATE\n\nTO SQUARE\n  4 0 DO\n    200 FORWARD\n    90 RIGHT\n  LOOP\nEND\n\nSQUARE"
+    },
+    {
+      "kind": 1,
+      "language": "markdown",
+      "value": "You can even create a graphical language based on emoji:"
+    },
+    {
+      "kind": 2,
+      "language": "waforth",
+      "value": "\\ Define our graphical language\n: 🚜 : ; : 🚧 POSTPONE ; ; IMMEDIATE : ⤵️ RIGHT ; : ⬆️ FORWARD ; : ▶️ POSTPONE DO ; IMMEDIATE : 🔁 POSTPONE LOOP ; IMMEDIATE\n\n\\ Build the definition of a pentagram\n🚜 ⛤\n  18 ⤵️ \n  5 0 ▶️\n    450 ⬆️\n    144 ⤵️\n  🔁\n🚧\n\n\\ Draw a pentagram\n⛤"
     }
   ]
 }
