@@ -1634,6 +1634,37 @@ function loadTests() {
       });
     });
 
+    describe("CODE / ;CODE / $U, / $S,", () => {
+      it("should work", () => {
+        run(`
+: $LOCAL.GET ( n -- )   32 $U, $U,         ; IMMEDIATE
+: $I32.ADD   ( -- )    106 $U,             ; IMMEDIATE
+: $I32.SUB   ( -- )    107 $U,             ; IMMEDIATE
+: $I32.CONST ( n -- )   65 $U, $S,         ; IMMEDIATE
+: $I32.LOAD  ( -- )     40 $U, 2 $U, 0 $U, ; IMMEDIATE
+: $I32.STORE ( -- )     54 $U, 2 $U, 0 $U, ; IMMEDIATE
+        
+CODE DUP' ( n -- n n )
+  [ 0 ] $LOCAL.GET
+
+  [ 0 ] $LOCAL.GET
+  [ 4 ] $I32.CONST
+  $I32.SUB
+  $I32.LOAD
+
+  $I32.STORE
+
+  [ 0 ] $LOCAL.GET
+  [ 4 ] $I32.CONST 
+  $I32.ADD
+;CODE
+
+42 DUP'
+`);
+        expect(stackValues()).to.eql([42, 42]);
+      });
+    });
+
     describe("DEFER", () => {
       it("should work", () => {
         run("DEFER DEFER1");

@@ -156,6 +156,72 @@ forth.interpret(`
 `);
 ```
 
+
+## Writing WebAssembly in Forth
+
+WAForth supports directly writing WebAssembly in Forth using the [`CODE`](https://forth-standard.org/standard/tools/CODE) word.
+For example, the following snippet defines a raw WebAssembly version of [`DUP`](https://forth-standard.org/standard/core/DUP):
+
+```forth
+CODE DUP' ( n -- n n )
+  \ Put pointer to top of Forth stack (local_0) on the 
+  \ Wasm operand stack (for use later)
+  [ 0 ] $LOCAL.GET
+
+  \ Load the number at the top of the Forth stack 
+  \ (local_0 - 4) on the Wasm operand stack
+  [ 0 ] $LOCAL.GET
+  [ 4 ] $I32.CONST
+  $I32.SUB
+  $I32.LOAD
+
+  \ Store the number on the Wasm operand stack on 
+  \ top of the Forth stack. The first operand (Forth 
+  \ stack pointer) was put on the Wasm operand stack 
+  \ at the beginning of this snippet
+  $I32.STORE
+
+  \ Increment the Forth top of stack pointer (local_0), 
+  \ and leave it on the Wasm operand stack as return value
+  [ 0 ] $LOCAL.GET
+  [ 4 ] $I32.CONST 
+  $I32.ADD
+;CODE
+```
+
+This creates a word with the specified WebAssembly:
+
+```wasm
+(func $DUP' (param $tos i32) (result i32)
+  local.get $tos
+  local.get $tos
+  i32.const 4
+  i32.sub
+  i32.load
+  i32.store
+  local.get $tos
+  i32.const 4
+  i32.add
+)
+```
+
+Note that support for writing WebAssembly is still experimental.
+The assembly words used in the above snippet (`$LOCAL.GET`, `$I32.*`, ...) aren't available in the WAForth core,
+and have to be manually defined using the low-level `$U,` and `$S,` words that append ([LEB128](https://en.wikipedia.org/wiki/LEB128)-encoded) bytes directly to the WebAssembly module. For example, the code above relies on the following assembly word definitions:
+
+```forth
+: $LOCAL.GET ( u -- )   32 $U, $U,         ; IMMEDIATE
+: $I32.ADD   ( -- )    106 $U,             ; IMMEDIATE
+: $I32.SUB   ( -- )    107 $U,             ; IMMEDIATE
+: $I32.CONST ( n -- )   65 $U, $S,         ; IMMEDIATE
+: $I32.LOAD  ( -- )     40 $U, 2 $U, 0 $U, ; IMMEDIATE
+: $I32.STORE ( -- )     54 $U, 2 $U, 0 $U, ; IMMEDIATE
+```
+
+The exact opcodes and format of instructions can be found in
+[the WebAssembly spec](https://webassembly.github.io/spec/core/binary/instructions.html). In the future, I'll probably make all WebAssembly assembly instructions available somewhere. Using WebAssembly locals also currently isn't possible, although this should be easy to add later.  
+
+
 ## Notebooks
 
 The [WAForth Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=remko.waforth-vscode-extension) adds support
