@@ -2745,7 +2745,7 @@
   (func $emitBr (param $n i32) (call $emit1 (i32.const 0x0c) (local.get $n)))
   (func $emitBrIf (param $n i32) (call $emit1 (i32.const 0x0d) (local.get $n)))
   (func $emitSetLocal (param $n i32)
-    (call $emit1v (i32.const 0x21) (local.get $n))
+    (call $emit1 (i32.const 0x21) (local.get $n))
     (global.set $lastEmitWasGetTOS (i32.eqz (local.get $n))))
   (func $emitGetLocal (param $n i32)
     (block
@@ -2757,8 +2757,8 @@
       (i32.store8 (i32.sub (global.get $cp) (i32.const 2)) (i32.const 0x22))
       (global.set $lastEmitWasGetTOS (i32.const 0))
       (return))
-    (call $emit1v (i32.const 0x20) (local.get $n)))
-  (func $emitTeeLocal (param $n i32) (call $emit1v (i32.const 0x22) (local.get $n)))
+    (call $emit1 (i32.const 0x20) (local.get $n)))
+  (func $emitTeeLocal (param $n i32) (call $emit1 (i32.const 0x22) (local.get $n)))
   (func $emitAdd (call $emit0 (i32.const 0x6a)))
   (func $emitSub (call $emit0 (i32.const 0x6b)))
   (func $emitXOR (call $emit0 (i32.const 0x73)))
@@ -2772,29 +2772,24 @@
   (func $emitLoad (call $emit2 (i32.const 0x28) (i32.const 0x02 (; align ;)) (i32.const 0x00 (; offset ;))))
 
   (func $emit0 (param $op i32)
-    (call $emit (local.get $op))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $op)))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
   (func $emit1v (param $op i32) (param $i1 i32)
-    (call $emit (local.get $op))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $op)))
     (global.set $cp (call $leb128 (global.get $cp) (local.get $i1)))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
   (func $emit1 (param $op i32) (param $i1 i32)
-    (call $emit (local.get $op))
-    (call $emit (local.get $i1))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $op)))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $i1)))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
 
   (func $emit2 (param $op i32) (param $i1 i32) (param $i2 i32)
-    (call $emit (local.get $op))
-    (call $emit (local.get $i1))
-    (call $emit (local.get $i2))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $op)))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $i1)))
+    (global.set $cp (call $leb128u (global.get $cp) (local.get $i2)))
     (global.set $lastEmitWasGetTOS (i32.const 0)))
-
-  (func $emit (param $v i32)
-    (i32.store8 (global.get $cp) (local.get $v))
-    (global.set $cp (i32.add (global.get $cp) (i32.const 1))))
-
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compilation state
@@ -3017,6 +3012,17 @@
       (i32.store8 (local.get $p) (local.get $byte))
       (local.set $p (i32.add (local.get $p) (i32.const 1)))
       (br_if $loop (local.get $more)))
+    (local.get $p))
+  
+  (func $leb128u (export "leb128u") (param $p i32) (param $value i32) (result i32)
+    (local $byte i32)
+    (loop $loop
+      (local.set $byte (i32.and (i32.const 0x7F) (local.get $value)))
+      (local.set $value (i32.shr_u (local.get $value) (i32.const 7)))
+      (if (i32.eqz (local.get $value)) (then) (else (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))))
+      (i32.store8 (local.get $p) (local.get $byte))
+      (local.set $p (i32.add (local.get $p) (i32.const 1)))
+      (br_if $loop (local.get $value)))
     (local.get $p))
 
   (func $body (param $xt i32) (result i32)

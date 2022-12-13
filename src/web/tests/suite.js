@@ -171,6 +171,37 @@ function loadTests() {
       });
     });
 
+    describe("leb128u", () => {
+      it("should convert 0x0", () => {
+        const r = core.leb128u(0x0, 0x0);
+        expect(r).to.eql(0x1);
+        expect(memory8[0]).to.eql(0x0);
+      });
+      it("should convert 0x17", () => {
+        const r = core.leb128u(0x0, 0x17);
+        expect(r).to.eql(0x1);
+        expect(memory8[0]).to.eql(0x17);
+      });
+      it("should convert 0x73", () => {
+        const r = core.leb128u(0x0, 0x73);
+        expect(r).to.eql(0x1);
+        expect(memory8[0]).to.eql(0x73);
+      });
+      it("should convert 0x80", () => {
+        const r = core.leb128u(0x0, 0x80);
+        expect(r).to.eql(0x2);
+        expect(memory8[0]).to.eql(0x80);
+        expect(memory8[1]).to.eql(0x01);
+      });
+      it("should convert 0x12345", () => {
+        const r = core.leb128(0x0, 0x12345);
+        expect(r).to.eql(0x3);
+        expect(memory8[0]).to.eql(0xc5);
+        expect(memory8[1]).to.eql(0xc6);
+        expect(memory8[2]).to.eql(0x04);
+      });
+    });
+
     describe("leb128-4p", () => {
       it("should convert 0x0", () => {
         expect(core.leb128_4p(0x0)).to.eql(0x808080);
