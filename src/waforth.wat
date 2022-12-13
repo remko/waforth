@@ -288,12 +288,11 @@
     "\01" ;; #Bodies
       "\FE\00\00\00" ;; Body size (padded)
       "\01" ;; #locals
-        "\FD\00\00\00\7F"  ;; # #i32 locals (padded)
-        "\20\00") ;; local.get 0
+        "\FD\00\00\00\7F")  ;; # #i32 locals (padded)
 
   ;; Compiled module header offsets:
   ;;
-  ;;   MODULE_HEADER_SIZE := 0x60
+  ;;   MODULE_HEADER_SIZE := 0x5E
   ;;   MODULE_HEADER_CODE_SIZE_OFFSET := 0x4f
   ;;   MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 := 0x53
   ;;   MODULE_HEADER_BODY_SIZE_OFFSET := 0x54
@@ -303,12 +302,12 @@
   ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET := 0x2c
   ;;   MODULE_HEADER_FUNCTION_TYPE_OFFSET := 0x41
   ;;
-  ;;   MODULE_BODY_BASE := 0x1060                    (MODULE_HEADER_BASE + 0x60 (; = MODULE_HEADER_SIZE ;))
+  ;;   MODULE_BODY_BASE := 0x105E                      (MODULE_HEADER_BASE + 0x5e (; = MODULE_HEADER_SIZE ;))
   ;;   MODULE_HEADER_CODE_SIZE_BASE := 0x104f          (MODULE_HEADER_BASE + 0x4f (; = MODULE_HEADER_CODE_SIZE_OFFSET ;))
   ;;   MODULE_HEADER_BODY_SIZE_BASE := 0x1054          (MODULE_HEADER_BASE + 0x54 (; = MODULE_HEADER_BODY_SIZE_OFFSET ;))
   ;;   MODULE_HEADER_LOCAL_COUNT_BASE := 0x1059        (MODULE_HEADER_BASE + 0x59 (; = MODULE_HEADER_LOCAL_COUNT_OFFSET ;))
   ;;   MODULE_HEADER_TABLE_INDEX_BASE := 0x1047        (MODULE_HEADER_BASE + 0x47 (; = MODULE_HEADER_TABLE_INDEX_OFFSET ;))
-  ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102c  (MODULE_HEADER_BASE + 0x2c (; = MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET ;))
+  ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102c (MODULE_HEADER_BASE + 0x2c (; = MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET ;))
   ;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x1041      (MODULE_HEADER_BASE + 0x41 (; = MODULE_HEADER_FUNCTION_TYPE_OFFSET ;))
 
 
@@ -359,6 +358,7 @@
   (func $:NONAME (param $tos i32) (result i32)
     (call $create (i32.const 0x0) (i32.const 0) (i32.const 0x0) (global.get $nextTableIndex))
     (call $startColon (i32.const 0))
+    (call $emitGetLocal (i32.const 0))
     (call $push (local.get $tos) (global.get $latest))
     (call $right-bracket))
   (data (i32.const 0x2009c) "\00\00\00\00" "\07" ":NONAME" "\10\00\00\00")
@@ -817,6 +817,7 @@
       ;; agnostic about whether it is compiling a word or a DOES>.
       (global.get $nextTableIndex))
     (call $startColon (i32.const 0))
+    (call $emitGetLocal (i32.const 0))
     (call $right-bracket (local.get $tos)))
   (data (i32.const 0x2029c) "\8c\02\02\00" "\01" ":  " "\38\00\00\00")
   (elem (i32.const 0x38) $:)
@@ -1301,6 +1302,7 @@
     (call $compileCall (i32.const 1) (i32.const 0x4 (; = SET_LATEST_BODY_INDEX ;)))
     (call $endColon)
     (call $startColon (i32.const 1))
+    (call $emitGetLocal (i32.const 0))
     (call $compilePushLocal (i32.const 1)))
   (data (i32.const 0x20544) "\38\05\02\00" "\85" (; F_IMMEDIATE ;) "DOES>  " "\64\00\00\00")
   (elem (i32.const 0x64) $DOES>)
@@ -2433,7 +2435,7 @@
   ;; or type 1 (1 param)
   (func $startColon (param $type i32)
     (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $type))
-    (global.set $cp (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
+    (global.set $cp (i32.const 0x105e (; = MODULE_BODY_BASE ;)))
     (global.set $firstTemporaryLocal (i32.add (local.get $type) (i32.const 1)))
     ;; 1 temporary local for computations
     (global.set $currentLocal (global.get $firstTemporaryLocal))
@@ -2802,7 +2804,7 @@
   (global $lastEmitWasGetTOS (mut i32) (i32.const 0))
 
   ;; Compilation pointer
-  (global $cp (mut i32) (i32.const 0x1060 (; = MODULE_BODY_BASE ;)))
+  (global $cp (mut i32) (i32.const 0x105e (; = MODULE_BODY_BASE ;)))
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
