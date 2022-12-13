@@ -5,9 +5,9 @@
 [![Build](https://github.com/remko/waforth/actions/workflows/build.yml/badge.svg)](https://github.com/remko/waforth/actions/workflows/build.yml)
 
 
-WAForth is a small but complete bootstrapping Forth interpreter and dynamic compiler for
+WAForth is a small but complete Forth interpreter and dynamic compiler for and in
 [WebAssembly](https://webassembly.org). You can see it in action
-[in an interactive Forth console](https://mko.re/waforth/), and in [a Logo-like Turtle graphics language](https://mko.re/thurtle/).
+[in an interactive Forth console](https://mko.re/waforth/), in [a Logo-like Turtle graphics language](https://mko.re/thurtle/), and in [an interactive notebook](https://mko.re/wafnb/drawing-with-forth).
 
 WAForth is [entirely written in (raw)
 WebAssembly](https://github.com/remko/waforth/blob/master/src/waforth.wat), and
@@ -219,7 +219,8 @@ and have to be manually defined using the low-level `$U,` and `$S,` words that a
 ```
 
 The exact opcodes and format of instructions can be found in
-[the WebAssembly spec](https://webassembly.github.io/spec/core/binary/instructions.html). In the future, I'll probably make all WebAssembly assembly instructions available somewhere. Using WebAssembly locals also currently isn't possible, although this should be easy to add later.  
+[the WebAssembly spec](https://webassembly.github.io/spec/core/binary/instructions.html). In the future, I'll probably make all WebAssembly assembly instructions available somewhere. Using WebAssembly locals also currently isn't possible, although this can
+be added in the future. 
 
 
 ## Notebooks
@@ -245,7 +246,7 @@ An example can be seen [here](https://mko.re/wafnb/drawing-with-forth).
 
 Here are some of the goals (and non-goals) of WAForth:
 
-- ✅ **WebAssembly-first**: Implement as much as possible in (raw) WebAssembly. Only call out to JavaScript for functionality that is not available in WebAssembly (I/O, loading compiled WebAssembly code).
+- ✅ **WebAssembly-first**: Implement as much as possible in (raw) WebAssembly. Only call out to JavaScript (or whatever the host language is) for functionality that is not available in WebAssembly (I/O, loading compiled WebAssembly code).
 - ✅ **Simplicity**: Keep the code as simple and clean as possible. Raw WebAssembly requires more effort to maintain than code in a high level language, so avoid complexity if you can.
 - ✅ **Completeness**: Implement a complete (and correct) Forth system, following the [ANS Standard](http://lars.nocrew.org/dpans/dpans.htm), including all [ANS Core words](http://lars.nocrew.org/dpans/dpans6.htm#6.1).
 - ❓ **Speed**: If some speed gains can be gotten without paying much in simplicity (e.g. better design of the system, more efficient implementation of words, simple compiler improvements, ...), then I do it. However, generating the most efficient code would require a smart compiler, and a smart compiler would introduce a lot of complexity if implemented in raw WebAssembly, so speed is not an ultimate goal. Although the low level of WebAssembly gives some speed advantages, the design of the system will cause execution to consist almost exclusively of indirect calls to small functions, so there will be languages targeting WebAssembly that run faster.
