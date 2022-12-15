@@ -20,3 +20,8 @@ Once the extension is installed, you can create a new WAForth notebook from the 
 
 The extension also works in the web-based VS Code environments. 
 For example, install the extension on https://github.dev, and then open [this example notebook](https://github.dev/remko/waforth/blob/master/src/web/notebook/examples/drawing-with-forth.wafnb).
+
+> 💡 **Tip:** If you opened the example notebook (or any WAForth notebook) before
+> installing the extension, and you're seeing the raw data of the notebook in
+> your editor, right-click on the tab header, and choose *Reopen Editor
+> With...* › *WAForth Notebook*.
