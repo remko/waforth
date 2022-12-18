@@ -227,6 +227,18 @@ function loadTests() {
         expect(output.trim()).to.eql("undefined word: BADWORD");
       });
 
+      it("should write the ok prompt when interpreting", () => {
+        forth.read("1 2");
+        core.run();
+        expect(output.trim()).to.eql("ok");
+      });
+
+      it("should write the compiled prompt when compiling", () => {
+        forth.read(": foo 1 2");
+        core.run();
+        expect(output.trim()).to.eql("compiled");
+      });
+
       it("should interpret a positive number", () => {
         forth.read("123");
         core.run();
