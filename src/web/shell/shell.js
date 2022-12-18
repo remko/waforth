@@ -61,32 +61,9 @@ function unoutput(isInput) {
 
 function startConsole() {
   let inputbuffer = [];
-  document.addEventListener("keydown", (ev) => {
-    // console.log("keydown", ev);
-    if (ev.key === "Enter") {
-      output(" ", true);
-      forth.interpret(inputbuffer.join(""));
-      inputbuffer = [];
-    } else if (ev.key === "Backspace") {
-      if (inputbuffer.length > 0) {
-        inputbuffer = inputbuffer.slice(0, inputbuffer.length - 1);
-        unoutput(true);
-      }
-    } else if (ev.key.length === 1 && !ev.metaKey && !ev.ctrlKey) {
-      output(ev.key, true);
-      inputbuffer.push(ev.key);
-    } else {
-      console.log("ignoring key %s", ev.key);
-    }
-    if (ev.key === " ") {
-      ev.preventDefault();
-    }
-  });
 
-  document.addEventListener("paste", (event) => {
-    let paste = (event.clipboardData || window.clipboardData).getData("text");
-    const commands = paste.split("\n");
-    // console.log("paste", paste, commands);
+  function load(s) {
+    const commands = s.split("\n");
     let newInputBuffer = [];
     if (commands.length > 0) {
       newInputBuffer.push(commands.pop());
@@ -102,6 +79,52 @@ function startConsole() {
       flush();
     }
     inputbuffer = newInputBuffer;
+  }
+
+  document.addEventListener("keydown", (ev) => {
+    // console.log("keydown", ev);
+    if (ev.key === "Enter") {
+      output(" ", true);
+      forth.interpret(inputbuffer.join(""));
+      inputbuffer = [];
+    } else if (ev.key === "Backspace") {
+      if (inputbuffer.length > 0) {
+        inputbuffer = inputbuffer.slice(0, inputbuffer.length - 1);
+        unoutput(true);
+      }
+    } else if (ev.key.length === 1 && !ev.metaKey && !ev.ctrlKey) {
+      output(ev.key, true);
+      inputbuffer.push(ev.key);
+    } else if (ev.key === "o" && (ev.metaKey || ev.ctrlKey)) {
+      if (!window.showOpenFilePicker) {
+        window.alert("File loading not supported on this browser");
+        return;
+      }
+      (async () => {
+        const [fh] = await window.showOpenFilePicker({
+          types: [
+            {
+              description: "Forth source files",
+              accept: {
+                "text/plain": [".fs", ".f", ".fth", ".f4th", ".fr"],
+              },
+            },
+          ],
+          excludeAcceptAllOption: true,
+          multiple: false,
+        });
+        load(await (await fh.getFile()).text());
+      })();
+    } else {
+      console.log("ignoring key %s", ev.key);
+    }
+    if (ev.key === " ") {
+      ev.preventDefault();
+    }
+  });
+
+  document.addEventListener("paste", (event) => {
+    load(event.clipboardData || window.clipboardData).getData("text");
   });
 }
 
@@ -117,9 +140,10 @@ forth.onEmit = withCharacterBuffer((c) => {
 
 clearConsole();
 
-output("Loading core ... ", false, true);
-forth.load().then(
-  () => {
+(async () => {
+  output("Loading core ... ", false, true);
+  try {
+    await forth.load();
     clearConsole();
     startConsole();
 
@@ -143,8 +167,7 @@ forth.load().then(
         forth.interpret(command);
       }
     }
-  },
-  (e) => {
+  } catch (e) {
     console.error(e);
     const errorEl = document.createElement("span");
     errorEl.className = "error";
@@ -153,4 +176,4 @@ forth.load().then(
     inputEl.remove();
     consoleEl.appendChild(errorEl);
   }
-);
+})();
