@@ -3,3 +3,4 @@
 /wasm-micro-runtime
 /wasmtime-*
 /*.tgz
+/run_sieve.f

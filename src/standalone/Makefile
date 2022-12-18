@@ -120,7 +120,13 @@ check:
 	grep "Hello, Forth" test.out
 	rm test.out
 
-	
+run_sieve.f: ../examples/sieve.f
+	(cat $< && echo "90000000 sieve") > $@
+
+.PHONY: run-sieve
+run-sieve: run_sieve.f
+	./waforth $<
+
 .PHONY: clean
 clean:
 	-rm -f waforth_core.wasm waforth_core.h $(OBJECTS) waforth *.exe *.tgz *.zip test.out

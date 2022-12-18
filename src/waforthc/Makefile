@@ -94,6 +94,9 @@ waforth_core.wasm: ../waforth.wat
 
 .PHONY: package
 
+sieve:
+	./waforthc --ccflag=-O2 --output=sieve --init="90000000 sieve" ../examples/sieve.f
+
 .PHONY: check
 check:
 	-rm -f test test.out
