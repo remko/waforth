@@ -38,7 +38,7 @@ let buildConfig = {
   // target: "es6",
   outdir: path.join(__dirname, "public/waforth/dist"),
   publicPath: "/waforth/dist",
-  external: ["fs", "stream", "util", "events"],
+  external: ["fs", "stream", "util", "events", "path"],
   minify: !dev,
   loader: {
     ".wasm": "binary",

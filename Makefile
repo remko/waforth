@@ -23,7 +23,9 @@ lint:
 wasm: src/waforth.assembled.wat scripts/word.wasm.hex
 
 src/web/benchmarks/sieve/sieve-c.js:
-	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ -sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	emcc src/web/benchmarks/sieve/sieve.c -O2 -o $@ \
+		-sSINGLE_FILE -sMODULARIZE -sINITIAL_MEMORY=100Mb \
+		-sEXPORTED_FUNCTIONS=_sieve -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 .PHONY: standalone
 standalone:

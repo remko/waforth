@@ -6,6 +6,8 @@ import sieveWasmModule from "./sieve/sieve.wat";
 import sieveJS from "./sieve/sieve.js";
 import update from "immutability-helper";
 import "./benchmarks.css";
+// import sieveCModule from "./sieve/sieve-c.js";
+const sieveCModule = null;
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 const jsx = React;
@@ -38,6 +40,13 @@ setup.push(
   })
 );
 
+let sieveC;
+setup.push(
+  (async () => {
+    // sieveC = (await sieveCModule())._sieve;
+  })()
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const ITERATIONS = 5;
@@ -64,6 +73,16 @@ const benchmarks = [
       return r[r.length - 1];
     },
   },
+  ...(sieveCModule == null
+    ? []
+    : [
+        {
+          name: "sieve-c",
+          fn: () => {
+            return sieveC(LIMIT);
+          },
+        },
+      ]),
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
