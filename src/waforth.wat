@@ -95,8 +95,8 @@
   ;;
   ;; Traps if a word was not found in the dictionary (and isn't a number).
   (func $interpret (param $tos i32) (result i32)
-    (local $FINDResult i32)
-    (local $FINDToken i32)
+    (local $findResult i32)
+    (local $findToken i32)
     (local $error i32)
     (local $number i32)
     (local $wordAddr i32)
@@ -112,9 +112,9 @@
         (br_if $endLoop (i32.eqz (local.get $wordLen)))
 
         ;; Search the name in the dictionary
-        (local.set $FINDToken (local.set $FINDResult 
+        (local.set $findToken (local.set $findResult 
           (call $find (local.get $wordAddr) (local.get $wordLen))))
-        (if (i32.eqz (local.get $FINDResult))
+        (if (i32.eqz (local.get $findResult))
           (then 
             ;; Name is not in the dictionary. Is it a number?
             (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
@@ -139,15 +139,15 @@
               ;; Are we interpreting?
               (br_if 0 (i32.eqz (i32.load (i32.const 0x20990 (; = body(STATE) ;)))))
               ;; Is the word immediate?
-              (br_if 0 (i32.eq (local.get $FINDResult) (i32.const 1)))
+              (br_if 0 (i32.eq (local.get $findResult) (i32.const 1)))
 
               ;; We're compiling a non-immediate. 
               ;; Compile the execution of the word into the current compilation body.
-              (local.set $tos (call $compileExecute (local.get $tos) (local.get $FINDToken)))
+              (local.set $tos (call $compileExecute (local.get $tos) (local.get $findToken)))
               (br $loop))
             ;; We're interpreting, or this is an immediate word
             ;; Execute the word.
-            (local.set $tos (call $execute (local.get $tos) (local.get $FINDToken)))))
+            (local.set $tos (call $execute (local.get $tos) (local.get $findToken)))))
         (br $loop)))
     (local.get $tos))
 
@@ -1801,16 +1801,16 @@
 
   ;; [6.1.2033](https://forth-standard.org/standard/core/POSTPONE)
   (func $POSTPONE (param $tos i32) (result i32)
-    (local $FINDToken i32)
-    (local $FINDResult i32)
+    (local $findToken i32)
+    (local $findResult i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (local.set $FINDToken (local.set $FINDResult (call $find! (call $parseName))))
-    (if (param i32) (result i32) (i32.eq (local.get $FINDResult) (i32.const 1))
+    (local.set $findToken (local.set $findResult (call $find! (call $parseName))))
+    (if (param i32) (result i32) (i32.eq (local.get $findResult) (i32.const 1))
       (then 
-        (call $compileExecute (local.get $FINDToken)))
+        (call $compileExecute (local.get $findToken)))
       (else
-        (call $emitConst (local.get $FINDToken))
+        (call $emitConst (local.get $findToken))
         (call $compileCall (i32.const 1) (i32.const 0x5 (; = COMPILE_EXECUTE_INDEX ;))))))
   (data (i32.const 0x20824) "\14\08\02\00" "\88" (; F_IMMEDIATE ;) "POSTPONE   " "\94\00\00\00")
   (elem (i32.const 0x94) $POSTPONE)
@@ -2759,11 +2759,11 @@
     (call $emitGetLocal (i32.const 0))
     (call $emitLoad))
     
-  (func $compileExecute (param $tos i32) (param $FINDToken i32) (result i32)
+  (func $compileExecute (param $tos i32) (param $xt i32) (result i32)
     (local $body i32)
-    (local.set $body (call $body (local.get $FINDToken)))
-    (if (i32.and (i32.load (i32.add (local.get $FINDToken) (i32.const 4)))
-                  (i32.const 0x40 (; = F_DATA ;)))
+    (local.set $body (call $body (local.get $xt)))
+    (if (i32.and (i32.load (i32.add (local.get $xt) (i32.const 4)))
+                 (i32.const 0x40 (; = F_DATA ;)))
       (then
         (call $emitConst (i32.add (local.get $body) (i32.const 4)))
         (call $compileCall (i32.const 1) (i32.load (local.get $body))))
