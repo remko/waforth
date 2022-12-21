@@ -108,23 +108,40 @@
         ;; Parse the next name in the input stream
         (local.set $wordAddr (local.set $wordLen (call $parseName)))
 
-        ;; No more input. Break the loop.
+        ;; Break the loop if we didn't parse anything
         (br_if $endLoop (i32.eqz (local.get $wordLen)))
 
-        ;; Search the name in the dictionary
-        (local.set $findToken (local.set $findResult 
-          (call $find (local.get $wordAddr) (local.get $wordLen))))
-        (if (i32.eqz (local.get $findResult))
-          (then 
+        ;; Find the name in the dictionary
+        (local.set $findToken (local.set $findResult (call $find (local.get $wordAddr) (local.get $wordLen))))
+        (if (local.get $findResult)
+          (then
+            ;; Name found in the dictionary. 
+            (block
+              ;; Are we interpreting? Then jump out of this block
+              (br_if 0 (i32.eqz (i32.load (i32.const 0x20990 (; = body(STATE) ;)))))
+              ;; Is the word immediate? Then jump out of this block
+              (br_if 0 (i32.eq (local.get $findResult) (i32.const 1)))
+
+              ;; We're compiling a non-immediate. 
+              ;; Compile the execution of the word into the current compilation body.
+              (local.set $tos (call $compileExecute (local.get $tos) (local.get $findToken)))
+
+              ;; Continue the loop
+              (br $loop))
+            ;; We're interpreting, or this is an immediate word
+            ;; Execute the word.
+            (local.set $tos (call $execute (local.get $tos) (local.get $findToken))))
+          (else 
             ;; Name is not in the dictionary. Is it a number?
             (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
-              ;; It's a number. Are we compiling?
+              ;; It's a number. 
               (then 
                 (local.set $number)
+
+                ;; Are we compiling?
                 (if (i32.load (i32.const 0x20990 (; = body(STATE) ;)))
                   (then
-                    ;; We're compiling. Pop it off the stack and 
-                    ;; add it to the compiled list
+                    ;; We're compiling. Add a push of the number to the current compilation body.
                     (local.set $tos (call $compilePushConst (local.get $tos) (local.get $number))))
                   (else 
                     ;; We're not compiling. Put the number on the stack.
@@ -132,22 +149,7 @@
               ;; It's not a number either. Fail.
               (else 
                 (drop)
-                (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen)))))
-          (else 
-            ;; Name found in the dictionary. 
-            (block
-              ;; Are we interpreting?
-              (br_if 0 (i32.eqz (i32.load (i32.const 0x20990 (; = body(STATE) ;)))))
-              ;; Is the word immediate?
-              (br_if 0 (i32.eq (local.get $findResult) (i32.const 1)))
-
-              ;; We're compiling a non-immediate. 
-              ;; Compile the execution of the word into the current compilation body.
-              (local.set $tos (call $compileExecute (local.get $tos) (local.get $findToken)))
-              (br $loop))
-            ;; We're interpreting, or this is an immediate word
-            ;; Execute the word.
-            (local.set $tos (call $execute (local.get $tos) (local.get $findToken)))))
+                (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen))))))
         (br $loop)))
     (local.get $tos))
 
