@@ -43,5 +43,25 @@ waforthc:
 
 clean:
 	-rm -rf $(WASM_FILES) scripts/word.wasm scripts/word.wasm.hex src/waforth.wat.tmp \
-		public/waforth
+		public/waforth run_sieve.*
+
+
+################################################################################
+# Sieve benchmark
+################################################################################
+
+run_sieve.c: src/web/benchmarks/sieve/sieve.c
+	(echo "#include <stdio.h>" && cat $< && echo "int main() { printf(\"%d\\\n\", sieve(90000000)); return 0; }") > $@
+
+run_sieve: run_sieve.c
+	$(CC) -O2 -o $@ $<
+
+run-sieve: run_sieve
+	time ./run_sieve
+
+run-sieve-gforth:
+	time gforth -m 100000 src/examples/sieve.f -e "90000000 sieve bye"
+
+run-sieve-gforth-fast:
+	time gforth-fast -m 100000 src/examples/sieve.f -e "90000000 sieve bye"
 

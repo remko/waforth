@@ -125,7 +125,7 @@ run_sieve.f: ../examples/sieve.f
 
 .PHONY: run-sieve
 run-sieve: run_sieve.f
-	./waforth $<
+	time ./waforth $<
 
 .PHONY: clean
 clean:

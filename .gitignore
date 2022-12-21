@@ -13,3 +13,5 @@ dist/
 *.bin
 *.assembled.wat
 *.o
+/run_sieve
+/run_sieve.c

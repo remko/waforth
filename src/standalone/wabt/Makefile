@@ -64,6 +64,13 @@ waforth_core.h: waforth_core.wasm
 
 .PHONY: package
 
+run_sieve.f: ../../examples/sieve.f
+	(cat $< && echo "90000000 sieve") > $@
+
+.PHONY: run-sieve
+run-sieve: run_sieve.f
+	time ./waforth $<
+
 .PHONY: check
 check:
 	-rm -f test.out
