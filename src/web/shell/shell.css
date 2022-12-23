@@ -11,52 +11,19 @@ html {
 body {
   height: 100vh;
   margin: 0;
-  background-color: black;
+  background-color: #111;
   color: gray;
 }
 
-.console {
+.container {
   position: absolute;
-  overflow-y: scroll;
-  background-color: black;
-  font-family: monospace;
-  padding: 1em;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin: 0;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
 }
 
-.console .header {
-  color: #00ff00;
-}
-
-.console .header a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.console .cursor {
-  background-color: gray;
-}
-
-.console .in {
-  color: #bb0;
-}
-
-.console .out {
-  color: white;
-}
-
-.console .error {
-  color: red;
-}
-
-input {
+body .Console {
+  height: 100%;
   width: 100%;
-  opacity: 0;
-  visibility: hidden;
 }

@@ -1,0 +1,41 @@
+.Console {
+  overflow-y: scroll;
+  background-color: #111;
+  font-family: monospace;
+  padding: 1em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.Console .header {
+  color: #00ff00;
+}
+
+.Console .header a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.Console .cursor {
+  background-color: gray;
+}
+
+.Console .in {
+  color: #bb0;
+}
+
+.Console .out {
+  color: white;
+}
+
+.Console .error {
+  color: red;
+}
+
+.Console input {
+  width: 100%;
+  height: 0;
+  opacity: 0;
+  visibility: hidden;
+}

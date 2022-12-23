@@ -1,0 +1,66 @@
+.code-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+}
+
+.code-cell .output {
+  flex: 1 1 15em;
+  gap: 0.125em;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-cell .console {
+  font-family: monospace;
+  background-color: #111;
+  color: white;
+  padding: 0.5em 1em;
+  border-radius: 0.25em;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.code-cell .editor {
+  flex: 1 1 15em;
+  background-color: #eee;
+  box-sizing: content-box;
+}
+
+.code-cell .world {
+  border: thin solid rgb(171, 208, 166);
+  background-color: rgb(221, 248, 221);
+  border-radius: 10px;
+  width: 100%;
+  max-height: 15em;
+}
+
+.code-cell .controls {
+  float: left;
+  margin-left: -28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bi {
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: currentcolor;
+}
+
+.toolbutton {
+  display: inline-block;
+  border: none;
+  border-radius: 0.5em;
+  background: none;
+  color: #888;
+  height: 24px;
+  width: 24px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.toolbutton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: inherit;
+}
