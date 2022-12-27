@@ -112,6 +112,8 @@
         (br_if $endLoop (i32.eqz (local.get $wordLen)))
 
         ;; Find the name in the dictionary
+        ;; Besides the code address (aka token), also returns a constant whether the word
+        ;; was found (!= 0), and if so, whether it was immediate (1) or not (-1).
         (local.set $findToken (local.set $findResult (call $find (local.get $wordAddr) (local.get $wordLen))))
         (if (local.get $findResult)
           (then
