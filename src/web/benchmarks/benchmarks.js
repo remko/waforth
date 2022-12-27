@@ -70,7 +70,7 @@ const benchmarks = [
     name: "sieve-js",
     fn: () => {
       const r = sieveJS(LIMIT);
-      return r[r.length - 1];
+      return r;
     },
   },
   ...(sieveCModule == null
