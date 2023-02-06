@@ -29,6 +29,9 @@ Words](http://lars.nocrew.org/dpans/dpans6.htm#6.2). You can get the complete
 list of supported words [from the interactive
 console](https://mko.re/waforth/?p=WORDS).
 
+You can watch [a video of a talk at FOSDEM 2023](https://www.youtube.com/watch?v=QqW39jElFhA) introducing
+WAForth, and explaining the goals and some of the internals.
+
 You can read more about the internals and the design of WAForth in the [Design
 document](doc/Design.md).
 
