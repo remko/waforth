@@ -2,6 +2,7 @@ name: Build
 
 on:
   push:
+    branches: ['*', '!master']
   pull_request:
   workflow_dispatch:
   workflow_call:
@@ -10,9 +11,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - run: yarnpkg build
-      - run: make -C src/web/notebook
       - run: yarnpkg lint
       - run: yarnpkg test --coverage
+      - run: make -C src/web/notebook
+      - run: ./dist/wafnb2html src/web/notebook/examples/drawing-with-forth.wafnb
+
+      # Build & upload pages
+      - run: |
+          mkdir -p public/waforth/drawing-with-forth
+          cp src/web/notebook/examples/drawing-with-forth.html public/waforth/drawing-with-forth/index.html
+        shell: bash
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: public/waforth

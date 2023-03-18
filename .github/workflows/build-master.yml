@@ -1,0 +1,46 @@
+name: Build (master)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  deploy-pages:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+
+  deploy-aws:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get update
+      - run: sudo apt-get install awscli
+      - uses: actions/download-artifact@v2
+        with:
+          name: github-pages
+      - run: |
+          mkdir pages
+          tar xf artifact.tar -C pages
+      - run: ls -R pages
+      - name: aws s3 sync
+        run: |
+          aws configure set region eu-central-1
+          aws configure set aws_access_key_id ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws configure set aws_secret_access_key ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws s3 sync pages/ s3://${{secrets.AWS_SITE_BUCKET}}/waforth/

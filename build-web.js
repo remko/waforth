@@ -98,7 +98,7 @@ async function handleBuildFinished(result) {
     ["WAForh Benchmarks", "benchmarks", "public/waforth/benchmarks"],
     ["WAForth Prompt Example", "prompt", "public/waforth/examples/prompt"],
     ["WAForth Fetch Example", "fetch", "public/waforth/examples/fetch"],
-    ["Thurtle", "thurtle", "public/thurtle", true],
+    ["Thurtle", "thurtle", "public/waforth/thurtle", true],
   ];
   for (const [title, base, outpath, bs] of indexes) {
     let index = INDEX_TEMPLATE.replace(/\$BASE/g, base).replace(

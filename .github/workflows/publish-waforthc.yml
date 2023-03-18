@@ -15,7 +15,7 @@ jobs:
         os: [macos-latest, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
 
       - if: runner.os == 'macOS' || runner.os == 'Windows'
