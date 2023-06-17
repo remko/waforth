@@ -6,8 +6,16 @@ runs:
     with:
       node-version: 17
       cache: 'yarn'
+  # - if: runner.os == 'macOS'
+  #   run: brew install wabt
+  #   shell: bash
   - if: runner.os == 'macOS'
-    run: brew install wabt
+    run: |
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.31/wabt-1.0.31-macos-12.tar.gz | tar xvz -C /tmp
+      sudo mv /tmp/wabt-1.0.31/bin/* /usr/local/bin
+      sudo mv /tmp/wabt-1.0.31/include/* /usr/local/include
+      sudo mv /tmp/wabt-1.0.31/lib/*.a /usr/local/lib
+      sudo mv /tmp/wabt-1.0.31/share/wabt /usr/local/share
     shell: bash
   - if: runner.os == 'Linux'
     run: |
