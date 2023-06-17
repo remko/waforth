@@ -37,7 +37,6 @@ jobs:
       - run: |
           mkdir pages
           tar xf artifact.tar -C pages
-      - run: ls -R pages
       - name: aws s3 sync
         run: |
           aws configure set region eu-central-1

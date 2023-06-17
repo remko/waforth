@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -90,7 +91,7 @@ int runChild(const std::vector<std::string> &cmd) {
   auto pid = fork();
   if (pid == 0) {
     if (execvp(argsp[0], (char **)&argsp[0]) == -1) {
-      std::cerr << "execvp() error" << std::endl;
+      std::cerr << "error executing '" << cmd[0] << ": " << std::strerror(errno) << " (" << errno << ")" << std::endl;
       return -1;
     }
     return 0;
