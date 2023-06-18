@@ -32,7 +32,8 @@ endif
 WABT_INCLUDE_DIR := $(WABT_DIR)/include
 WABT_LIB_DIR := $(WABT_DIR)/lib
 CXXFLAGS:= -I$(WABT_INCLUDE_DIR) $(CXXFLAGS)
-LIBS:=$(WABT_LIB_DIR)/libwabt.a $(LIBS)
+LIBS:=-lwabt $(LIBS)
+LDFLAGS := $(LDFLAGS) -L$(WABT_LIB_DIR)
 
 ifeq ($(DEBUG),1)
 CXXFLAGS := $(CXXFLAGS) -g
