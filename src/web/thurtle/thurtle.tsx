@@ -21,6 +21,31 @@ import draw from "./draw";
 
 declare let bootstrap: any;
 
+async function b64encode(bs: Uint8Array, forURL?: boolean) {
+  const url = await new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.readAsDataURL(new Blob([bs]));
+  });
+  const result = url.slice(url.indexOf(",") + 1);
+  return forURL
+    ? result.replace(/\//g, "_").replace(/\+/g, "-").replace(/=+$/, "")
+    : result;
+}
+
+function b64decode(s: string) {
+  if (s.length % 4 != 0) {
+    s += "===".slice(0, 4 - (s.length % 4));
+  }
+  return new Uint8Array(
+    [...atob(s.replace(/_/g, "/").replace(/-/g, "+"))].map((c) =>
+      c.charCodeAt(0)
+    )
+  );
+}
+
 function parseQS(sqs = window.location.search) {
   const qs: Record<string, string> = {};
   const sqss = sqs
@@ -492,6 +517,9 @@ async function downloadPNG(ev: MouseEvent) {
   img.style.display = "none";
   document.body.appendChild(img);
   try {
+    const imgSrc =
+      "data:image/svg+xml;base64," +
+      (await b64encode(new TextEncoder().encode(svg.data)));
     const dataURL = await new Promise<string>((resolve, reject) => {
       img.onerror = (e) => {
         reject(e);
@@ -504,7 +532,7 @@ async function downloadPNG(ev: MouseEvent) {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL("image/png"));
       };
-      img.src = "data:image/svg+xml;base64," + btoa(svg.data);
+      img.src = imgSrc;
     });
     const blob = await (await fetch(dataURL)).blob();
     saveAs(blob, programsEl.value + ".png");
@@ -516,14 +544,16 @@ async function downloadPNG(ev: MouseEvent) {
   }
 }
 
-function share(ev: MouseEvent) {
+async function share(ev: MouseEvent) {
   ev.preventDefault();
   shareModalTitleEl.innerText = programsEl.value;
   shareModalURLEl.value = `${window.location.protocol}//${
     window.location.host
   }${window.location.pathname}?pn=${encodeURIComponent(
     programsEl.value
-  )}&p=${encodeURIComponent(btoa(editor.getValue()))}&ar=1`;
+  )}&p=${encodeURIComponent(
+    await b64encode(new TextEncoder().encode(editor.getValue()), true)
+  )}&ar=1`;
   shareModal.show();
 }
 
@@ -581,7 +611,7 @@ async function reset() {
 /////////////////////////////////////////////////////////////////////////
 
 if (qs.p) {
-  saveProgram(qs.pn ?? "", atob(qs.p), true);
+  saveProgram(qs.pn ?? "", new TextDecoder().decode(b64decode(qs.p)), true);
   loadPrograms();
   loadProgram(qs.pn);
 } else {
