@@ -11,6 +11,7 @@ enum PenState {
 
 type Path = {
   strokeWidth?: number;
+  strokeColor?: number;
   d: string[];
 };
 
@@ -87,6 +88,11 @@ export default async function draw({
       paths.push({ d: [`M ${position.x} ${position.y}`], strokeWidth: s });
     });
 
+    forth.bind("setpencolor", (stack) => {
+      const s = stack.pop();
+      paths.push({ d: [`M ${position.x} ${position.y}`], strokeColor: s });
+    });
+
     forth.bind("setxy", (stack) => {
       const y = stack.pop();
       const x = stack.pop();
@@ -131,12 +137,17 @@ export default async function draw({
   );
 
   pathsEl.innerHTML = "";
+  let strokeWidth = 5;
+  let strokeColor = 0;
   for (const path of paths) {
+    strokeColor = path.strokeColor ?? strokeColor;
+    strokeWidth = path.strokeWidth ?? strokeWidth;
     const pathEl = (
       <path
         xmlns="http://www.w3.org/2000/svg"
         d={path.d.join(" ")}
-        stroke-width={(path.strokeWidth ?? 5) + ""}
+        stroke={"#" + strokeColor.toString(16).padStart(6, "0")}
+        stroke-width={strokeWidth + ""}
       />
     );
     pathsEl.appendChild(pathEl);

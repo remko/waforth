@@ -31,7 +31,6 @@
 }
 
 .world path {
-  stroke: black;
   fill: white;
   fill-opacity: 0;
 }

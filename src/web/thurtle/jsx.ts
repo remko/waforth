@@ -25,6 +25,7 @@ declare global {
       };
       path: JSXElement<SVGPathElement> & {
         xmlns: "http://www.w3.org/2000/svg";
+        stroke?: string;
         d?: string;
       };
       g: JSXElement<Omit<SVGGraphicsElement, "transform">> & {

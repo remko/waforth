@@ -357,6 +357,10 @@ const rootEl = (
                   strokes to <code>n</code> (default: 5).
                 </li>
                 <li>
+                  <code>SETPENCOLOR ( n -- )</code>: Set the color of the drawed
+                  strokes to RGB value <code>n</code> (default: 0).
+                </li>
+                <li>
                   <code>HIDETURTLE ( -- )</code>: Hide the turtle.
                 </li>
                 <li>
