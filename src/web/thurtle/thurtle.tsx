@@ -408,6 +408,7 @@ function loadProgram(name: string) {
     deleteActionEl.classList.remove("disabled");
   }
   programsEl.value = name;
+  document.title = name + " - Thurtle";
 }
 
 function loadPrograms() {
