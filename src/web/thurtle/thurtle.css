@@ -64,3 +64,7 @@ label {
 .right-pane {
   flex: 2;
 }
+
+.copy-url-btn {
+  border: thin solid rgb(206, 212, 218) !important;
+}
