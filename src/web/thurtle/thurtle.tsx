@@ -1,6 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 // Query parameters:
 // `p`: Base64-encoded program
+// `u`: Base64-encoded ULZ-compressed program
 // `pn`: Program name. If `p` is not provided, looks up builtin example
 // `ar`: Auto-run program
 // `sn`: Show navbar (default: 1)
@@ -18,8 +19,11 @@ import {
 import Editor from "./Editor";
 import { saveAs } from "file-saver";
 import draw from "./draw";
+import { ulzEncode, ulzDecode } from "./ulz";
 
 declare let bootstrap: any;
+
+////////////////////////////////////////////////////////////////////////////////
 
 async function b64encode(bs: Uint8Array, forURL?: boolean) {
   const url = await new Promise<string>((resolve) => {
@@ -46,6 +50,8 @@ function b64decode(s: string) {
   );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 function parseQS(sqs = window.location.search) {
   const qs: Record<string, string> = {};
   const sqss = sqs
@@ -64,6 +70,8 @@ function parseQS(sqs = window.location.search) {
 }
 
 const qs = parseQS();
+
+////////////////////////////////////////////////////////////////////////////////
 
 function About() {
   return (
@@ -604,13 +612,17 @@ async function downloadPNG(ev: MouseEvent) {
 async function share(ev: MouseEvent) {
   ev.preventDefault();
   shareModalTitleEl.innerText = programsEl.value;
-  shareModalURLEl.value = `${window.location.protocol}//${
-    window.location.host
-  }${window.location.pathname}?pn=${encodeURIComponent(
-    programsEl.value
-  )}&p=${encodeURIComponent(
-    await b64encode(new TextEncoder().encode(editor.getValue()), true)
-  )}&ar=1`;
+  let url = `${window.location.protocol}//${window.location.host}${
+    window.location.pathname
+  }?pn=${encodeURIComponent(programsEl.value)}&ar=1&`;
+  const program = new TextEncoder().encode(editor.getValue());
+  const compressed = ulzEncode(program);
+  if (compressed.length < program.length) {
+    url += `u=${encodeURIComponent(await b64encode(compressed, true))}`;
+  } else {
+    url += `p=${encodeURIComponent(await b64encode(program, true))}`;
+  }
+  shareModalURLEl.value = url;
   shareModal.show();
 }
 
@@ -676,8 +688,9 @@ async function reset() {
 
 /////////////////////////////////////////////////////////////////////////
 
-if (qs.p) {
-  saveProgram(qs.pn ?? "", new TextDecoder().decode(b64decode(qs.p)), true);
+if (qs.p || qs.u) {
+  const program = qs.p ? b64decode(qs.p) : ulzDecode(b64decode(qs.u));
+  saveProgram(qs.pn ?? "", new TextDecoder().decode(program), true);
   loadPrograms();
   loadProgram(qs.pn);
 } else {
