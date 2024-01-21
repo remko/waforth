@@ -10,3 +10,9 @@
 : SETPENCOLOR ( n -- ) S" setpencolor" SCALL ;
 : SETXY ( n1 n2 -- ) S" setxy" SCALL ;
 : SETHEADING ( n -- ) S" setheading" SCALL ;
+
+\ Aliases
+: ⬆️ FORWARD ;
+: ⬇️ BACKWARD ;
+: ⬅️ LEFT ;
+: ➡️ RIGHT ;
