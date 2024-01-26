@@ -369,6 +369,10 @@ const rootEl = (
                   strokes to RGB value <code>n</code> (default: 0).
                 </li>
                 <li>
+                  <code>SETSCREENCOLOR ( n -- )</code>: Set the color of the
+                  screen to RGB value <code>n</code>.
+                </li>
+                <li>
                   <code>HIDETURTLE ( -- )</code>: Hide the turtle.
                 </li>
                 <li>

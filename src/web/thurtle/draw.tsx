@@ -15,6 +15,10 @@ type Path = {
   d: string[];
 };
 
+function color(n: number): string {
+  return "#" + n.toString(16).padStart(6, "0");
+}
+
 export default async function draw({
   program,
   drawEl,
@@ -32,6 +36,7 @@ export default async function draw({
   let rotation = 270;
   const position = { x: 0, y: 0 };
   const boundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  let screenColor: number | null = null;
   let pen = PenState.Down;
   let visible = true;
   let isEmpty = true;
@@ -92,6 +97,9 @@ export default async function draw({
       const s = stack.pop();
       paths.push({ d: [`M ${position.x} ${position.y}`], strokeColor: s });
     });
+    forth.bind("setscreencolor", (stack) => {
+      screenColor = stack.pop();
+    });
 
     forth.bind("setxy", (stack) => {
       const y = stack.pop();
@@ -146,7 +154,7 @@ export default async function draw({
       <path
         xmlns="http://www.w3.org/2000/svg"
         d={path.d.join(" ")}
-        stroke={"#" + strokeColor.toString(16).padStart(6, "0")}
+        stroke={color(strokeColor)}
         stroke-width={strokeWidth + ""}
       />
     );
@@ -194,6 +202,12 @@ export default async function draw({
         Math.ceil(height + 2 * paddingY),
       ].join(" ")
     );
+  }
+
+  if (screenColor != null) {
+    drawEl.style.backgroundColor = color(screenColor);
+  } else {
+    drawEl.style.backgroundColor = "";
   }
 
   drawEl.appendChild(pathsEl);
