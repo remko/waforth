@@ -204,6 +204,47 @@ HERE RND !
 SIZE 0 PLANT
 `,
   },
+  {
+    name: "🌱",
+    isExample: true,
+    program: `
+450 CONSTANT <SIZE>
+7   CONSTANT <BRANCHES>
+160 CONSTANT <SPREAD>
+HEX 006A47 DECIMAL CONSTANT 🟩
+HEX 825E5C DECIMAL CONSTANT 🟫
+
+VARIABLE RND
+134348 RND !
+
+: RANDOM ( -- n )
+  RND @ 75 * 74 + 65537 MOD
+  DUP RND !
+;
+
+: CHOOSE ( n1 -- n2 )
+  RANDOM 65537 */MOD SWAP DROP 
+; 
+
+: 🌱 ( size angle -- )
+  OVER 10 < IF 2DROP EXIT THEN
+  OVER 50 / 1 MAX SETPENSIZE
+  OVER 50 > IF 🟫 ELSE 🟩 THEN SETPENCOLOR 
+  DUP ➡️
+  OVER ⬆️
+  <BRANCHES> 0 DO
+    OVER 2/
+    <SPREAD> CHOOSE <SPREAD> 2/ -
+    RECURSE
+  LOOP
+  PENUP SWAP ⬇️ PENDOWN
+  ⬅️
+;
+  
+<SIZE> 0 🌱
+HIDETURTLE
+`,
+  },
 ].map((e) => ({ ...e, program: e.program.trimStart() }));
 
 // Load programs
