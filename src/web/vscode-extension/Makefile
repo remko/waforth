@@ -3,7 +3,7 @@ all:
 
 .PHONY: install-deps
 install-deps:
-	yarn global add vsce
+	npm install --global vsce
 
 .PHONY: prepackage
 prepackage: all LICENSE.txt icon.png

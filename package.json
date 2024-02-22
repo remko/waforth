@@ -51,5 +51,51 @@
     "wasm",
     "compiler",
     "interpreter"
-  ]
+  ],
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:react-hooks/recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 12,
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "sourceType": "module"
+    },
+    "plugins": [
+      "prettier",
+      "react",
+      "@typescript-eslint"
+    ],
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    },
+    "rules": {
+      "prettier/prettier": "error",
+      "react/display-name": 0,
+      "react/prop-types": 0,
+      "@typescript-eslint/explicit-module-boundary-types": 0,
+      "@typescript-eslint/no-explicit-any": 0,
+      "@typescript-eslint/no-non-null-assertion": 0
+    },
+    "ignorePatterns": [
+      "public/waforth/dist",
+      "build/",
+      "dist/",
+      "src/web/benchmarks/sieve/sieve-c.js",
+      "src/standalone/wasm-micro-runtime"
+    ]
+  }
 }

@@ -6,19 +6,19 @@ WAT2WASM_FLAGS:=$(WAT2WASM_FLAGS) --debug-names
 endif
 
 all:
-	yarn -s build
+	npm run build
 
 dev:
-	yarn -s dev
+	npm run dev
 
 check:
-	yarn -s test
+	npm test
 
 check-watch:
-	yarn -s test-watch
+	npm run test-watch
 
 lint:
-	yarn -s lint
+	npm run lint
 
 wasm: src/waforth.assembled.wat scripts/word.wasm.hex
 

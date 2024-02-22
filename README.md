@@ -264,23 +264,22 @@ Here are some of the goals (and non-goals) of WAForth:
 
 The build uses the [WebAssembly Binary
 Toolkit](https://github.com/WebAssembly/wabt) for converting raw WebAssembly
-text format into the binary format, and [Yarn](https://yarnpkg.com) (and therefore
-[Node.JS](https://nodejs.org/en/)) for
+text format into the binary format, and [Node.JS](https://nodejs.org/en/) for
 managing the build process and the dependencies of the shell.
 
-    brew install wabt yarn
-    yarn
+    brew install wabt node
+    npm install
 
 
 ### Building & Running
 
 To build everything:
     
-    yarn build
+    npm run build
 
 To run the development server:
 
-    yarn dev
+    npm run dev
 
 ### Testing
 
@@ -288,4 +287,4 @@ The tests are served from `/waforth/tests` by the development server.
 
 You can also run the tests in Node.JS by running
 
-    yarn test
+    npm test

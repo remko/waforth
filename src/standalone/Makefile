@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := all
 
-VERSION?=$(shell cat ../../package.json | grep '"version"' | sed -e 's/.*:.*"\(.*\)".*/\1/')
+VERSION?=$(shell cat ../../package.json | grep '"version"' | head -n 1 | sed -e 's/.*:.*"\(.*\)".*/\1/')
 
 ################################################
 # WebAssembly engine configuration

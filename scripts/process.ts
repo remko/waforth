@@ -1,4 +1,4 @@
-#!/usr/bin/env yarn exec ts-node --
+#!/usr/bin/env npx ts-node --
 
 import * as process from "process";
 import * as fs from "fs";

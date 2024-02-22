@@ -5,7 +5,8 @@ runs:
   - uses: actions/setup-node@v2
     with:
       node-version: 17
-      cache: 'yarn'
+      registry-url: 'https://registry.npmjs.org/'
+      cache: 'npm'
   # - if: runner.os == 'macOS'
   #   run: brew install wabt
   #   shell: bash
@@ -31,5 +32,5 @@ runs:
       mv /tmp/wabt-1.0.31 /c/tools/wabt
       cp /c/tools/wabt/bin/* /c/Windows/system32
     shell: bash
-  - run: yarnpkg --pure-lockfile
+  - run: npm ci
     shell: bash
