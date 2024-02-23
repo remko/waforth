@@ -1,6 +1,6 @@
 {
   "name": "waforth",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "description": "Small but complete Forth interpreter and dynamic compiler for and in WebAssembly",
   "license": "MIT",
   "repository": "github:remko/waforth",
