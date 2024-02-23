@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <termios.h>
 
 #include "wasm-rt-impl.h"
@@ -61,6 +62,10 @@ u32 Z_shellZ_key(struct Z_shell_instance_t *mod) {
   char ch = getchar();
   tcsetattr(0, TCSANOW, &old);
   return ch;
+}
+
+u32 Z_shellZ_random(struct Z_shell_instance_t *mod) {
+  return random();
 }
 
 void Z_shellZ_call(struct Z_shell_instance_t *mod) {

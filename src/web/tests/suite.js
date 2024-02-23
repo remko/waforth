@@ -1706,6 +1706,14 @@ CODE DUP' ( n -- n n )
       });
     });
 
+    describe("RANDOM", () => {
+      it("should work", () => {
+        run("RANDOM RANDOM");
+        expect(stackValues().length).to.eql(2);
+        expect(stackValues()[0]).to.not.eql(stackValues()[1]);
+      });
+    });
+
     describe("system", () => {
       it("should run sieve", () => {
         run(sieve);

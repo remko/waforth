@@ -1,4 +1,5 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#define _CRT_RAND_S
 #include <windows.h>
 #else
 #include <termios.h>
@@ -7,6 +8,7 @@
 #include "waforth_core.h"
 #include "wasm.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef VERSION
 #define VERSION "dev"
@@ -61,8 +63,10 @@ wasm_trap_t *read_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   char *addr = &wasm_memory_data(memory)[args->data[0].of.i32];
   size_t len = args->data[1].of.i32;
   *addr = 0;
-  fgets(addr, len, input);
-  int n = strlen(addr);
+  int n = 0;
+  if (fgets(addr, len, input)) {
+    n = strlen(addr);
+  };
   results->data[0].kind = WASM_I32;
   results->data[0].of.i32 = n;
   return NULL;
@@ -95,6 +99,22 @@ wasm_trap_t *key_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   results->data[0].of.i32 = ch;
   return NULL;
 }
+
+wasm_trap_t *random_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  unsigned int ur;
+  if (rand_s(&ur) != 0) {
+    return trap_from_string("error generating random number");
+  }
+  int r = ur & 0x7fffffff;
+#else
+  int r = random();
+#endif
+  results->data[0].kind = WASM_I32;
+  results->data[0].of.i32 = r;
+  return NULL;
+}
+
 
 wasm_trap_t *load_cb(const wasm_val_vec_t *args, wasm_val_vec_t *results) {
   wasm_byte_t *addr = &wasm_memory_data(memory)[args->data[0].of.i32];
@@ -155,6 +175,10 @@ int main(int argc, char *argv[]) {
   wasm_func_t *key_fn = wasm_func_new(store, key_ft, key_cb);
   wasm_functype_delete(key_ft);
 
+  wasm_functype_t *random_ft = wasm_functype_new_0_1(wasm_valtype_new_i32());
+  wasm_func_t *random_fn = wasm_func_new(store, random_ft, random_cb);
+  wasm_functype_delete(random_ft);
+
   wasm_functype_t *load_ft = wasm_functype_new_2_0(wasm_valtype_new_i32(), wasm_valtype_new_i32());
   wasm_func_t *load_fn = wasm_func_new(store, load_ft, load_cb);
   wasm_functype_delete(load_ft);
@@ -163,7 +187,7 @@ int main(int argc, char *argv[]) {
   wasm_func_t *call_fn = wasm_func_new_with_env(store, call_ft, call_cb, store, NULL);
   wasm_functype_delete(call_ft);
 
-  wasm_extern_t *externs[] = {wasm_func_as_extern(emit_fn), wasm_func_as_extern(read_fn), wasm_func_as_extern(key_fn), wasm_func_as_extern(load_fn),
+  wasm_extern_t *externs[] = {wasm_func_as_extern(emit_fn), wasm_func_as_extern(read_fn), wasm_func_as_extern(key_fn), wasm_func_as_extern(random_fn), wasm_func_as_extern(load_fn),
                               wasm_func_as_extern(call_fn)};
   wasm_extern_vec_t imports = WASM_ARRAY_VEC(externs);
   wasm_trap_t *trap = NULL;
@@ -255,6 +279,7 @@ int main(int argc, char *argv[]) {
   wasm_instance_delete(instance);
   wasm_func_delete(call_fn);
   wasm_func_delete(load_fn);
+  wasm_func_delete(random_fn);
   wasm_func_delete(key_fn);
   wasm_func_delete(read_fn);
   wasm_func_delete(emit_fn);
