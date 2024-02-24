@@ -17,8 +17,8 @@ else
 # Wasmtime (https://wasmtime.dev)
 ifeq ($(OS),Windows_NT)
 
-WASMTIME_DIR=wasmtime-v1.0.0-x86_64-mingw-c-api
-WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.0/wasmtime-v1.0.0-x86_64-mingw-c-api.zip
+WASMTIME_DIR=wasmtime-v18.0.0-x86_64-mingw-c-api
+WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v18.0.0/wasmtime-v18.0.0-x86_64-mingw-c-api.zip
 CC=gcc
 CFLAGS=-DWASM_API_EXTERN=
 LIBS=-luserenv -lole32 -lntdll -lws2_32 -lkernel32 -lbcrypt
@@ -48,16 +48,16 @@ UNAME_S=$(shell uname -s)
 UNAME_P=$(shell uname -p)
 ifeq ($(UNAME_S),Darwin)
 ifeq ($(UNAME_P),arm)
-WASMTIME_DIR=wasmtime-v1.0.1-aarch64-macos-c-api
+WASMTIME_DIR=wasmtime-v18.0.0-aarch64-macos-c-api
 PACKAGE_SUFFIX=arm64-macos
 else
-WASMTIME_DIR=wasmtime-v1.0.1-x86_64-macos-c-api
+WASMTIME_DIR=wasmtime-v18.0.0-x86_64-macos-c-api
 PACKAGE_SUFFIX=x86_64-macos
 endif
-WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.1/$(WASMTIME_DIR).tar.xz
+WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v18.0.0/$(WASMTIME_DIR).tar.xz
 else
-WASMTIME_DIR=wasmtime-v1.0.1-x86_64-linux-c-api
-WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.1/wasmtime-v1.0.1-x86_64-linux-c-api.tar.xz
+WASMTIME_DIR=wasmtime-v18.0.0-x86_64-linux-c-api
+WASMTIME_RELEASE_URL=https://github.com/bytecodealliance/wasmtime/releases/download/v18.0.0/wasmtime-v18.0.0-x86_64-linux-c-api.tar.xz
 LIBS=-lpthread -lm -ldl
 PACKAGE_SUFFIX=x86_64-linux
 endif
