@@ -71,7 +71,8 @@ package: waforth
 
 endif
 CFLAGS:= -I$(WASMTIME_DIR)/include $(CFLAGS)
-LIBS:=$(WASMTIME_DIR)/lib/libwasmtime.a $(LIBS)
+LIBS:=-lwasmtime $(LIBS)
+LDFLAGS := -L$(WASMTIME_DIR)/lib $(LDFLAGS)
 endif
 
 ifeq ($(DEBUG),1)
