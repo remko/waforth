@@ -6,8 +6,8 @@
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; External function dependencies.
-  ;; 
-  ;; These are provided by JavaScript (or whoever instantiates the WebAssembly 
+  ;;
+  ;; These are provided by JavaScript (or whoever instantiates the WebAssembly
   ;; module)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -31,7 +31,6 @@
 
   ;; Generic signal to shell
   (import "shell" "call" (func $shell_call))
-
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter
@@ -68,32 +67,31 @@
 
         ;; Check for stack underflow
         (if (i32.lt_s (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;)))
-          (call $fail (i32.const 0x20085 (; = str("stack empty") ;))))
+          (then (call $fail (i32.const 0x20085 (; = str("stack empty") ;)))))
 
         ;; Show prompt, depending on STATE
         (if (i32.eqz (local.get $silent))
-          (call $ctype 
+          (then (call $ctype
             (block $endCase (result i32)
-              (block $caseDefault 
-                (block $caseOK 
-                  (block $caseCompiled 
-                    (br_table $caseOK $caseCompiled $caseDefault 
+              (block $caseDefault
+                (block $caseOK
+                  (block $caseCompiled
+                    (br_table $caseOK $caseCompiled $caseDefault
                       (i32.load (i32.const 0x209a0 (; = body(STATE) ;)))))
                   (i32.const 0x2009c (; = str("compiled\n") ;)) (br $endCase))
                 (i32.const 0x20091 (; = str("ok\n") ;)) (br $endCase))
-              (i32.const 0x20095 (; = str("error\n") ;)))))
+              (i32.const 0x20095 (; = str("error\n") ;))))))
 
         (local.get $tos)
         (br $loop)))
-      
+
       ;; Reset the global TOS pointer to the current local value (still on the WASM operand stack)
       (global.set $tos)
 
       ;; End of input was reached
       (global.set $error (i32.const 0x4 (; = ERR_EOI ;))))
 
-
-  ;; Interpret the string in the input buffer word by word, until 
+  ;; Interpret the string in the input buffer word by word, until
   ;; the end of the input buffer is reached.
   ;;
   ;; Traps if a word was not found in the dictionary (and isn't a number).
@@ -106,7 +104,7 @@
     (local $wordLen i32)
     (local.set $error (i32.const 0))
     (global.set $tors (i32.const 0x2000 (; = RETURN_STACK_BASE ;)))
-    (block $endLoop 
+    (block $endLoop
       (loop $loop
         ;; Parse the next name in the input stream
         (local.set $wordAddr (local.set $wordLen (call $parseName)))
@@ -120,14 +118,14 @@
         (local.set $findToken (local.set $findResult (call $find (local.get $wordAddr) (local.get $wordLen))))
         (if (local.get $findResult)
           (then
-            ;; Name found in the dictionary. 
+            ;; Name found in the dictionary.
             (block
               ;; Are we interpreting? Then jump out of this block
               (br_if 0 (i32.eqz (i32.load (i32.const 0x209a0 (; = body(STATE) ;)))))
               ;; Is the word immediate? Then jump out of this block
               (br_if 0 (i32.eq (local.get $findResult) (i32.const 1)))
 
-              ;; We're compiling a non-immediate. 
+              ;; We're compiling a non-immediate.
               ;; Compile the execution of the word into the current compilation body.
               (local.set $tos (call $compileExecute (local.get $tos) (local.get $findToken)))
 
@@ -136,11 +134,11 @@
             ;; We're interpreting, or this is an immediate word
             ;; Execute the word.
             (local.set $tos (call $execute (local.get $tos) (local.get $findToken))))
-          (else 
+          (else
             ;; Name is not in the dictionary. Is it a number?
             (if (param i32) (i32.eqz (call $readNumber (local.get $wordAddr) (local.get $wordLen)))
-              ;; It's a number. 
-              (then 
+              ;; It's a number.
+              (then
                 (local.set $number)
 
                 ;; Are we compiling?
@@ -148,11 +146,11 @@
                   (then
                     ;; We're compiling. Add a push of the number to the current compilation body.
                     (local.set $tos (call $compilePushConst (local.get $tos) (local.get $number))))
-                  (else 
+                  (else
                     ;; We're not compiling. Put the number on the stack.
                     (local.set $tos (call $push (local.get $tos) (local.get $number))))))
               ;; It's not a number either. Fail.
-              (else 
+              (else
                 (drop)
                 (call $failUndefinedWord (local.get $wordAddr) (local.get $wordLen))))))
         (br $loop)))
@@ -166,14 +164,14 @@
     (local.set $body (call $body (local.get $xt)))
 
     ;; Perform an indirect call to the table index
-    (if (result i32) (i32.and 
+    (if (result i32) (i32.and
           (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
           (i32.const 0x40 (; = F_DATA ;)))
       (then
-        ;; A data word gets the pointer to the dictionary entry's data field 
+        ;; A data word gets the pointer to the dictionary entry's data field
         ;; as extra parameter
-        (call_indirect 
-          (type $dataWord) 
+        (call_indirect
+          (type $dataWord)
           (local.get $tos)
           (i32.add (local.get $body) (i32.const 4))
           (i32.load (local.get $body))))
@@ -192,7 +190,6 @@
     (i32.store (i32.const 0x209a0 (; = body(STATE) ;)) (i32.const 0))
     (unreachable))
 
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Function table
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -201,7 +198,7 @@
   ;; functions used in compiled words. All calls from compiled words to other words go
   ;; through this table.
   ;;
-  ;; The table starts with 16 reserved addresses for utility, non-words 
+  ;; The table starts with 16 reserved addresses for utility, non-words
   ;; functions (used in compiled words). From then on, the built-in words start.
   ;;
   ;; Predefined entries:
@@ -217,10 +214,10 @@
   ;;   END_DO_INDEX := 9
   (table (export "table") 0xc4 funcref)
 
-  ;; The function table contains 2 type of entries for: entries for 
+  ;; The function table contains 2 type of entries for: entries for
   ;; regular compiled words, and entries for data words.
 
-  ;; A regular compiled word is a function with only the 
+  ;; A regular compiled word is a function with only the
   ;; top-of-stack pointer as parameter (and returns the new top-of-stack pointer)
   ;; Arguments are passed via the stack.
   (type $word (func (param i32) (result i32)))
@@ -228,7 +225,6 @@
   ;; Words with the 'data' flag set also get a pointer to data passed
   ;; as second parameter.
   (type $dataWord (func (param i32) (param i32) (result i32)))
-
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Data
@@ -243,14 +239,14 @@
   ;;   INPUT_BUFFER_BASE  :=     0x0
   ;;   INPUT_BUFFER_SIZE  :=  0x1000
   ;;   (Compiled modules are limited to 4096 bytes until Chrome refuses to load them synchronously)
-  ;;   MODULE_HEADER_BASE :=  0x1000 
+  ;;   MODULE_HEADER_BASE :=  0x1000
   ;;   RETURN_STACK_BASE  :=  0x2000
   ;;   STACK_BASE         := 0x10000
   ;;   DATA_SPACE_BASE    := 0x20000
   ;;
   ;; Transient regions, offset from HERE:
   ;;   PICTURED_OUTPUT_OFFSET := 0x200 (filled backward)
-  ;;   WORD_OFFSET            := 0x200 
+  ;;   WORD_OFFSET            := 0x200
   ;;   PAD_OFFSET             := 0x304 (WORD_OFSET + 1 + 0xFF)
   ;;
   (memory (export "memory") 0x640 (; = MEMORY_SIZE_PAGES ;))
@@ -278,7 +274,6 @@
         "\60\02\7f\7f\01\7f" ;; (func (param i32) (param i32) (result i32))
         "\60\01\7f\02\7F\7f" ;; (func (param i32) (result i32) (result i32))
 
-
     "\02" "\20" ;; Import section
       "\02" ;; #Entries
       "\03\65\6E\76" "\05\74\61\62\6C\65" ;; 'env' . 'table'
@@ -289,7 +284,7 @@
     "\03" "\02" ;; Function section
       "\01" ;; #Entries
       "\FA" ;; Type 0
-      
+
     "\09" "\0a" ;; Element section
       "\01" ;; #Entries
       "\00" ;; Table 0
@@ -323,7 +318,6 @@
   ;;   MODULE_HEADER_TABLE_INITIAL_SIZE_BASE := 0x102c (MODULE_HEADER_BASE + 0x2c (; = MODULE_HEADER_TABLE_INITIAL_SIZE_OFFSET ;))
   ;;   MODULE_HEADER_FUNCTION_TYPE_BASE := 0x1041      (MODULE_HEADER_BASE + 0x41 (; = MODULE_HEADER_FUNCTION_TYPE_OFFSET ;))
 
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Constant strings
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -339,7 +333,6 @@
   (data (i32.const 0x20091) "\03" "ok\n")
   (data (i32.const 0x20095) "\06" "error\n")
   (data (i32.const 0x2009c) "\09" "compiled\n")
-
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Built-in words
@@ -361,7 +354,7 @@
   ;;   Length is acquired by masking
   ;;      LENGTH_MASK := 0x1F
   ;; - name (n bytes): Name characters. End is 4-byte aligned.
-  ;; - code pointer (4 bytes): Index into the function 
+  ;; - code pointer (4 bytes): Index into the function
   ;;   table of code to execute
   ;; - data (optional m bytes, only if 'data' flag is set)
   ;;
@@ -369,7 +362,7 @@
   ;;
 
   ;; [15.6.2.0470](https://forth-standard.org/standard/tools/SemiCODE)
-  (func $semiCODE (param $tos i32) (result i32) 
+  (func $semiCODE (param $tos i32) (result i32)
     (call $semicolon (local.get $tos)))
   (data (i32.const 0x200a8) "\00\00\00\00" "\85" (; F_IMMEDIATE ;) ";CODE  " "\10\00\00\00")
   (elem (i32.const 0x10) $semiCODE)
@@ -436,7 +429,7 @@
   (elem (i32.const 0x16) $#>)
 
   ;; [6.1.0050](https://forth-standard.org/standard/core/numS)
-  (func $#S (param $tos i32) (result i32) 
+  (func $#S (param $tos i32) (result i32)
     (local $v i64)
     (local $base i64)
     (local $bbtos i32)
@@ -609,7 +602,7 @@
     (local $bbtos i32)
     (local $divisor i32)
     (if (i32.eqz (local.tee $divisor (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
-      (call $fail (i32.const 0x2000f (; = str("division by 0") ;))))
+      (then (call $fail (i32.const 0x2000f (; = str("division by 0") ;)))))
     (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i32.div_s (i32.load (local.get $bbtos)) (local.get $divisor)))
     (local.get $btos))
@@ -624,7 +617,7 @@
     (local $n2 i32)
     (i32.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i32.rem_s (local.tee $n1 (i32.load (local.get $bbtos)))
-                          (local.tee $n2 (i32.load (local.tee $btos (i32.sub (local.get $tos) 
+                          (local.tee $n2 (i32.load (local.tee $btos (i32.sub (local.get $tos)
                                                                               (i32.const 4)))))))
     (i32.store (local.get $btos) (i32.div_s (local.get $n1) (local.get $n2)))
     (local.get $tos))
@@ -635,7 +628,7 @@
   (func $<> (param $tos i32) (result i32)
     (local $btos i32)
     (local $bbtos i32)
-    (if (i32.eq 
+    (if (i32.eq
           (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
           (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
       (then (i32.store (local.get $bbtos) (i32.const 0)))
@@ -645,16 +638,16 @@
   (elem (i32.const 0x27) $<>)
 
   (func $$Scomma (param $tos i32) (result i32)
-    (local $btos i32)    
-    (global.set $cp 
+    (local $btos i32)
+    (global.set $cp
       (call $leb128 (global.get $cp) (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.get $btos))
   (data (i32.const 0x201dc) "\d0\01\02\00" "\03" "$S," "\28\00\00\00")
   (elem (i32.const 0x28) $$Scomma)
 
   (func $$Ucomma (param $tos i32) (result i32)
-    (local $btos i32)    
-    (global.set $cp 
+    (local $btos i32)
+    (global.set $cp
       (call $leb128u (global.get $cp) (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.get $btos))
   (data (i32.const 0x201e8) "\dc\01\02\00" "\03" "$U," "\29\00\00\00")
@@ -663,7 +656,7 @@
   ;; [6.1.0250](https://forth-standard.org/standard/core/Zeroless)
   (func $0< (param $tos i32) (result i32)
     (local $btos i32)
-    (if (i32.lt_s 
+    (if (i32.lt_s
           (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
           (i32.const 0))
       (then (i32.store (local.get $btos) (i32.const -1)))
@@ -695,7 +688,7 @@
   ;; [6.2.0280](https://forth-standard.org/standard/core/Zeromore)
   (func $0> (param $tos i32) (result i32)
     (local $btos i32)
-    (if (i32.gt_s (i32.load (local.tee $btos (i32.sub (local.get $tos) 
+    (if (i32.gt_s (i32.load (local.tee $btos (i32.sub (local.get $tos)
                                                       (i32.const 4))))
                   (i32.const 0))
       (then (i32.store (local.get $btos) (i32.const -1)))
@@ -798,7 +791,7 @@
   ;; [6.2.0415](https://forth-standard.org/standard/core/TwoRFetch)
   (func $2R@ (param $tos i32) (result i32)
     (local $bbtors i32)
-    (i32.store (local.get $tos) 
+    (i32.store (local.get $tos)
       (i32.load (local.tee $bbtors (i32.sub (global.get $tors) (i32.const 8)))))
     (i32.store (i32.add (local.get $tos) (i32.const 4))
       (i32.load (i32.add (local.get $bbtors) (i32.const 4))))
@@ -809,7 +802,7 @@
   ;; [6.2.0410](https://forth-standard.org/standard/core/TwoRfrom)
   (func $2R> (param $tos i32) (result i32)
     (local $bbtors i32)
-    (i32.store (local.get $tos) 
+    (i32.store (local.get $tos)
       (i32.load (local.tee $bbtors (i32.sub (global.get $tors) (i32.const 8)))))
     (i32.store (i32.add (local.get $tos) (i32.const 4))
       (i32.load (i32.add (local.get $bbtors) (i32.const 4))))
@@ -912,7 +905,7 @@
   (data (i32.const 0x20328) "\18\03\02\00" "\43" (; F_DATA ;) ">IN" "\03\00\00\00" (; = pack(PUSH_DATA_ADDRESS_INDEX) ;) "\00\00\00\00")
 
   ;; [6.1.0570](https://forth-standard.org/standard/core/toNUMBER)
-  (func $>NUMBER (param $tos i32) (result i32) 
+  (func $>NUMBER (param $tos i32) (result i32)
     (local $btos i32)
     (local $bbtos i32)
     (local $bbbbtos i32)
@@ -949,7 +942,7 @@
         (i32.store (local.get $tos)
           (i32.load (local.get $btos)))
         (i32.add (local.get $tos) (i32.const 4)))
-      (else 
+      (else
         (local.get $tos))))
   (data (i32.const 0x20354) "\48\03\02\00" "\04" "?DUP   " "\44\00\00\00")
   (elem (i32.const 0x44) $?DUP)
@@ -1002,8 +995,8 @@
     (local $p i32)
     (local $endp i32)
     (local $c i32)
-    (local.set $endp 
-      (i32.add 
+    (local.set $endp
+      (i32.add
         (local.tee $addr (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
         (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))
     (local.set $p (local.get $addr))
@@ -1023,7 +1016,7 @@
   (func $ACTION-OF (param $tos i32) (result i32)
     (local $xtp i32)
     (local $btos i32)
-    (local.set $xtp 
+    (local.set $xtp
       (i32.add
         (call $body (drop (call $find! (call $parseName))))
         (i32.const 4)))
@@ -1134,11 +1127,11 @@
     (local.set $addr (local.set $len (call $parse (i32.const 0x22 (; = '"' ;)))))
     (i32.store8 (global.get $here) (local.get $len))
     (memory.copy
-      (i32.add (global.get $here) (i32.const 1)) 
-      (local.get $addr) 
+      (i32.add (global.get $here) (i32.const 1))
+      (local.get $addr)
       (local.get $len))
     (call $compilePushConst (global.get $here))
-    (global.set $here 
+    (global.set $here
       (call $aligned (i32.add (i32.add (global.get $here) (i32.const 1)) (local.get $len)))))
   (data (i32.const 0x20460) "\54\04\02\00" "\82" (; F_IMMEDIATE ;) "C\22 " "\55\00\00\00")
   (elem (i32.const 0x55) $Cq)
@@ -1165,7 +1158,7 @@
   (func $CELLS (param $tos i32) (result i32)
     (local $btos i32)
     (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
-                (i32.shl (i32.load (local.get $btos)) (i32.const 2)))            
+                (i32.shl (i32.load (local.get $btos)) (i32.const 2)))
     (local.get $tos))
   (data (i32.const 0x20488) "\78\04\02\00" "\05" "CELLS  " "\58\00\00\00")
   (elem (i32.const 0x58) $CELLS)
@@ -1224,7 +1217,7 @@
     (local $btos i32)
     (local $addr i32)
     (i32.store (local.get $tos)
-                (i32.load8_u (local.tee $addr (i32.load (local.tee $btos (i32.sub (local.get $tos) 
+                (i32.load8_u (local.tee $addr (i32.load (local.tee $btos (i32.sub (local.get $tos)
                                                                                 (i32.const 4)))))))
     (i32.store (local.get $btos) (i32.add (local.get $addr) (i32.const 1)))
     (i32.add (local.get $tos) (i32.const 4)))
@@ -1244,9 +1237,9 @@
     (local $nameLen i32)
     (local.set $nameAddr (local.set $nameLen (call $parseName)))
     (if (i32.eqz (local.get $nameLen))
-      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
+      (then (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (call $create
-      (local.get $nameAddr) 
+      (local.get $nameAddr)
       (local.get $nameLen)
       (i32.const 0x40 (; = F_DATA ;))
       (i32.const 0x3 (; = PUSH_DATA_ADDRESS_INDEX ;)))
@@ -1267,13 +1260,13 @@
     (local $nameLen i32)
     (local.set $nameAddr (local.set $nameLen (call $parseName)))
     (if (i32.eqz (local.get $nameLen))
-      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
+      (then (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (call $create
-      (local.get $nameAddr) 
+      (local.get $nameAddr)
       (local.get $nameLen)
       (i32.const 0x40 (; = F_DATA ;))
       (i32.const 0x8 (; = EXECUTE_DEFER_INDEX ;)))
-    (; Store `here` and `latest` pointer before this definition in the data 
+    (; Store `here` and `latest` pointer before this definition in the data
        area of the word, so we can reset it in `$resetMarker` ;)
     (global.set $here (i32.add (global.get $here) (i32.const 4)))
     (local.get $tos))
@@ -1376,7 +1369,7 @@
         (i32.store (local.get $bbtos) (i32.const 8))
         (i32.store (local.get $btos) (i32.const -1))
         (local.get $tos))
-      (else 
+      (else
         (if (result i32) (call $stringEqual (local.get $addr) (local.get $len) (i32.const 0x20076 (; = str("/COUNTED-STRING") + 1 ;)) (i32.const 0xf (; = len("/COUNTED-STRING") ;)))
           (then
             (i32.store (local.get $bbtos) (i32.const 255))
@@ -1391,7 +1384,7 @@
   ;; [6.2.1350](https://forth-standard.org/standard/core/ERASE)
   (func $ERASE (param $tos i32) (result i32)
     (local $bbtos i32)
-    (memory.fill 
+    (memory.fill
       (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
       (i32.const 0)
       (i32.load (i32.sub (local.get $tos) (i32.const 4))))
@@ -1433,7 +1426,7 @@
     (call $execute (call $pop (local.get $tos))))
   (data (i32.const 0x20610) "\fc\05\02\00" "\07" "EXECUTE" "\70\00\00\00")
   (elem (i32.const 0x70) $EXECUTE)
-    
+
   ;; [6.1.1380](https://forth-standard.org/standard/core/EXIT)
   (func $EXIT (param $tos i32) (result i32)
     (local.get $tos)
@@ -1451,7 +1444,7 @@
   ;; [6.1.1540](https://forth-standard.org/standard/core/FILL)
   (func $FILL (param $tos i32) (result i32)
     (local $bbbtos i32)
-    (memory.fill 
+    (memory.fill
       (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
       (i32.load (i32.sub (local.get $tos) (i32.const 4)))
       (i32.load (i32.sub (local.get $tos) (i32.const 8))))
@@ -1464,8 +1457,8 @@
     (local $caddr i32)
     (local $xt i32)
     (local $r i32)
-    (local.set $xt (local.set $r 
-      (call $find     
+    (local.set $xt (local.set $r
+      (call $find
         (i32.add (local.tee $caddr (i32.load (i32.sub (local.get $tos) (i32.const 4)))) (i32.const 1))
         (i32.load8_u (local.get $caddr)))))
     (if (i32.eqz (local.get $r))
@@ -1486,8 +1479,8 @@
     (local $q i32)
     (local $mod i32)
     (local.set $mod
-      (i32.wrap_i64 
-        (i64.rem_s 
+      (i32.wrap_i64
+        (i64.rem_s
           (local.tee $n1 (i64.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))))
           (local.tee $n2 (i64.extend_i32_s (local.tee $n2_32 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))))))))
     (local.set $q (i32.wrap_i64 (i64.div_s (local.get $n1) (local.get $n2))))
@@ -1520,7 +1513,7 @@
   (func $HOLD (param $tos i32) (result i32)
     (local $btos i32)
     (local $npo i32)
-    (i32.store8 
+    (i32.store8
       (local.tee $npo (i32.sub (global.get $po) (i32.const 1)))
       (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (global.set $po (local.get $npo))
@@ -1533,9 +1526,9 @@
     (local $len i32)
     (local $npo i32)
     (memory.copy
-      (local.tee $npo 
-        (i32.sub 
-          (global.get $po) 
+      (local.tee $npo
+        (i32.sub
+          (global.get $po)
           (local.tee $len (i32.load (i32.sub (local.get $tos) (i32.const 4))))))
       (i32.load (i32.sub (local.get $tos) (i32.const 8)))
       (local.get $len))
@@ -1562,7 +1555,7 @@
   ;; [6.1.1710](https://forth-standard.org/standard/core/IMMEDIATE)
   (func $IMMEDIATE (param $tos i32) (result i32)
     (i32.store (i32.add (global.get $latest) (i32.const 4))
-      (i32.or 
+      (i32.or
         (i32.load (i32.add (global.get $latest) (i32.const 4)))
         (i32.const 0x80 (; = F_IMMEDIATE ;))))
     (local.get $tos))
@@ -1644,7 +1637,7 @@
     (local $bbtos i32)
     (i64.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i64.mul (i64.extend_i32_s (i32.load (local.get $bbtos)))
-                        (i64.extend_i32_s (i32.load (i32.sub (local.get $tos) 
+                        (i64.extend_i32_s (i32.load (i32.sub (local.get $tos)
                                                               (i32.const 4))))))
     (local.get $tos))
   (data (i32.const 0x2075c) "\4c\07\02\00" "\02" "M* " "\86\00\00\00")
@@ -1658,15 +1651,15 @@
     (local $oldLatest i32)
     (local.set $nameAddr (local.set $nameLen (call $parseName)))
     (if (i32.eqz (local.get $nameLen))
-      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
+      (then (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (local.set $oldHere (global.get $here))
     (local.set $oldLatest (global.get $latest))
     (call $create
-      (local.get $nameAddr) 
+      (local.get $nameAddr)
       (local.get $nameLen)
       (i32.const 0x40 (; = F_DATA ;))
       (i32.const 0x7 (; = RESET_MARKER_INDEX ;)))
-    (; Store `here` and `latest` pointer before this definition in the data 
+    (; Store `here` and `latest` pointer before this definition in the data
        area of the word, so we can reset it in `$resetMarker` ;)
     (i32.store (global.get $here) (local.get $oldHere))
     (i32.store (i32.add (global.get $here) (i32.const 4)) (local.get $oldLatest))
@@ -1681,7 +1674,7 @@
     (local $bbtos i32)
     (local $v i32)
     (if (i32.lt_s (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
-                  (local.tee $v (i32.load (local.tee $btos (i32.sub (local.get $tos) 
+                  (local.tee $v (i32.load (local.tee $btos (i32.sub (local.get $tos)
                                                                     (i32.const 4))))))
       (then
         (i32.store (local.get $bbtos) (local.get $v))))
@@ -1695,7 +1688,7 @@
     (local $bbtos i32)
     (local $v i32)
     (if (i32.gt_s (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8))))
-                  (local.tee $v (i32.load (local.tee $btos (i32.sub (local.get $tos) 
+                  (local.tee $v (i32.load (local.tee $btos (i32.sub (local.get $tos)
                                                                     (i32.const 4))))))
       (then
         (i32.store (local.get $bbtos) (local.get $v))))
@@ -1717,7 +1710,7 @@
   ;; [6.1.1900](https://forth-standard.org/standard/core/MOVE)
   (func $MOVE (param $tos i32) (result i32)
     (local $bbbtos i32)
-    (memory.copy 
+    (memory.copy
       (i32.load (i32.sub (local.get $tos) (i32.const 8)))
       (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12))))
       (i32.load (i32.sub (local.get $tos) (i32.const 4))))
@@ -1774,8 +1767,8 @@
     (local $addr i32)
     (local $len i32)
     (local $btos i32)
-    (local.set $addr (local.set $len 
-      (call $parse 
+    (local.set $addr (local.set $len
+      (call $parse
         (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 0x4)))))))
     (i32.store (local.get $btos) (local.get $addr))
     (i32.store (local.get $tos) (local.get $len))
@@ -1798,9 +1791,9 @@
   (func $PICK (param $tos i32) (result i32)
     (local $btos i32)
     (i32.store (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))
-      (i32.load 
-        (i32.sub 
-          (local.get $tos) 
+      (i32.load
+        (i32.sub
+          (local.get $tos)
           (i32.shl (i32.add (i32.load (local.get $btos)) (i32.const 2)) (i32.const 2)))))
     (local.get $tos))
   (data (i32.const 0x20814) "\00\08\02\00" "\04" "PICK   " "\93\00\00\00")
@@ -1814,7 +1807,7 @@
     (call $ensureCompiling)
     (local.set $findToken (local.set $findResult (call $find! (call $parseName))))
     (if (param i32) (result i32) (i32.eq (local.get $findResult) (i32.const 1))
-      (then 
+      (then
         (call $compileExecute (local.get $findToken)))
       (else
         (call $emitConst (local.get $findToken))
@@ -1868,9 +1861,9 @@
       (then
         (call $push (i32.const -1))
         (return)))
-    (global.set $inputBufferSize 
-      (call $shell_read 
-        (i32.const 0x0 (; = INPUT_BUFFER_BASE ;)) 
+    (global.set $inputBufferSize
+      (call $shell_read
+        (i32.const 0x0 (; = INPUT_BUFFER_BASE ;))
         (i32.const 0x1000 (; = INPUT_BUFFER_SIZE ;))))
     (if (param i32) (result i32) (i32.eqz (global.get $inputBufferSize))
       (then (call $push (i32.const 0)))
@@ -1902,15 +1895,15 @@
     (local $x i32)
     (local $p i32)
     (local $btos i32)
-    (local.set $u 
+    (local.set $u
       (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (local.set $x
-      (i32.load 
-        (local.tee $p 
-          (i32.sub 
+      (i32.load
+        (local.tee $p
+          (i32.sub
             (local.get $btos)
             (i32.shl (i32.add (local.get $u) (i32.const 1)) (i32.const 2))))))
-    (memory.copy 
+    (memory.copy
       (local.get $p)
       (i32.add (local.get $p) (i32.const 4))
       (i32.shl (local.get $u) (i32.const 2)))
@@ -1926,9 +1919,9 @@
     (local $bbtos i32)
     (local $bbbtos i32)
     (local.set $tmp (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
-    (i32.store (local.get $btos) 
+    (i32.store (local.get $btos)
       (i32.load (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))))
-    (i32.store (local.get $bbbtos) 
+    (i32.store (local.get $bbbtos)
       (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
     (i32.store (local.get $bbtos) (local.get $tmp))
     (local.get $tos))
@@ -1957,7 +1950,7 @@
     (memory.copy (global.get $here) (local.get $addr) (local.get $len))
     (call $compilePushConst (global.get $here))
     (call $compilePushConst (local.get $len))
-    (global.set $here 
+    (global.set $here
       (call $aligned (i32.add (global.get $here) (local.get $len)))))
   (data (i32.const 0x208e4) "\d4\08\02\00" "\82" (; F_IMMEDIATE ;) "S\22 " "\a0\00\00\00")
   (elem (i32.const 0xa0) $Sq)
@@ -1973,8 +1966,8 @@
     (local $delimited i32)
     (local.get $tos)
     (call $ensureCompiling)
-    (local.set $p 
-      (local.tee $addr (i32.add (global.get $inputBufferBase) 
+    (local.set $p
+      (local.tee $addr (i32.add (global.get $inputBufferBase)
       (i32.load (i32.const 0x20334 (; = body(>IN) ;))))))
     (local.set $end (i32.add (global.get $inputBufferBase) (global.get $inputBufferSize)))
     (local.set $tp (global.get $here))
@@ -2006,13 +1999,13 @@
             (else (if (i32.eq (local.get $c) (i32.const 0x7a (; = 'z' ;))) (then (local.set $c (i32.const 0x00)))
             (else (if (i32.eq (local.get $c) (i32.const 0x22 (; = '"' ;))) (then (local.set $c (i32.const 0x22)))
             (else (if (i32.eq (local.get $c) (i32.const 0x5c (; = '\\' ;))) (then (local.set $c (i32.const 0x5c)))
-            (else (if (i32.eq (local.get $c) (i32.const 0x6d (; = 'm' ;))) 
-              (then 
+            (else (if (i32.eq (local.get $c) (i32.const 0x6d (; = 'm' ;)))
+              (then
                 (i32.store8 (local.get $tp) (i32.const 0x0d))
                 (local.set $tp (i32.add (local.get $tp) (i32.const 1)))
                 (local.set $c (i32.const 0x0a)))
-            (else (if (i32.eq (local.get $c) (i32.const 0x78 (; = 'x' ;))) 
-              (then 
+            (else (if (i32.eq (local.get $c) (i32.const 0x78 (; = 'x' ;)))
+              (then
                 (br_if $endOfInput (i32.eq (local.get $p) (local.get $end)))
                 (local.set $c2 (i32.load8_s (local.get $p)))
                 (local.set $p (i32.add (local.get $p) (i32.const 1)))
@@ -2021,7 +2014,7 @@
                 (local.set $c (i32.load8_s (local.get $p)))
                 (local.set $p (i32.add (local.get $p) (i32.const 1)))
                 (br_if $endOfInput (i32.eq (local.get $c) (i32.const 0xa)))
-                (local.set $c 
+                (local.set $c
                   (i32.or
                     (call $hexchar (local.get $c))
                     (i32.shl (call $hexchar (local.get $c2)) (i32.const 4))))))))))))))))))))))))))))))))))
@@ -2032,7 +2025,7 @@
             (i32.store8 (local.get $tp) (local.get $c))
             (local.set $tp (i32.add (local.get $tp) (i32.const 1)))))
         (br $read)))
-    (i32.store (i32.const 0x20334 (; = body(>IN) ;)) 
+    (i32.store (i32.const 0x20334 (; = body(>IN) ;))
       (i32.sub (local.get $p) (global.get $inputBufferBase)))
     (call $compilePushConst (global.get $here))
     (call $compilePushConst (i32.sub (local.get $tp) (global.get $here)))
@@ -2069,7 +2062,7 @@
     (local $btos i32)
     (local $npo i32)
     (if (i32.lt_s (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))) (i32.const 0))
-      (then 
+      (then
         (i32.store8 (local.tee $npo (i32.sub (global.get $po) (i32.const 1))) (i32.const 0x2d (; = '-' ;)))
         (global.set $po (local.get $npo))))
     (local.get $btos))
@@ -2084,15 +2077,15 @@
     (local $bbbtos i32)
     (local $n1 i64)
     (local $n2 i64)
-    (i32.store 
+    (i32.store
       (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))
-      (i32.wrap_i64 
-        (i64.rem_s 
+      (i32.wrap_i64
+        (i64.rem_s
           (local.tee $n1 (i64.load (local.get $bbbtos)))
           (local.tee $n2 (i64.extend_i32_s (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))))))
-    (i32.store 
+    (i32.store
       (i32.sub (local.get $tos) (i32.const 8))
-      (i32.wrap_i64 
+      (i32.wrap_i64
         (i64.div_s (local.get $n1) (local.get $n2))))
     (local.get $btos))
   (data (i32.const 0x2093c) "\2c\09\02\00" "\06" "SM/REM " "\a6\00\00\00")
@@ -2142,7 +2135,7 @@
     (local $bbtos i32)
     (local $tmp i32)
     (local.set $tmp (i32.load (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))))
-    (i32.store (local.get $bbtos) 
+    (i32.store (local.get $bbtos)
                 (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))
     (i32.store (local.get $btos) (local.get $tmp))
     (local.get $tos))
@@ -2229,7 +2222,7 @@
     (local $bbtos i32)
     (i64.store (local.tee $bbtos (i32.sub (local.get $tos) (i32.const 8)))
                 (i64.mul (i64.extend_i32_u (i32.load (local.get $bbtos)))
-                        (i64.extend_i32_u (i32.load (i32.sub (local.get $tos) 
+                        (i64.extend_i32_u (i32.load (i32.sub (local.get $tos)
                                                               (i32.const 4))))))
     (local.get $tos))
   (data (i32.const 0x20a24) "\18\0a\02\00" "\03" "UM*" "\b4\00\00\00")
@@ -2241,15 +2234,15 @@
     (local $bbbtos i32)
     (local $n1 i64)
     (local $n2 i64)
-    (i32.store 
+    (i32.store
       (local.tee $bbbtos (i32.sub (local.get $tos) (i32.const 12)))
-      (i32.wrap_i64 
-        (i64.rem_u 
+      (i32.wrap_i64
+        (i64.rem_u
           (local.tee $n1 (i64.load (local.get $bbbtos)))
           (local.tee $n2 (i64.extend_i32_u (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4)))))))))
-    (i32.store 
+    (i32.store
       (i32.sub (local.get $tos) (i32.const 8))
-      (i32.wrap_i64 
+      (i32.wrap_i64
         (i64.div_u (local.get $n1) (local.get $n2))))
     (local.get $btos))
   (data (i32.const 0x20a30) "\24\0a\02\00" "\06" "UM/MOD " "\b5\00\00\00")
@@ -2329,9 +2322,9 @@
     (local.set $delimiter (call $pop))
     (call $skip (local.get $delimiter))
     (local.set $addr (local.set $len (call $parse (local.get $delimiter))))
-    (memory.copy 
-      (i32.add 
-        (local.tee $wordBase (i32.add (global.get $here) (i32.const 0x200 (; = WORD_OFFSET ;)))) 
+    (memory.copy
+      (i32.add
+        (local.tee $wordBase (i32.add (global.get $here) (i32.const 0x200 (; = WORD_OFFSET ;))))
         (i32.const 1))
       (local.get $addr)
       (local.get $len))
@@ -2352,7 +2345,7 @@
       (local.set $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
       (if (i32.eqz (i32.and (local.get $entryLF) (i32.const 0x20 (; = F_HIDDEN ;))))
         (then
-          (call $type  
+          (call $type
             (i32.add (local.get $entryP) (i32.const 5))
             (i32.and (local.get $entryLF) (i32.const 0x1f (; = LENGTH_MASK ;))))
           (call $shell_emit (i32.const 0x20))))
@@ -2413,7 +2406,6 @@
   (data (i32.const 0x20b14) "\08\0b\02\00" "\01" "]  " "\c3\00\00\00")
   (elem (i32.const 0xc3) $right-bracket)
 
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Interpreter state
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2440,7 +2432,7 @@
   (global $po (mut i32) (i32.const -1))
 
   ;; Error code
-  ;; 
+  ;;
   ;; This can only be inspected after an interpret() call (using error()).
   ;;
   ;; Values:
@@ -2451,14 +2443,13 @@
   ;;   ERR_BYE :=     0x5   (BYE called)
   (global $error (mut i32) (i32.const 0x0))
 
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Compiler functions
   ;;
   ;; `compileXXXX` functions compile Forth words. These are mostly defined in terms of
   ;; several lower level `emitXXXX` functions.
   ;;
-  ;; `emitXXXX` words are low level functions that emit a single WebAssembly 
+  ;; `emitXXXX` words are low level functions that emit a single WebAssembly
   ;; instruction in binary format. This is a direct translation from the WebAssembly
   ;; spec.
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2468,9 +2459,9 @@
     (local $nameLen i32)
     (local.set $nameAddr (local.set $nameLen (call $parseName)))
     (if (i32.eqz (local.get $nameLen))
-      (call $fail (i32.const 0x2001d (; = str("incomplete input") ;))))
+      (then (call $fail (i32.const 0x2001d (; = str("incomplete input") ;)))))
     (call $create
-      (local.get $nameAddr) 
+      (local.get $nameAddr)
       (local.get $nameLen)
       (i32.const 0x20 (; = F_HIDDEN ;))
       ;; Store the code pointer already
@@ -2482,7 +2473,7 @@
     (call $right-bracket (local.get $tos)))
 
   ;; Initializes compilation.
-  ;; Parameter indicates the type of code we're compiling: type 0 (no params), 
+  ;; Parameter indicates the type of code we're compiling: type 0 (no params),
   ;; or type 1 (1 param)
   (func $startColon (param $type i32)
     (i32.store8 (i32.const 0x1041 (; = MODULE_HEADER_FUNCTION_TYPE_BASE ;)) (local.get $type))
@@ -2501,48 +2492,48 @@
     (call $emitEnd)
 
     ;; Update code size
-    (local.set $bodySize (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)))) 
-    (i32.store 
+    (local.set $bodySize (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))))
+    (i32.store
       (i32.const 0x104f (; = MODULE_HEADER_CODE_SIZE_BASE ;))
       (call $leb128-4p
-          (i32.sub (local.get $bodySize) 
+          (i32.sub (local.get $bodySize)
                   (i32.const 0x53 (; = MODULE_HEADER_CODE_SIZE_OFFSET_PLUS_4 ;)))))
 
     ;; Update body size
-    (i32.store 
+    (i32.store
       (i32.const 0x1054 (; = MODULE_HEADER_BODY_SIZE_BASE ;))
       (call $leb128-4p
-          (i32.sub (local.get $bodySize) 
+          (i32.sub (local.get $bodySize)
                   (i32.const 0x58 (; = MODULE_HEADER_BODY_SIZE_OFFSET_PLUS_4 ;)))))
 
     ;; Update #locals
-    (i32.store 
+    (i32.store
       (i32.const 0x1059 (; = MODULE_HEADER_LOCAL_COUNT_BASE ;))
-      (call $leb128-4p 
+      (call $leb128-4p
         (i32.add
-          (i32.sub 
-            (global.get $lastLocal) 
+          (i32.sub
+            (global.get $lastLocal)
             (global.get $firstTemporaryLocal))
           (i32.const 1))))
 
     ;; Update table offset
-    (i32.store 
+    (i32.store
       (i32.const 0x1047 (; = MODULE_HEADER_TABLE_INDEX_BASE ;))
       (call $leb128-4p (global.get $nextTableIndex)))
     ;; Also store the initial table size to satisfy other tools (e.g. wasm-as)
-    (i32.store 
+    (i32.store
       (i32.const 0x102c (; = MODULE_HEADER_TABLE_INITIAL_SIZE_BASE ;))
       (call $leb128-4p (i32.add (global.get $nextTableIndex) (i32.const 1))))
 
     ;; Write a name section (if we're ending the code for the current dictionary entry)
-    (if (i32.eq 
-          (i32.load (call $body (global.get $latest))) 
+    (if (i32.eq
+          (i32.load (call $body (global.get $latest)))
           (global.get $nextTableIndex))
       (then
         (local.set $nameLength (i32.and (i32.load8_u (i32.add (global.get $latest) (i32.const 4)))
                                         (i32.const 0x1f (; = LENGTH_MASK ;))))
         (i32.store8 (global.get $cp) (i32.const 0))
-        (i32.store8 (i32.add (global.get $cp) (i32.const 1)) 
+        (i32.store8 (i32.add (global.get $cp) (i32.const 1))
                     (i32.add (i32.const 13) (i32.mul (i32.const 2) (local.get $nameLength))))
         (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (i32.const 0x04))
         (i32.store8 (i32.add (global.get $cp) (i32.const 3)) (i32.const 0x6e))
@@ -2552,24 +2543,24 @@
         (global.set $cp (i32.add (global.get $cp) (i32.const 7)))
 
         (i32.store8 (global.get $cp) (i32.const 0x00))
-        (i32.store8 (i32.add (global.get $cp) (i32.const 1)) 
+        (i32.store8 (i32.add (global.get $cp) (i32.const 1))
                     (i32.add (i32.const 1) (local.get $nameLength)))
-        (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (local.get $nameLength)) 
+        (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (i32.const 3)))
-        (memory.copy 
+        (memory.copy
           (global.get $cp)
           (i32.add (global.get $latest) (i32.const 5))
           (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (local.get $nameLength)))
 
         (i32.store8 (global.get $cp) (i32.const 0x01))
-        (i32.store8 (i32.add (global.get $cp) (i32.const 1)) 
+        (i32.store8 (i32.add (global.get $cp) (i32.const 1))
                     (i32.add (i32.const 3) (local.get $nameLength)))
         (i32.store8 (i32.add (global.get $cp) (i32.const 2)) (i32.const 0x01))
         (i32.store8 (i32.add (global.get $cp) (i32.const 3)) (i32.const 0x00))
         (i32.store8 (i32.add (global.get $cp) (i32.const 4)) (local.get $nameLength))
         (global.set $cp (i32.add (global.get $cp) (i32.const 5)))
-        (memory.copy 
+        (memory.copy
           (global.get $cp)
           (i32.add (global.get $latest) (i32.const 5))
           (local.get $nameLength))
@@ -2578,8 +2569,8 @@
     ;; Load the code
     (if (i32.ge_u (global.get $nextTableIndex) (table.size 0))
       (then (drop (table.grow 0 (ref.func $!) (table.size 0))))) ;; Double size
-    (call $shell_load 
-      (i32.const 0x1000 (; = MODULE_HEADER_BASE ;)) 
+    (call $shell_load
+      (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))
       (i32.sub (global.get $cp) (i32.const 0x1000 (; = MODULE_HEADER_BASE ;))))
 
     (global.set $nextTableIndex (i32.add (global.get $nextTableIndex) (i32.const 1))))
@@ -2646,7 +2637,7 @@
     ;; startDo $1
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $compileCall (i32.const 1) (i32.const 0x1 (; = START_DO_INDEX ;)))
-    
+
     ;; $diff = $1 - $end_i
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitGetLocal (global.get $currentLocal))
@@ -2667,7 +2658,7 @@
     (call $emitGetLocal (global.get $currentLocal))
     (call $emitAdd)
     (call $compileCall (i32.const 1) (i32.const 0x2 (; = UPDATE_DO_INDEX ;)))
-    
+
     ;; loop if $diff != 0
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitConst (i32.const 0))
@@ -2677,7 +2668,7 @@
     (call $compileLoopEnd (local.get $tos)))
 
   (func $compilePlusLoop (param $tos i32) (result i32)
-    ;; temporarily store old diff 
+    ;; temporarily store old diff
     (call $emitGetLocal (i32.sub (global.get $currentLocal) (i32.const 1)))
     (call $emitSetLocal (global.get $firstTemporaryLocal))
 
@@ -2699,7 +2690,7 @@
     (call $emitConst (i32.const 0))
     (call $emitGreaterEqualSigned)
     (call $emitBrIf (i32.const 0))
-    
+
     (call $compileLoopEnd (local.get $tos)))
 
   ;; Assumes increment is on the operand stack
@@ -2728,10 +2719,10 @@
     (call $compileIf))
 
   (func $compileRepeat (param $tos i32) (result i32)
-    (call $emitBr 
-      (i32.sub 
+    (call $emitBr
+      (i32.sub
         (global.get $branchNesting)
-        (i32.and 
+        (i32.and
           (i32.load (i32.sub (local.get $tos) (i32.const 4)))
           (i32.const 0x7FFFFFFF))))
     (call $emitEnd)
@@ -2749,8 +2740,8 @@
     (block $endLoop
       (loop $loop
         (br_if $endLoop (i32.le_u (local.get $tos) (i32.const 0x10000 (; = STACK_BASE ;))))
-        (br_if $endLoop 
-          (i32.ne 
+        (br_if $endLoop
+          (i32.ne
             (i32.load (local.tee $btos (i32.sub (local.get $tos) (i32.const 4))))
             (i32.or (global.get $branchNesting) (i32.const 0x80000000 (; dest bit ;)))))
         (call $emitEnd)
@@ -2771,7 +2762,7 @@
     (call $emitTeeLocal (i32.const 0))
     (call $emitGetLocal (i32.const 0))
     (call $emitLoad))
-    
+
   (func $compileExecute (param $tos i32) (param $xt i32) (result i32)
     (local $body i32)
     (local.set $body (call $body (local.get $xt)))
@@ -2805,7 +2796,7 @@
       (br_if 0 (local.get $n))
       (br_if 0 (i32.eqz (global.get $lastEmitWasGetTOS)))
       ;; In case we have a TOS get after a TOS set, replace the previous one with tee.
-      ;; Doesn't seem to have much of a performance impact, but this makes the code a little bit shorter, 
+      ;; Doesn't seem to have much of a performance impact, but this makes the code a little bit shorter,
       ;; and easier to step through.
       (i32.store8 (i32.sub (global.get $cp) (i32.const 2)) (i32.const 0x22))
       (global.set $lastEmitWasGetTOS (i32.const 0))
@@ -2856,7 +2847,6 @@
 
   ;; Compilation pointer
   (global $cp (mut i32) (i32.const 0x105e (; = MODULE_BODY_BASE ;)))
-
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Word helper functions
@@ -2917,22 +2907,22 @@
     (local $end1 i32)
     (local $end2 i32)
     (if (i32.eqz (local.get $len1))
-      (return (i32.const 0)))
+      (then (return (i32.const 0))))
     (if (i32.ne (local.get $len1) (local.get $len2))
-      (return (i32.const 0)))
+      (then (return (i32.const 0))))
     (local.set $end1 (i32.add (local.get $addr1) (local.get $len1)))
     (local.set $end2 (i32.add (local.get $addr2) (local.get $len2)))
     (loop $loop (result i32)
-      (if (i32.eq (local.get $addr1) (local.get $end1)) 
-        (return (i32.const 1)))
+      (if (i32.eq (local.get $addr1) (local.get $end1))
+        (then (return (i32.const 1))))
       (if (i32.ne (i32.load8_s (local.get $addr1)) (i32.load8_s (local.get $addr2)))
-        (return (i32.const 0)))
+        (then (return (i32.const 0))))
       (local.set $addr1 (i32.add (local.get $addr1) (i32.const 1)))
       (local.set $addr2 (i32.add (local.get $addr2)(i32.const 1)))
       (br $loop)))
 
   (func $fail (param $str i32)
-    (call $type 
+    (call $type
       (i32.add (local.get $str) (i32.const 1))
       (i32.load8_u (local.get $str)))
     (call $shell_emit (i32.const 10))
@@ -2958,7 +2948,7 @@
     (i32.store8 (local.get $here) (i32.or (local.get $nameLen) (local.get $flags)))
 
     ;; Store name
-    (memory.copy 
+    (memory.copy
       (local.tee $here (i32.add (local.get $here) (i32.const 1)))
       (local.get $nameAddr)
       (local.get $nameLen))
@@ -2967,7 +2957,7 @@
     ;; Store function index
     (i32.store (local.get $here) (local.get $func))
     (local.set $here (i32.add (local.get $here) (i32.const 4)))
-    
+
     (global.set $here (local.get $here)))
 
   (func $type (param $p i32) (param $len i32)
@@ -2987,7 +2977,7 @@
   (func $to (param $tos i32) (result i32)
     (local $dp i32)
     (local $btos i32)
-    (local.set $dp 
+    (local.set $dp
       (i32.add
         (call $body (drop (call $find! (call $parseName))))
         (i32.const 4)))
@@ -3014,15 +3004,15 @@
         (local.get $tos))))
 
   (func $ensureCompiling (param $tos i32) (result i32)
-    (local.get $tos) 
+    (local.get $tos)
     (if (param i32) (result i32) (i32.eqz (i32.load (i32.const 0x209a0 (; = body(STATE) ;))))
-      (call $fail (i32.const 0x2002e (; = str("word not supported in interpret mode") ;)))))
+      (then (call $fail (i32.const 0x2002e (; = str("word not supported in interpret mode") ;))))))
 
   ;; LEB128 with fixed 4 bytes (with padding bytes)
   ;; This means we can only represent 28 bits, which should be plenty.
   (func $leb128-4p (export "leb128_4p") (param $n i32) (result i32)
     (i32.or
-      (i32.or 
+      (i32.or
         (i32.or
           (i32.or
             (i32.and (local.get $n) (i32.const 0x7F))
@@ -3053,10 +3043,10 @@
       (local.set $value (i32.shr_s (local.get $value) (i32.const 7)))
       (block $next
         (block
-          (br_if 0 (i32.and 
-              (i32.eqz (local.get $value)) 
+          (br_if 0 (i32.and
+              (i32.eqz (local.get $value))
               (i32.eqz (i32.and (local.get $byte) (i32.const 0x40)))))
-          (br_if 0 (i32.and 
+          (br_if 0 (i32.and
               (i32.eq (local.get $value) (i32.const -1))
               (i32.eq (i32.and (local.get $byte) (i32.const 0x40)) (i32.const 0x40))))
           (local.set $byte (i32.or (local.get $byte) (i32.const 0x80)))
@@ -3066,7 +3056,7 @@
       (local.set $p (i32.add (local.get $p) (i32.const 1)))
       (br_if $loop (local.get $more)))
     (local.get $p))
-  
+
   (func $leb128u (export "leb128u") (param $p i32) (param $value i32) (result i32)
     (local $byte i32)
     (loop $loop
@@ -3081,7 +3071,7 @@
   (func $body (param $xt i32) (result i32)
     (i32.and
       (i32.add
-        (i32.add 
+        (i32.add
           (local.get $xt)
           (i32.and
             (i32.load8_u (i32.add (local.get $xt) (i32.const 4)))
@@ -3095,7 +3085,7 @@
         (i32.add (local.get $v) (i32.const 0x37)))
       (else
         (i32.add (local.get $v) (i32.const 0x30)))))
-  
+
   ;; Returns address+length
   (func $parseName (result i32 i32)
     (call $skip (i32.const 0x20 (; = ' ' ;)))
@@ -3108,8 +3098,8 @@
     (local $end i32)
     (local $c i32)
     (local $delimited i32)
-    (local.set $p 
-      (local.tee $addr (i32.add (global.get $inputBufferBase) 
+    (local.set $p
+      (local.tee $addr (i32.add (global.get $inputBufferBase)
       (i32.load (i32.const 0x20334 (; = body(>IN) ;))))))
     (local.set $end (i32.add (global.get $inputBufferBase) (global.get $inputBufferSize)))
     (local.set $delimited (i32.const 0))
@@ -3122,7 +3112,7 @@
           (br_if $delimiter (i32.eq (local.get $c) (i32.const 0xa)))
           (br_if $read (i32.ne (local.get $c) (local.get $delim)))))
       (local.set $delimited (i32.const 1)))
-    (i32.store (i32.const 0x20334 (; = body(>IN) ;)) 
+    (i32.store (i32.const 0x20334 (; = body(>IN) ;))
       (i32.sub (local.get $p) (global.get $inputBufferBase)))
     (local.get $addr)
     (i32.sub
@@ -3134,8 +3124,8 @@
     (local $p i32)
     (local $end i32)
     (local $c i32)
-    (local.set $p 
-      (local.tee $addr (i32.add (global.get $inputBufferBase) 
+    (local.set $p
+      (local.tee $addr (i32.add (global.get $inputBufferBase)
       (i32.load (i32.const 0x20334 (; = body(>IN) ;))))))
     (local.set $end (i32.add (global.get $inputBufferBase) (global.get $inputBufferSize)))
     (block $endLoop
@@ -3146,7 +3136,7 @@
         (local.set $p (i32.add (local.get $p) (i32.const 1)))
         ;; Eat up a newline
         (br_if $loop (i32.ne (local.get $c) (i32.const 0xa)))))
-    (i32.store (i32.const 0x20334 (; = body(>IN) ;)) 
+    (i32.store (i32.const 0x20334 (; = body(>IN) ;))
       (i32.sub (local.get $p) (global.get $inputBufferBase))))
 
   ;; Returns (number, unparsed length)
@@ -3154,7 +3144,7 @@
     (local $restcount i32)
     (local $value i32)
     (if (i32.eqz (local.get $len))
-      (return (i32.const -1) (i32.const -1)))
+      (then (return (i32.const -1) (i32.const -1))))
     (call $number (i64.const 0) (local.get $addr) (local.get $len))
     (local.set $restcount)
     (drop)
@@ -3169,38 +3159,38 @@
     (local $char i32)
     (local $base i32)
     (local $end i32)
-    (local $n i32)  
+    (local $n i32)
     (local.set $p (local.get $addr))
-    (local.set $end (i32.add (local.get $p) (local.get $length)))  
+    (local.set $end (i32.add (local.get $p) (local.get $length)))
     (local.set $base (i32.load (i32.const 0x2040c (; = body(BASE) ;))))
 
     ;; Read first character
     (if (i32.eq (local.tee $char (i32.load8_u (local.get $p))) (i32.const 0x2d (; = '-' ;)))
-      (then 
+      (then
         (local.set $sign (i64.const -1))
         (local.set $char (i32.const 0x30 (; = '0' ;) ))
         (if (i32.eq (local.get $length) (i32.const 1))
           (then
             (return (local.get $value) (local.get $p) (local.get $length)))))
-      (else 
+      (else
         (local.set $sign (i64.const 1))))
 
     ;; Read all characters
     (block $endLoop
       (loop $loop
         (if (i32.lt_s (local.get $char) (i32.const 0x30 (; = '0' ;) ))
-          (br $endLoop))      
+          (then (br $endLoop)))
         (if (i32.le_s (local.get $char) (i32.const 0x39 (; = '9' ;) ))
-          (then 
+          (then
             (local.set $n (i32.sub (local.get $char) (i32.const 48))))
           (else
             (if (i32.lt_s (local.get $char) (i32.const 0x41 (; = 'A' ;) ))
-              (br $endLoop))
+              (then (br $endLoop)))
             (local.set $n (i32.sub (local.get $char) (i32.const 55)))))
         (if (i32.ge_s (local.get $n) (local.get $base))
-          (br $endLoop))
-        (local.set $value 
-          (i64.add 
+          (then (br $endLoop)))
+        (local.set $value
+          (i64.add
             (i64.mul (local.get $value) (i64.extend_i32_u (local.get $base)))
             (i64.extend_i32_u (local.get $n))))
         (local.set $p (i32.add (local.get $p) (i32.const 1)))
@@ -3209,17 +3199,17 @@
         (br $loop)))
 
     (i64.mul (local.get $sign) (local.get $value))
-    (local.get $p) 
+    (local.get $p)
     (i32.sub (local.get $end) (local.get $p)))
-  
+
   (func $hexchar (param $c i32) (result i32)
     (if (result i32) (i32.le_u (local.get $c) (i32.const 0x39 (; = '9' ;)))
       (then (i32.sub (local.get $c) (i32.const 0x30 (; = '0' ;))))
-      (else 
+      (else
         (if (result i32) (i32.le_u (local.get $c) (i32.const 0x5a (; = 'Z' ;)))
            (then (i32.sub (local.get $c) (i32.const 55)))
            (else (i32.sub (local.get $c) (i32.const 87)))))))
-  
+
   ;; Returns xt, type (0 = not found, 1 = immediate, -1 = non-immediate)
   (func $find (param $addr i32) (param $len i32) (result i32) (result i32)
     (local $entryP i32)
@@ -3227,13 +3217,13 @@
     (local.set $entryP (global.get $latest))
     (loop $loop
       (block
-        (br_if 0 
-          (i32.and 
+        (br_if 0
+          (i32.and
             (local.tee $entryLF (i32.load (i32.add (local.get $entryP) (i32.const 4))))
             (i32.const 0x20 (; = F_HIDDEN ;))))
-        (br_if 0 
+        (br_if 0
           (i32.eqz
-            (call $stringEqual 
+            (call $stringEqual
               (local.get $addr) (local.get $len)
               (i32.add (local.get $entryP) (i32.const 5)) (i32.and (local.get $entryLF) (i32.const 0x1f (; = LENGTH_MASK ;))))))
         (local.get $entryP)
@@ -3244,18 +3234,18 @@
       (local.set $entryP (i32.load (local.get $entryP)))
       (br_if $loop (local.get $entryP)))
     (i32.const 0) (i32.const 0))
-  
+
   ;; Returns xt, type (1 = immediate, -1 = non-immediate)
   ;; Aborts if not found
   (func $find! (param $addr i32) (param $len i32) (result i32) (result i32)
     (local $r i32)
-    (if (i32.eqz (local.tee $r (call $find (local.get $addr) (local.get $len))))      
-      (call $failUndefinedWord (local.get $addr) (local.get $len)))
+    (if (i32.eqz (local.tee $r (call $find (local.get $addr) (local.get $len))))
+      (then (call $failUndefinedWord (local.get $addr) (local.get $len))))
     (local.get $r))
 
   (func $aligned (param $addr i32) (result i32)
-    (i32.and 
-      (i32.add (local.get $addr) (i32.const 3)) 
+    (i32.and
+      (i32.add (local.get $addr) (i32.const 3))
       (i32.const -4 (; ~3 ;))))
 
   (func $U._ (param $v i32) (param $base i32)
@@ -3267,11 +3257,10 @@
       (else (call $U._ (local.get $v) (local.get $base))))
     (call $shell_emit (call $numberToChar (local.get $m))))
 
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; API Functions
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
   (func (export "push") (param $v i32)
     (global.set $tos (call $push (global.get $tos) (local.get $v))))
 
