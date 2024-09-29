@@ -32,9 +32,10 @@ WABT_DATA_DIR = $(WABT_DIR)/share/wabt
 LIBS := -mmacosx-version-min=13.0 
 else # $(UNAME_S)
 GCC_TARGET_MACHINE = $(shell gcc -dumpmachine)
-WABT_INCLUDE_DIR ?= /usr/lib/include
-WABT_LIB_DIR ?= /usr/lib/$(GCC_TARGET_MACHINE)
-WABT_DATA_DIR ?= /usr/share/wabt
+WABT_DIR ?= /usr
+WABT_INCLUDE_DIR ?= $(WABT_DIR)/include
+WABT_LIB_DIR ?= $(WABT_DIR)/lib/$(GCC_TARGET_MACHINE)
+WABT_DATA_DIR ?= $(WABT_DIR)/share/wabt
 PACKAGE_SUFFIX=x86_64-linux
 endif # $(UNAME_S)
 package: waforthc
@@ -42,9 +43,8 @@ package: waforthc
 endif # $(OS)
 
 CXXFLAGS := -DVERSION='"$(VERSION)"' -Wall -std=c++17 -I$(WABT_INCLUDE_DIR) $(CXXFLAGS)
-LIBS := \
-	$(WABT_LIB_DIR)/libwabt.a \
-	$(LIBS)
+LIBS := -lwabt $(LIBS)
+LDFLAGS := -L$(WABT_LIB_DIR)
 
 ifeq ($(DEBUG),1)
 CXXFLAGS := $(CXXFLAGS) -g
@@ -67,7 +67,7 @@ OBJECTS := waforthc.o
 all: waforthc
 
 waforthc: $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 waforthc.o: waforth_core.h waforth_rt.h waforth_wabt_wasm-rt-impl_c.h waforth_wabt_wasm-rt-impl_h.h waforth_wabt_wasm-rt_h.h 
 
