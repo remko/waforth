@@ -14,7 +14,7 @@
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
     "chai": "^4.3.6",
-    "esbuild": "^0.14.36",
+    "esbuild": "^0.25.0",
     "eslint": "^8.13.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.29.4",
