@@ -31,8 +31,13 @@
 
 #include "waforth_core.h"
 #include "waforth_rt.h"
+#include "waforth_wabt_wasm-rt-exceptions-impl_c.h"
+#include "waforth_wabt_wasm-rt-exceptions_h.h"
+#include "waforth_wabt_wasm-rt-impl-tableops_inc.h"
 #include "waforth_wabt_wasm-rt-impl_c.h"
 #include "waforth_wabt_wasm-rt-impl_h.h"
+#include "waforth_wabt_wasm-rt-mem-impl-helper_inc.h"
+#include "waforth_wabt_wasm-rt-mem-impl_c.h"
 #include "waforth_wabt_wasm-rt_h.h"
 
 namespace fs = std::filesystem;
@@ -144,14 +149,31 @@ wabt::Result compileToNative(wabt::Module &mod, const std::string &init, const s
     wcopt.module_name = "waforth";
     wabt::FileStream c_stream((wd / "_waforth.c").string());
     wabt::FileStream h_stream((wd / "_waforth.h").string());
-    CHECK_RESULT(WriteC(&c_stream, &h_stream, "_waforth.h", &mod, wcopt));
+    CHECK_RESULT(WriteC({&c_stream}, &h_stream, &c_stream, "_waforth.h", "", &mod, wcopt));
     wabt::FileStream((wd / "_waforth_rt.c").string()).WriteData(waforth_rt, sizeof(waforth_rt));
-    wabt::FileStream((wd / "wasm-rt-impl.c").string()).WriteData(waforth_wabt_wasm_rt_impl_c, sizeof(waforth_wabt_wasm_rt_impl_c));
-    wabt::FileStream((wd / "wasm-rt-impl.h").string()).WriteData(waforth_wabt_wasm_rt_impl_h, sizeof(waforth_wabt_wasm_rt_impl_h));
     wabt::FileStream((wd / "wasm-rt.h").string()).WriteData(waforth_wabt_wasm_rt_h, sizeof(waforth_wabt_wasm_rt_h));
+    wabt::FileStream((wd / "wasm-rt-impl.h").string()).WriteData(waforth_wabt_wasm_rt_impl_h, sizeof(waforth_wabt_wasm_rt_impl_h));
+    wabt::FileStream((wd / "wasm-rt-impl.c").string()).WriteData(waforth_wabt_wasm_rt_impl_c, sizeof(waforth_wabt_wasm_rt_impl_c));
+    wabt::FileStream((wd / "wasm-rt-impl-tableops.inc").string())
+        .WriteData(waforth_wabt_wasm_rt_impl_tableops_inc, sizeof(waforth_wabt_wasm_rt_impl_tableops_inc));
+    wabt::FileStream((wd / "wasm-rt-exceptions.h").string()).WriteData(waforth_wabt_wasm_rt_exceptions_h, sizeof(waforth_wabt_wasm_rt_exceptions_h));
+    wabt::FileStream((wd / "wasm-rt-exceptions-impl.c").string())
+        .WriteData(waforth_wabt_wasm_rt_exceptions_impl_c, sizeof(waforth_wabt_wasm_rt_exceptions_impl_c));
+    wabt::FileStream((wd / "wasm-rt-mem-impl.c").string()).WriteData(waforth_wabt_wasm_rt_mem_impl_c, sizeof(waforth_wabt_wasm_rt_mem_impl_c));
+    wabt::FileStream((wd / "wasm-rt-mem-impl-helper.inc").string())
+        .WriteData(waforth_wabt_wasm_rt_mem_impl_helper_inc, sizeof(waforth_wabt_wasm_rt_mem_impl_helper_inc));
   }
 
-  std::vector<std::string> cmd = {cc, "-o", outfile, (wd / "_waforth_rt.c").string(), (wd / "_waforth.c").string(), (wd / "wasm-rt-impl.c").string()};
+  std::vector<std::string> cmd = {
+      cc,
+      "-o",
+      outfile,
+      (wd / "_waforth_rt.c").string(),
+      (wd / "_waforth.c").string(),
+      (wd / "wasm-rt-impl.c").string(),
+      (wd / "wasm-rt-exceptions-impl.c").string(),
+      (wd / "wasm-rt-mem-impl.c").string(),
+  };
   cmd.insert(cmd.end(), cflags.begin(), cflags.end());
   if (runChild(cmd) != 0) {
     std::cerr << "error compiling";
@@ -346,21 +368,21 @@ wabt::Result compileToModule(std::vector<wabt::Module> &words, const std::vector
                              wabt::Module &compiled, wabt::Errors &errors) {
   CHECK_RESULT(readModule("waforth.wasm", waforth_core, sizeof(waforth_core), compiled, errors));
 
-  auto dsf = wabt::MakeUnique<wabt::DataSegmentModuleField>();
+  auto dsf = std::make_unique<wabt::DataSegmentModuleField>();
   wabt::DataSegment &ds = dsf->data_segment;
   ds.memory_var = wabt::Var(0, wabt::Location());
-  ds.offset.push_back(wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset)));
+  ds.offset.push_back(std::make_unique<wabt::ConstExpr>(wabt::Const::I32(dataOffset)));
   ds.data = data;
   compiled.AppendField(std::move(dsf));
 
-  compiled.globals[HERE_GLOBAL_INDEX]->init_expr = wabt::ExprList{wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(dataOffset + data.size()))};
-  compiled.globals[LATEST_GLOBAL_INDEX]->init_expr = wabt::ExprList{wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(latest))};
+  compiled.globals[HERE_GLOBAL_INDEX]->init_expr = wabt::ExprList{std::make_unique<wabt::ConstExpr>(wabt::Const::I32(dataOffset + data.size()))};
+  compiled.globals[LATEST_GLOBAL_INDEX]->init_expr = wabt::ExprList{std::make_unique<wabt::ConstExpr>(wabt::Const::I32(latest))};
 
   for (auto &word : words) {
     assert(word.funcs.size() == 1);
     // compiled.funcs.push_back(word.funcs[0]);
 
-    auto ff = wabt::MakeUnique<wabt::FuncModuleField>();
+    auto ff = std::make_unique<wabt::FuncModuleField>();
     auto &f = ff->func;
     f.name = word.funcs[0]->name;
     f.decl = word.funcs[0]->decl;
@@ -371,7 +393,7 @@ wabt::Result compileToModule(std::vector<wabt::Module> &words, const std::vector
 
     assert(word.elem_segments.size() == 1);
     auto elem = word.elem_segments[0];
-    auto esf = wabt::MakeUnique<wabt::ElemSegmentModuleField>();
+    auto esf = std::make_unique<wabt::ElemSegmentModuleField>();
     wabt::ElemSegment &es = esf->elem_segment;
     es.kind = elem->kind;
     es.name = elem->name;
@@ -379,8 +401,11 @@ wabt::Result compileToModule(std::vector<wabt::Module> &words, const std::vector
     es.elem_type = elem->elem_type;
     assert(elem->elem_type = wabt::Type::FuncRef);
     es.offset = std::move(elem->offset);
-    es.elem_exprs.push_back(wabt::ExprList{wabt::MakeUnique<wabt::RefFuncExpr>(wabt::Var(compiled.funcs.size() - 1, wabt::Location()))});
+    es.elem_exprs.push_back(wabt::ExprList{std::make_unique<wabt::RefFuncExpr>(wabt::Var(compiled.funcs.size() - 1, wabt::Location()))});
     compiled.AppendField(std::move(esf));
+
+    // Make sure the function is marked as used, so the wrapper gets emitted
+    compiled.used_func_refs.insert(compiled.funcs.size() - 1);
   }
 
   compiled.tables[0]->elem_limits.initial += words.size();
