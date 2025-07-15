@@ -24,6 +24,6 @@ jobs:
           mkdir -p public/waforth/drawing-with-forth
           cp src/web/notebook/examples/drawing-with-forth.html public/waforth/drawing-with-forth/index.html
         shell: bash
-      - uses: actions/upload-pages-artifact@v1
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: public/waforth

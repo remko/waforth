@@ -2,34 +2,35 @@ name: "Setup project"
 runs:
   using: "composite"
   steps:
-  - uses: actions/setup-node@v2
+  - uses: actions/setup-node@v4
     with:
-      node-version: 17
+      node-version: 24
       registry-url: 'https://registry.npmjs.org/'
       cache: 'npm'
-  # - if: runner.os == 'macOS'
-  #   run: brew install wabt
-  #   shell: bash
   - if: runner.os == 'macOS'
-    run: |
-      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.31/wabt-1.0.31-macos-12.tar.gz | tar xvz -C /tmp
-      sudo mv /tmp/wabt-1.0.31/bin/* /usr/local/bin
-      sudo mv /tmp/wabt-1.0.31/include/* /usr/local/include
-      sudo mv /tmp/wabt-1.0.31/lib/*.a /usr/local/lib
-      sudo mv /tmp/wabt-1.0.31/share/wabt /usr/local/share
+    run: brew install wabt
     shell: bash
+  # - if: runner.os == 'macOS'
+  #   run: |
+  #     curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.37/wabt-1.0.37-macos-14.tar.gz | tar xvz -C /tmp
+  #     sudo mkdir -p /usr/local/bin /usr/local/include /usr/local/lib /usr/local/share
+  #     sudo mv /tmp/wabt-1.0.37/bin/* /usr/local/bin
+  #     sudo mv /tmp/wabt-1.0.37/include/* /usr/local/include
+  #     sudo mv /tmp/wabt-1.0.37/lib/*.a /usr/local/lib
+  #     sudo mv /tmp/wabt-1.0.37/share/wabt /usr/local/share
+  #   shell: bash
   - if: runner.os == 'Linux'
     run: |
-      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.31/wabt-1.0.31-ubuntu.tar.gz | tar xvz -C /tmp
-      sudo mv /tmp/wabt-1.0.31/bin/* /usr/local/bin
-      sudo mv /tmp/wabt-1.0.31/include/* /usr/local/include
-      sudo mv /tmp/wabt-1.0.31/lib/*.a /usr/local/lib
-      sudo mv /tmp/wabt-1.0.31/share/wabt /usr/local/share
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.37/wabt-1.0.37-ubuntu-20.04.tar.gz | tar xvz -C /tmp
+      sudo mv /tmp/wabt-1.0.37/bin/* /usr/local/bin
+      sudo mv /tmp/wabt-1.0.37/include/* /usr/local/include
+      sudo mv /tmp/wabt-1.0.37/lib/*.a /usr/local/lib
+      sudo mv /tmp/wabt-1.0.37/share/wabt /usr/local/share
     shell: bash
   - if: runner.os == 'Windows'
     run: |
-      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.31/wabt-1.0.31-windows.tar.gz | tar xvz -C /tmp
-      mv /tmp/wabt-1.0.31 /c/tools/wabt
+      curl -L -s https://github.com/WebAssembly/wabt/releases/download/1.0.37/wabt-1.0.37-windows.tar.gz | tar xvz -C /tmp
+      mv /tmp/wabt-1.0.37 /c/tools/wabt
       cp /c/tools/wabt/bin/* /c/Windows/system32
     shell: bash
   - run: npm ci
