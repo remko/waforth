@@ -27,7 +27,9 @@ jobs:
 
   deploy-aws:
     needs: build
-    runs-on: ubuntu-latest
+    # It seems awscli disappeared in 24.04 (it seems to be back in later versions).
+    # For now, running this on an older ubuntu.
+    runs-on: ubuntu-22.04
     steps:
       - run: sudo apt-get update
       - run: sudo apt-get install awscli
